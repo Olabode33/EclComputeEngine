@@ -1,0 +1,4 @@
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Release\IFRS9_ECL.Util.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Release\IFRS9_ECL.Util.pdb
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Release\IFRS9_ECL.Util.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Release\IFRS9_ECL.Util.pdb

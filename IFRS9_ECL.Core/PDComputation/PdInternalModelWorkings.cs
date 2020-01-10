@@ -1,0 +1,234 @@
+﻿using IFRS9_ECL.Core.PDComputation.cmPD;
+using IFRS9_ECL.Models.PD;
+using IFRS9_ECL.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IFRS9_ECL.Core.PDComputation
+{
+    public class PdInternalModelWorkings
+    {
+        protected const int _maxLogRateYear = 15;
+        protected const int _maxRatingYear = 20;
+        protected const int _maxRatingRank = 9;
+
+        Guid _eclId;
+
+        public PdInternalModelWorkings(Guid eclId)
+        {
+            this._eclId = eclId;
+        }
+
+        public void Run()
+        {
+            List<MonthlyLogOddsRatio> dataTable = ComputeMonthlyCummulativeSurvival();
+
+            string stop = "stop";
+        }
+
+        protected List<MonthlyLogOddsRatio> ComputeMonthlyCummulativeSurvival()
+        {
+            var monthlyLogOddsRatio = ComputeMonthlyLogOddsRatio();
+
+            var monthlyCummulativeSurvivalResult = new List<MonthlyLogOddsRatio>();
+
+            ///Month 1 Computation
+            var tempDt = monthlyLogOddsRatio.AsEnumerable()
+                                    .Where(row => row.Month == 1).ToList();
+            foreach (var dr in tempDt)
+            {
+                var dataRow = new MonthlyLogOddsRatio();
+                dataRow.Month = dr.Month;
+                dataRow.Rank = dr.Rank;
+                dataRow.Rating = dr.Rating;
+                dataRow.CreditRating = 1.0 - dr.CreditRating;
+                monthlyCummulativeSurvivalResult.Add(dataRow);
+            }
+
+            ///Month 2 to max computation
+            for (int month = 2; month <= (_maxRatingYear * 12); month++)
+            {
+                var prevMonthCreditRating = monthlyCummulativeSurvivalResult.Where(row => row.Month == month - 1).ToList();
+
+                var currMonthCreditRating = monthlyLogOddsRatio.Where(row => row.Month == month)
+                                                    .Select(row =>
+                                                    {
+                                                        double prev = prevMonthCreditRating.AsEnumerable()
+                                                                        .FirstOrDefault(x => x.Rank == row.Rank)
+                                                                        .CreditRating;
+                                                        row.CreditRating = prev * (1 - row.CreditRating);
+
+                                                        return row;
+                                                    }).ToList();
+
+                monthlyCummulativeSurvivalResult.AddRange(currMonthCreditRating);
+            }
+
+
+            return monthlyCummulativeSurvivalResult;
+        }
+        public List<MonthlyLogOddsRatio> ComputeMonthlyLogOddsRatio()
+        {
+            var marginalDefaultRate = ComputeMarginalDefaultRate();
+            var monthlyLogOddsRatioResult = new List<MonthlyLogOddsRatio>();
+
+            int monthCount = 1;
+
+            for (int year = 1; year <= _maxRatingYear; year++)
+            {
+                for (int month = 1; month <= 12; month++)
+                {
+                    for (int rank = 1; rank <= _maxRatingRank; rank++)
+                    {
+                        var rate = marginalDefaultRate.FirstOrDefault(row => row.Year == year && row.Rank == rank);
+
+                        var dataRow = new MonthlyLogOddsRatio();
+                        dataRow.Month = monthCount;
+                        dataRow.Rank = rank;
+                        dataRow.Rating = rate.Rating;
+                        dataRow.CreditRating = 1.0 - Math.Pow((1.0 - rate.LogOddsRatio), (1.0 / 12.0)); ;
+                        monthlyLogOddsRatioResult.Add(dataRow);
+                    }
+                    monthCount += 1;
+                }
+            }
+
+
+
+            return monthlyLogOddsRatioResult;
+        }
+        protected List<LogOddRatio> ComputeMarginalDefaultRate()
+        {
+            var cummulativeDefaultRate = ComputeCummulativeDefaultRate();
+
+            ///Get cummulative values for year 1
+            var marginalDefaultRateResult = new List<LogOddRatio>();
+            marginalDefaultRateResult = cummulativeDefaultRate;
+            var tempDt = cummulativeDefaultRate.Where(row => row.Year == 1).ToList();
+            foreach (var dr in tempDt)
+            {
+                var dataRow = new LogOddRatio();
+                dataRow.Rank = dr.Rank;
+                dataRow.Rating = dr.Rating;
+                dataRow.Year = dr.Year;
+                dataRow.LogOddsRatio = dr.LogOddsRatio;
+                marginalDefaultRateResult.Add(dataRow);
+            }
+
+            for (int year = 2; year <= _maxRatingYear; year++)
+            {
+                for (int rank = 1; rank <= _maxRatingRank; rank++)
+                {
+                    double prevYearRate = cummulativeDefaultRate.FirstOrDefault(row =>row.Rank == rank && row.Year == year - 1).LogOddsRatio;
+
+                    var currYearRate = cummulativeDefaultRate.FirstOrDefault(row =>row.Rank == rank && row.Year == year);
+
+                    double rate = (currYearRate.LogOddsRatio - prevYearRate) / (1 - prevYearRate);
+
+                    var dataRow = new LogOddRatio();
+                    dataRow.Rank = currYearRate.Rank;
+                    dataRow.Rating = currYearRate.Rating;
+                    dataRow.Year = currYearRate.Year;
+                    dataRow.LogOddsRatio = rate;
+                    marginalDefaultRateResult.Add(dataRow);
+                }
+            }
+
+            return marginalDefaultRateResult;
+        }
+        protected List<LogOddRatio> ComputeCummulativeDefaultRate()
+        {
+            var logOddsRatio = ComputeLogsOddsRatio();
+
+            var cummulativeDefaultRateResult = logOddsRatio.Select(row => {
+                                                                    row.LogOddsRatio = 1 / (1 + Math.Exp(row.LogOddsRatio));
+                                                                    return row;
+                                                                }).ToList();
+
+            return cummulativeDefaultRateResult;
+        }
+        protected List<LogOddRatio> ComputeLogsOddsRatio()
+        {
+            var pd12MonthAssumption = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_12MonthPds();
+            var pdInputAssumptions = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
+            var logRates = ComputeLogRates();
+
+            var logOddsRatioResult = new List<LogOddRatio>();
+
+            string snpMappingInput = pdInputAssumptions.FirstOrDefault(o => o.Assumptions == ECLNonStringConstants.i.SnpMapping).Value;
+
+            for (int rank = 1; rank <= _maxRatingRank; rank++)
+            {
+                var _12MonthAssumption = pd12MonthAssumption.FirstOrDefault(o => o.Rating == rank);
+                string rating = snpMappingInput == _12MonthAssumption.Policy ? _12MonthAssumption.Policy : _12MonthAssumption.Fit;
+
+                //Year 1 computation
+                double pdValue = pd12MonthAssumption.FirstOrDefault(o => o.Rating == rank).PD;
+                double year1LogOddRatio = Math.Log((1 - pdValue) / pdValue);
+
+                var dataRow = new LogOddRatio();
+                dataRow.Rank = rank;
+                dataRow.Rating = rating;
+                dataRow.Year = 1;
+                dataRow.LogOddsRatio = year1LogOddRatio;
+                logOddsRatioResult.Add(dataRow);
+
+                //Year to Max computation
+                double year1RatingLogRate = logRates.FirstOrDefault(row =>row.Rating == rating && row.Year == 1).LogOddsRatio;
+
+                for (int year = 2; year <= _maxRatingYear; year++)
+                {
+                    double currentYearRatingLogRate = logRates.FirstOrDefault(row => row.Rating == rating && row.Year == Math.Min(year, _maxLogRateYear)).LogOddsRatio;
+
+                    double currentYearLogOddRatio = year1LogOddRatio + currentYearRatingLogRate - year1RatingLogRate;
+
+                    var currentYeardataRow = new LogOddRatio();
+                    currentYeardataRow.Rank = rank;
+                    currentYeardataRow.Rating = rating;
+                    currentYeardataRow.Year = year;
+                    currentYeardataRow.LogOddsRatio = currentYearLogOddRatio;
+                    logOddsRatioResult.Add(currentYeardataRow);
+                }
+            }
+
+            return logOddsRatioResult;
+        }
+        protected List<LogOddRatio> ComputeLogRates()
+        {
+            var snpCummulativeRate = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_SnPCummlativeDefaultRate();
+
+            var logRateResult = new List<LogOddRatio>();
+
+            //DataTable snpCummulativeRating = snpCummulativeRate.DefaultView.ToTable(false,  SnPCummlativeDefaultRateColumns.Rating );
+
+            foreach (var row in snpCummulativeRate)
+            {
+                string rating = row.Rating;
+
+                Type myObjOriginalType = row.GetType();
+                PropertyInfo[] myProps = myObjOriginalType.GetProperties();
+
+                for (int year = 1; year <= _maxLogRateYear; year++)
+                {
+                    double defaultRate = double.Parse(myProps.FirstOrDefault(o => o.Name.ToString() == $"_{year.ToString()}").GetValue(row).ToString());
+                    double log = Math.Log((1 - defaultRate) / defaultRate);
+
+                    var dataRow = new LogOddRatio();
+                    dataRow.Rating = rating;
+                    dataRow.Year = year;
+                    dataRow.LogOddsRatio = log;
+
+                    logRateResult.Add(dataRow);
+                }
+            }
+
+
+            return logRateResult;
+        }
+
+    }
+}

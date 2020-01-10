@@ -1,0 +1,5 @@
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Models\bin\Debug\IFRS9_ECL.Models.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Models\bin\Debug\IFRS9_ECL.Models.pdb
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Models\obj\Debug\IFRS9_ECL.Models.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Models\obj\Debug\IFRS9_ECL.Models.pdb
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Models\obj\Debug\IFRS9_ECL.Models.csprojAssemblyReference.cache
