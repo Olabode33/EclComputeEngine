@@ -49,11 +49,12 @@ namespace IFRS9_ECL.Data
         }
         public static string Get_nonInternalmodelInputQuery(Guid eclId)
         {
-            return $"SELECT Month,CONS_STAGE_1,CONS_STAGE_2,COMM_STAGE_1,COMM_STAGE_2, EclId FROM PDI_NonInternalModelInputs where EclId='{eclId}'";
+            return $"SELECT Month, PdGroup, MarginalDefaultRate, CummulativeSurvival FROM PdInputAssumptionNonInternalModels";// where EclId='{eclId}'";
+            //return $"SELECT Month,CONS_STAGE_1,CONS_STAGE_2,COMM_STAGE_1,COMM_STAGE_2, EclId FROM PDI_NonInternalModelInputs where EclId='{eclId}'";
         }
         public static string Get_snpCummulativeDefaultRateQuery(Guid eclId)
         {
-            return $"SELECT [Rating],[1] _1,[2] _2,[3] _3,[4] _4,[5] _5,[6] _6,[7] _7,[8] _8,[9] _9,[10] _10,[11] _11,[12] _12,[13] _13,[14] _14,[15] _15,[12 Month PD] _12_Month_PD, EclId FROM [PDI_SnPCummlativeDefaultRate] where EclId = '{eclId}'";
+            return $"SELECT [Rating],[Years],[Value] FROM [WholesaleEclPdSnPCummulativeDefaultRates] where WholesaleEclId = '{eclId}'";
         }
         //public static string Get_statisticalInputsQuery
         //{
@@ -70,9 +71,12 @@ namespace IFRS9_ECL.Data
         }
         public static string Get_pdInputAssumptionsQuery(Guid eclId)
         {
-            return $"SELECT [Assumptions],[Value], EclId FROM [PDI_Assumptions] where EclId='{eclId}'";
+            return $"SELECT [PdGroup], [Key],[Value], InputName, WholesaleEclId FROM [WholesaleEclPdAssumptions] where WholesaleEclId='{eclId}'";
         }
-
+        //public static string Get_pdInputAssumptionsQuery(Guid eclId)
+        //{
+        //    return $"SELECT [Assumptions],[Value], EclId FROM [PDI_Assumptions] where EclId='{eclId}'";
+        //}
         public static string Get_impairmentAssumptionsQuery(Guid eclId)
         {
             return $"SELECT [Assumption] FROM [ImpairmentAssumptions] where EclId='{eclId}'";

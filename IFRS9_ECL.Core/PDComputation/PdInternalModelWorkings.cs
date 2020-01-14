@@ -14,7 +14,7 @@ namespace IFRS9_ECL.Core.PDComputation
     {
         protected const int _maxLogRateYear = 15;
         protected const int _maxRatingYear = 20;
-        protected const int _maxRatingRank = 9;
+        protected const int _maxRatingRank = 10;
 
         Guid _eclId;
 
@@ -153,21 +153,31 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<LogOddRatio> ComputeLogsOddsRatio()
         {
-            var pd12MonthAssumption = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_12MonthPds();
+            //var pd12MonthAssumption = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions(); //.Get_PDI_12MonthPds();
             var pdInputAssumptions = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
             var logRates = ComputeLogRates();
 
             var logOddsRatioResult = new List<LogOddRatio>();
 
-            string snpMappingInput = pdInputAssumptions.FirstOrDefault(o => o.Assumptions == ECLNonStringConstants.i.SnpMapping).Value;
+            string snpMappingInput = pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== ECLNonStringConstants.i.SnpMapping).Value;
 
             for (int rank = 1; rank <= _maxRatingRank; rank++)
             {
-                var _12MonthAssumption = pd12MonthAssumption.FirstOrDefault(o => o.Rating == rank);
-                string rating = snpMappingInput == _12MonthAssumption.Policy ? _12MonthAssumption.Policy : _12MonthAssumption.Fit;
+                var _12MonthAssumption = new PDI_Assumptions();
+                if(snpMappingInput== PdAssumptionsRowKey.SnpMappingValueBestFit)
+                {
+                    _12MonthAssumption = pdInputAssumptions.Where(o=>o.PdGroup== PdInputAssumptionGroupEnum.CreditBestFit).FirstOrDefault(o => o.InputName == rank.ToString());
+                }
+                if (snpMappingInput == PdAssumptionsRowKey.SnpMappingValueEtiCreditPolicy)
+                {
+                    _12MonthAssumption = pdInputAssumptions.Where(o => o.PdGroup == PdInputAssumptionGroupEnum.CreditEtiPolicy).FirstOrDefault(o => o.InputName == rank.ToString());
+                }
+
+                string rating = _12MonthAssumption.Value;// snpMappingInput == _12MonthAssumption.Policy ? _12MonthAssumption.Policy : _12MonthAssumption.Fit;
 
                 //Year 1 computation
-                double pdValue = pd12MonthAssumption.FirstOrDefault(o => o.Rating == rank).PD;
+                double pdValue =double.Parse(pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.CreditPD && o.InputName == rank.ToString()).Value);
+                
                 double year1LogOddRatio = Math.Log((1 - pdValue) / pdValue);
 
                 var dataRow = new LogOddRatio();
@@ -209,21 +219,21 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 string rating = row.Rating;
 
-                Type myObjOriginalType = row.GetType();
-                PropertyInfo[] myProps = myObjOriginalType.GetProperties();
+                //Type myObjOriginalType = row.GetType();
+                //PropertyInfo[] myProps = myObjOriginalType.GetProperties();
 
-                for (int year = 1; year <= _maxLogRateYear; year++)
-                {
-                    double defaultRate = double.Parse(myProps.FirstOrDefault(o => o.Name.ToString() == $"_{year.ToString()}").GetValue(row).ToString());
-                    double log = Math.Log((1 - defaultRate) / defaultRate);
+                //for (int year = 1; year <= _maxLogRateYear; year++)
+                //{
+                    //double defaultRate = double.Parse(myProps.FirstOrDefault(o => o.Name.ToString() == $"_{row.Years.ToString()}").GetValue(row).ToString());
+                    double log = Math.Log((1 - row.Value) / row.Value);
 
                     var dataRow = new LogOddRatio();
                     dataRow.Rating = rating;
-                    dataRow.Year = year;
+                    dataRow.Year = row.Years;
                     dataRow.LogOddsRatio = log;
 
                     logRateResult.Add(dataRow);
-                }
+                //}
             }
 
 

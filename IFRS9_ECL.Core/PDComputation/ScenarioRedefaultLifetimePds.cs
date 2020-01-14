@@ -100,7 +100,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double GetRedefaultAdjustmentFactor()
         {
-            return Convert.ToDouble(GetPdInputAssumptions().FirstOrDefault(row => row.Assumptions == PdAssumptionsRowKey.ReDefaultAdjustmentFactor).Value);
+            return Convert.ToDouble(GetPdInputAssumptions().FirstOrDefault(row => row.PdGroup == PdInputAssumptionGroupEnum.General && row.Key== PdAssumptionsRowKey.ReDefaultAdjustmentFactor).Value);
         }
         protected List<PDI_Assumptions> GetPdInputAssumptions()
         {

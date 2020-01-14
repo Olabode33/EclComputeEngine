@@ -7,6 +7,42 @@ using System.Threading.Tasks;
 namespace IFRS9_ECL.Models.PD
 {
 
+    public static class PDInputs
+    {
+        public static PdInputAssumptionGroupEnum GetPDAssumptionEnum(int id)
+        {
+            if (id == 0)
+            {
+                return PdInputAssumptionGroupEnum.General;
+            }
+            if (id == 1)
+            {
+                return PdInputAssumptionGroupEnum.CreditPD;
+            }
+            if (id == 2)
+            {
+                return PdInputAssumptionGroupEnum.CreditEtiPolicy;
+            }
+            if (id == 3)
+            {
+                return PdInputAssumptionGroupEnum.CreditBestFit;
+            }
+            if (id == 4)
+            {
+                return PdInputAssumptionGroupEnum.StatisticsIndexWeights;
+            }
+            if (id == 5)
+            {
+                return PdInputAssumptionGroupEnum.InvestmentAssumption;
+            }
+            if (id == 6)
+            {
+                return PdInputAssumptionGroupEnum.InvestmentMacroeconomicScenario;
+            }
+            return PdInputAssumptionGroupEnum.General;
+        }
+    }
+
 
     public class PDI_StatisticalInputs
     {
@@ -56,9 +92,16 @@ namespace IFRS9_ECL.Models.PD
 
     public class PDI_Assumptions
     {
-        public string Assumptions { get; set; }
+        public PdInputAssumptionGroupEnum PdGroup { get; set; }
+        public string Key { get; set; }
         public string Value { get; set; }
+        public string InputName { get; set; }
         public Guid EclId { get; set; }
+    }
+
+    public enum PdInputAssumptionGroupEnum
+    {
+        General, CreditPD, CreditEtiPolicy, CreditBestFit, StatisticsIndexWeights, InvestmentAssumption, InvestmentMacroeconomicScenario
     }
 
     public class PDI_HistoricIndex
@@ -89,23 +132,10 @@ namespace IFRS9_ECL.Models.PD
     public class PDI_SnPCummlativeDefaultRate
     {
         public string Rating { get; set; }
-        public double _1 { get; set; }
-        public double _2 { get; set; }
-        public double _3 { get; set; }
-        public double _4 { get; set; }
-        public double _5 { get; set; }
-        public double _6 { get; set; }
-        public double _7 { get; set; }
-        public double _8 { get; set; }
-        public double _9 { get; set; }
-        public double _10 { get; set; }
-        public double _11 { get; set; }
-        public double _12 { get; set; }
-        public double _13 { get; set; }
-        public double _14 { get; set; }
-        public double _15 { get; set; }
-        public double PD { get; set; }
-        public Guid EclId { get; set; }
+        public int Years { get; set; }
+        public double Value { get; set; }
+        //public double PD { get; set; }
+        //public Guid EclId { get; set; }
 
     }
 

@@ -105,6 +105,7 @@ namespace IFRS9_ECL.Core
             foreach (DataRow dr in dt.Rows)
             {
                 var itm = DataAccess.i.ParseDataToObject(new PDI_Assumptions(), dr);
+                itm.PdGroup=PDInputs.GetPDAssumptionEnum(int.Parse(dr["PdGroup"].ToString()));
                 data.Add(itm);
             }
             return data;
@@ -165,6 +166,7 @@ namespace IFRS9_ECL.Core
 
         public List<PDI_NonInternalModelInputs> Get_PDI_NonInternalModelInputs()
         {
+            Match Object to SQL query 
             var dt = DataAccess.i.GetData(PD_Queries.Get_nonInternalmodelInputQuery(this._eclId));
             var data = new List<PDI_NonInternalModelInputs>();
             foreach (DataRow dr in dt.Rows)

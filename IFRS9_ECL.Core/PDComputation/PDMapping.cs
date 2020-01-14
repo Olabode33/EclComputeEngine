@@ -51,8 +51,8 @@ namespace IFRS9_ECL.Core.PDComputation
             var temp = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
 
-            int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.Assumptions == PdAssumptionsRowKey.Expired).Value);
-            int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.Assumptions == PdAssumptionsRowKey.NonExpired).Value);
+            int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== PdAssumptionsRowKey.Expired).Value);
+            int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value);
 
             //Get Data Excel/Database
             var qry = Queries.Raw_Data;
