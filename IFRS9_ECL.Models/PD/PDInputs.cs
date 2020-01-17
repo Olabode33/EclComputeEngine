@@ -129,6 +129,16 @@ namespace IFRS9_ECL.Models.PD
 
     }
 
+    public class PdInputAssumptionNonInternalModels
+    {
+        public int Month { get; set; }
+        public string PdGroup { get; set; }
+        public double MarginalDefaultRate { get; set; }
+        public double CummulativeSurvival { get; set; }
+        //public Guid EclId { get; set; }
+
+    }
+
     public class PDI_SnPCummlativeDefaultRate
     {
         public string Rating { get; set; }

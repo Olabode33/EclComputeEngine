@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,10 +28,21 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var output = ComputeLifetimePd();
             var dt = new DataTable();
+
+            var c = new LifeTimeObject();
+
+            Type myObjOriginalType = c.GetType();
+            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
+
+            for (int i = 0; i < myProps.Length; i++)
+            {
+                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
+            }
+
             foreach (var _d in output)
             {
                 _d.Id = Guid.NewGuid();
-                _d.Id = _eclId;
+                _d.WholesaleEclId = _eclId;
                 dt.Rows.Add(new object[]
                     {
                             _d.Id, _d.PdGroup, _d.Month, _d.Value, _d.WholesaleEclId

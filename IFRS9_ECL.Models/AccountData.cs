@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Models
 {
-    public class AccountData
+    public class LGDAccountData
     {        
         public Guid Id { get; set; }
         public string CONTRACT_NO { get; set; }

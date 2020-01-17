@@ -44,6 +44,14 @@
     <Compile Include="AccountData.cs" />
     <Compile Include="Collateral.cs" />
     <Compile Include="CoR.cs" />
+    <Compile Include="Framework\LgdCollateralProjection.cs" />
+    <Compile Include="Framework\FinalEcl.cs" />
+    <Compile Include="Framework\IrFactor.cs" />
+    <Compile Include="Framework\LgdInputAssumptions_UnsecuredRecovery.cs" />
+    <Compile Include="Framework\LifetimeCollateral.cs" />
+    <Compile Include="Framework\LifetimeEad.cs" />
+    <Compile Include="Framework\LifetimeLgd.cs" />
+    <Compile Include="Framework\StageClassification.cs" />
     <Compile Include="LGDPrecalculationOutput.cs" />
     <Compile Include="LGD_Assumptions.cs" />
     <Compile Include="LGD_Inputs.cs" />

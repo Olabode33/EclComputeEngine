@@ -67,6 +67,13 @@
     <Compile Include="Calibration\Input\PD_Wholesale_Input_Template.cs" />
     <Compile Include="ECLTasks.cs" />
     <Compile Include="ExcelFormulaUtil.cs" />
+    <Compile Include="FrameworkComputation\IrFactorWorkings.cs" />
+    <Compile Include="FrameworkComputation\LifetimeEadWorkings.cs" />
+    <Compile Include="FrameworkComputation\ScenarioEclWorkings.cs" />
+    <Compile Include="FrameworkComputation\ScenarioLifetimeCollateral.cs" />
+    <Compile Include="FrameworkComputation\ScenarioLifetimeLGD.cs" />
+    <Compile Include="FrameworkComputation\SicrWorkings.cs" />
+    <Compile Include="FrameworkComputation\UpdatedFSVsWorkings.cs" />
     <Compile Include="PDComputation\cmPD\IndexForecast.cs" />
     <Compile Include="PDComputation\cmPD\LogOddRatioColumns.cs" />
     <Compile Include="PDComputation\cmPD\MonthlyLogOddsRatio.cs" />

@@ -388,9 +388,9 @@ namespace IFRS9_ECL.Core
             //return CoR_DT;
         }
 
-        public List<AccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<Collateral> collateralTable, List<CoR> coR)
+        public List<LGDAccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<Collateral> collateralTable, List<CoR> coR)
         {
-            var accountData = new List<AccountData>();
+            var accountData = new List<LGDAccountData>();
 
             //var dt = DataAccess.i.GetData("Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, costOfRecovery from LGD_Assumptions");
             var dt = DataAccess.i.GetData(Queries.LGD_Assumption_2);
@@ -417,7 +417,7 @@ namespace IFRS9_ECL.Core
 
                 var cor_value = coR.FirstOrDefault(o => o.contract_no == obj.contractid);
                 if (cor_value == null) cor_value = new CoR();
-                accountData.Add(new AccountData { COST_OF_RECOVERY = cor_value.cor });
+                accountData.Add(new LGDAccountData { COST_OF_RECOVERY = cor_value.cor });
 
                 double[] tempOVMarray = {
                                         refinedRawData[i].DebentureOMV??0 ,
@@ -1076,13 +1076,13 @@ namespace IFRS9_ECL.Core
                     {
                         double value = projection_Calulcation_lifetimeEAD_0(obj.outstanding_balance_lcy, obj.product_type);
 
-                        lifetimeEadInputs.Add(new LifeTimeProjections { contract_no = contract, eir_group = eir_group_value, cir_group = cir_group_value, months = monthIndex, value = value });
+                        lifetimeEadInputs.Add(new LifeTimeProjections { Contract_no = contract, Eir_Group = eir_group_value, Cir_Group = cir_group_value, Month = monthIndex, Value = value });
 
                     }
                     else
                     {
                         double overallvalue = 0, value1, value2;
-                        double previousMonth = lifetimeEadInputs.FirstOrDefault(o => o.months == (monthIndex - 1) && o.contract_no == contract).value;
+                        double previousMonth = lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value;
 
 
                         if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_lease & obj.product_type != ECLStringConstants.i._productType_mortgage)
@@ -1160,10 +1160,10 @@ namespace IFRS9_ECL.Core
                                         if (obj.months_to_expiry == monthIndex)
                                         {
                                             //get range
-                                            double[] h_value = lifetimeEadInputs.Where(o => o.contract_no == contract
-                                                                            && o.months >= 0
-                                                                            && o.months <= monthIndex)
-                                                                            .Select(x => x.value)
+                                            double[] h_value = lifetimeEadInputs.Where(o => o.Contract_no == contract
+                                                                            && o.Month >= 0
+                                                                            && o.Month <= monthIndex)
+                                                                            .Select(x => x.Value)
                                                                             .ToArray();
                                             double[] i_value = cirProjections.Where(o => o.cir_group == cir_group_value
                                                                             && o.months >= 0
@@ -1183,10 +1183,10 @@ namespace IFRS9_ECL.Core
 
                                         double n_value = k_value * l_value * m_value;
                                         double o_value;
-                                        double[] p_value = lifetimeEadInputs.Where(o => o.contract_no == contract
-                                                                            && o.months >= 0
-                                                                            && o.months <= monthIndex)
-                                                                            .Select(x => x.value)
+                                        double[] p_value = lifetimeEadInputs.Where(o => o.Contract_no == contract
+                                                                            && o.Month >= 0
+                                                                            && o.Month <= monthIndex)
+                                                                            .Select(x => x.Value)
                                                                             .ToArray();
                                         double[] i_value = cirProjections.Where(o => o.cir_group == cir_group_value
                                                                         && o.months >= 0
@@ -1219,7 +1219,7 @@ namespace IFRS9_ECL.Core
                             }
                         }
 
-                        lifetimeEadInputs.Add(new LifeTimeProjections { contract_no = contract, eir_group = eir_group_value, cir_group = cir_group_value, months = monthIndex, value = overallvalue });
+                        lifetimeEadInputs.Add(new LifeTimeProjections { Contract_no = contract, Eir_Group = eir_group_value, Cir_Group = cir_group_value, Month = monthIndex, Value = overallvalue });
                     }
                 }
 

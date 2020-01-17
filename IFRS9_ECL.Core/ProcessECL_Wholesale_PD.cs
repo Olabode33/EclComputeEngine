@@ -22,7 +22,7 @@ namespace IFRS9_ECL.Core
         {
             // Compute Credit Index
             var crdIndx = new CreditIndex(this._eclId);
-            ////////////////////////crdIndx.Run();
+            crdIndx.Run();
 
             //// Compute Scenario Life time Pd
             //var indxForcastWorkings = new IndexForecastWorkings(this._eclId);//ComputeIndexForecast
@@ -35,6 +35,7 @@ namespace IFRS9_ECL.Core
             // Compute PD mapping
             var pDMapping = new PDMapping(this._eclId);
             pDMapping.Run();
+
 
             // Compute Sicr Input Workings (Added to PD Mappings)
             //var sicrInputWorkings = new SicrInputWorkings(this._eclId);
@@ -164,14 +165,14 @@ namespace IFRS9_ECL.Core
         //    return new List<PDI_MacroEcoOptimisit>();
         //}
 
-        public List<PDI_NonInternalModelInputs> Get_PDI_NonInternalModelInputs()
+        public List<PdInputAssumptionNonInternalModels> Get_PDI_NonInternalModelInputs()
         {
-            Match Object to SQL query 
-            var dt = DataAccess.i.GetData(PD_Queries.Get_nonInternalmodelInputQuery(this._eclId));
-            var data = new List<PDI_NonInternalModelInputs>();
+
+            var dt = DataAccess.i.GetData(PD_Queries.Get_nonInternalmodelInputQuery());//(this._eclId)); ;
+            var data = new List<PdInputAssumptionNonInternalModels>();
             foreach (DataRow dr in dt.Rows)
             {
-                var itm = DataAccess.i.ParseDataToObject(new PDI_NonInternalModelInputs(), dr);
+                var itm = DataAccess.i.ParseDataToObject(new PdInputAssumptionNonInternalModels(), dr);
                 data.Add(itm);
             }
             return data;

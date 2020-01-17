@@ -35,7 +35,7 @@ namespace IFRS9_ECL.Models.PD
         public string RatingModel { get; set; }
         public string Segment { get; set; }
         public long RatingUsed { get; set; }
-        public int? ClassificationScore { get; set; }
+        public int ClassificationScore { get; set; }
         public Guid WholesaleEclId { get; set; }
     }
 
@@ -54,7 +54,7 @@ namespace IFRS9_ECL.Models.PD
     public class SicrInputs
     {
        // public Guid Id { get; set; }
-        //public string ContractId { get; set; }
+        public string ContractId { get; set; }
         //public int RestructureIndicator { get; set; }
         //public int RestructureRisk { get; set; }
         //public int WatchlistIndicator { get; set; }

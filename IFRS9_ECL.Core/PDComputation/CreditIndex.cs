@@ -59,6 +59,20 @@ namespace IFRS9_ECL.Core.PDComputation
             return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesalePDCreditIndex_Table}]";
         }
 
+        public List<CreditIndex_Output> GetCreditIndexResult()
+        {
+                
+        var qry = $"select ProjectionMonth,BestEstimate, Optimistic, Downturn from {ECLStringConstants.i.WholesalePDCreditIndex_Table} where WholesaleEclId='{this._eclId}'";
+            var _lstRaw = DataAccess.i.GetData(qry);
+
+            var creditIndex = new List<CreditIndex_Output>();
+            foreach (DataRow dr in _lstRaw.Rows)
+            {
+                creditIndex.Add(DataAccess.i.ParseDataToObject(new CreditIndex_Output(), dr));
+            }
+            return creditIndex;
+        }
+
         private List<CreditIndex_Output> ComputeCreditIndex()
         {
             var creditIndices = new List<CreditIndex_Output>();

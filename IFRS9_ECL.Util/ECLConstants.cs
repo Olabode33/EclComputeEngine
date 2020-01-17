@@ -131,6 +131,15 @@ namespace IFRS9_ECL.Util
         private const double _statisticsStandardDeviation = 0.84;
         private const double _statisticsAverage = 0.00;
     }
+
+    public class nonInternalModelInput_Types
+    {
+        public const string CONS_STAGE_1 = "CONS_STAGE_1";
+        public const string CONS_STAGE_2 = "CONS_STAGE_2";
+        public const string COMM_STAGE_1 = "COMM_STAGE_1";
+        public const string COMM_STAGE_2 = "COMM_STAGE_2";
+    }
+
     public class ECLScheduleConstants
     {
         public const string Monthly = "M";
@@ -151,5 +160,61 @@ namespace IFRS9_ECL.Util
         Best,
         Optimistic,
         Downturn
+    }
+
+    public class FrameworkConstants
+    {
+        public const string EIR = "EIR";
+        public const string CIR = "CIR";
+        public const int MaxIrFactorProjectionMonths = 242;
+        public const int TempExcelVariable_LIM_MONTH = 204;
+        public const int TempExcelVariable_MPD_DEFAULT_CRITERIA = 3;
+        public const int ScenerioWorkingMaxMonth = 12;
+        public const int ProjectionMonth = 207;
+        public const int TempExcelVariable_LIM_CM = 60;
+    }
+
+
+    public static class ImpairmentRowKeys
+    {
+        public static string CreditIndexThreshold = "CreditIndexThresholdforDownturnRecoveries";
+        public static string BestScenarioLikelihood = "BestEstimateScenarioLikelihood";
+        public static string OptimisticScenarioLikelihood = "OptimisticScenarioLikelihood";
+        public static string DownturnScenarioLikelihood = "DownturnScenarioLikelihood";
+        public static string AbsoluteCreditQualityCriteria = "AbsoluteCreditQualityCriteria";
+        public static string AbsoluteCreditQualityThreshold = "AbsoluteCreditQualityThreshold";
+        public static string RelativeCreditQualityCriteria = "RelativeCreditQualityCriteria";
+        public static string RelativeCreditQualityThreshold = "RelativeCreditQualityThreshold";
+        public static string CreditRatingRankLowHighRisk = "CreditRatingRankLowHighRisk";
+        public static string CreditRatingRankLowRisk = "CreditRatingRankNotchesLowRisk";
+        public static string CreditRatingRankHighRisk = "CreditRatingRankNotchesHighRisk";
+        public static string CreditRatingDefaultIndicator = "CreditRatingDefaultIndicator";
+        public static string UseWatchlistIndicator = "UseWatchlistIndicator";
+        public static string UseRestructureIndicator = "UseRestructureIndicator?";
+        public static string ForwardTransitionStage1to1 = "ForwardTransitionsStage1to2";
+        public static string ForwardTransitionStage2to3 = "ForwardTransitionsStage2toStage3";
+        public static string BackwardTransitionsStage2to1 = "BackwardTransitionsProbationPeriodStage2to1";
+        public static string BackwardTransitionsStage3to2 = "BackwardTransitionsProbationPeriodStage3to2";
+        public static string CreditRatingRank1 = "CreditRatingRank1";
+        public static string CreditRatingRank2 = "CreditRatingRank2";
+        public static string CreditRatingRank3 = "CreditRatingRank3";
+        public static string CreditRatingRank4 = "CreditRatingRank4";
+        public static string CreditRatingRank5 = "CreditRatingRank5";
+        public static string CreditRatingRank6 = "CreditRatingRank6";
+        public static string CreditRatingRank7 = "CreditRatingRank7";
+        public static string CreditRatingRank8 = "CreditRatingRank8";
+        public static string CreditRatingRank9 = "CreditRatingRank9";
+        public static string CreditRatingRank10 = "CreditRatingRank10";
+        public static string CreditRatingRank11 = "CreditRatingRank11";
+        public static string CreditRatingRank12 = "CreditRatingRank12";
+        public static string CreditRatingRank13 = "CreditRatingRank13";
+        public static string CreditRatingRank14 = "CreditRatingRank14";
+        public static string CreditRatingRank15 = "CreditRatingRank15";
+        public static string CreditRatingRank16 = "CreditRatingRank16";
+        public static string CreditRatingRank17 = "CreditRatingRank17";
+        public static string CreditRatingRank18 = "CreditRatingRank18";
+        public static string CreditRatingRank19 = "CreditRatingRank19";
+        public static string CreditRatingRank20 = "CreditRatingRank20";
+
     }
 }

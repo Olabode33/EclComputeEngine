@@ -68,10 +68,10 @@ namespace IFRS9_ECL.Core.PDComputation
                 var pdGroupExp = new LifeTimeObject();
 
                 pdGroup10 = GetPdGroupForConsAndComm(pdGroup10, nonInternalModelInput, "10", month, vasicekIndexMonthValue);
-                consStage1Row = GetPdGroupForConsAndComm(consStage1Row, nonInternalModelInput, "CONS_STAGE_1", month, vasicekIndexMonthValue);
-                consStage2Row = GetPdGroupForConsAndComm(consStage2Row, nonInternalModelInput, "CONS_STAGE_2", month, vasicekIndexMonthValue);
-                commStage1Row = GetPdGroupForConsAndComm(commStage1Row, nonInternalModelInput, "COMM_STAGE_1", month, vasicekIndexMonthValue);
-                commStage2Row = GetPdGroupForConsAndComm(commStage2Row, nonInternalModelInput, "COMM_STAGE_2", month, vasicekIndexMonthValue);
+                consStage1Row = GetPdGroupForConsAndComm(consStage1Row, nonInternalModelInput, nonInternalModelInput_Types.CONS_STAGE_1, month, vasicekIndexMonthValue);
+                consStage2Row = GetPdGroupForConsAndComm(consStage2Row, nonInternalModelInput, nonInternalModelInput_Types.CONS_STAGE_2, month, vasicekIndexMonthValue);
+                commStage1Row = GetPdGroupForConsAndComm(commStage1Row, nonInternalModelInput, nonInternalModelInput_Types.COMM_STAGE_1, month, vasicekIndexMonthValue);
+                commStage2Row = GetPdGroupForConsAndComm(commStage2Row, nonInternalModelInput, nonInternalModelInput_Types.COMM_STAGE_2, month, vasicekIndexMonthValue);
                 pdGroupExp = GetPdGroupForConsAndComm(pdGroupExp, nonInternalModelInput, ECLStringConstants.i.ExpiredContractsPrefix, month, vasicekIndexMonthValue);
 
                 marginalPds.Add(pdGroup10);
@@ -86,9 +86,9 @@ namespace IFRS9_ECL.Core.PDComputation
             return marginalPds;
         }
 
-        private LifeTimeObject GetPdGroupForConsAndComm(LifeTimeObject dr, List<PDI_NonInternalModelInputs> nonInternalModelInput, string columnName, int month, double vasicekIndexMonthValue)
+        private LifeTimeObject GetPdGroupForConsAndComm(LifeTimeObject dr, List<PdInputAssumptionNonInternalModels> nonInternalModelInput, string columnName, int month, double vasicekIndexMonthValue)
         {
-            if (columnName == "10" || columnName == "EXP")
+            if (columnName == "10" || columnName == ECLStringConstants.i.ExpiredContractsPrefix)
             {
                 dr.PdGroup = columnName;
                 dr.Month = month;
@@ -98,29 +98,29 @@ namespace IFRS9_ECL.Core.PDComputation
             }
             else
             {
-                var consStageObj = nonInternalModelInput.FirstOrDefault(row => row.Month == month);
+                var consStageObj = nonInternalModelInput.FirstOrDefault(row => row.Month == month && row.PdGroup== columnName);
 
-                var consStageVal = 0.0;
-                if(columnName== "CONS_STAGE_1")
-                {
-                    consStageVal = consStageObj.CONS_STAGE_1;
-                }
-                if (columnName == "CONS_STAGE_2")
-                {
-                    consStageVal = consStageObj.CONS_STAGE_2;
-                }
-                if (columnName == "COMM_STAGE_1")
-                {
-                    consStageVal = consStageObj.COMM_STAGE_1;
-                }
-                if (columnName == "COMM_STAGE_2")
-                {
-                    consStageVal = consStageObj.COMM_STAGE_2;
-                }
+                //var consStageVal = 0.0;
+                //if(columnName== "CONS_STAGE_1")
+                //{
+                //    consStageVal = consStageObj.CONS_STAGE_1;
+                //}
+                //if (columnName == "CONS_STAGE_2")
+                //{
+                //    consStageVal = consStageObj.CONS_STAGE_2;
+                //}
+                //if (columnName == "COMM_STAGE_1")
+                //{
+                //    consStageVal = consStageObj.COMM_STAGE_1;
+                //}
+                //if (columnName == "COMM_STAGE_2")
+                //{
+                //    consStageVal = consStageObj.COMM_STAGE_2;
+                //}
 
-                dr.PdGroup = columnName;
+                dr.PdGroup = consStageObj.PdGroup;
                 dr.Month = month;
-                dr.Value = consStageVal * vasicekIndexMonthValue;
+                dr.Value = consStageObj.MarginalDefaultRate * vasicekIndexMonthValue;
 
                 return dr;
             }
@@ -134,7 +134,7 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             return _vasicekWorkings.ComputeVasicekScenario();
         }
-        protected List<PDI_NonInternalModelInputs> GetNonInternalModelInputsData()
+        protected List<PdInputAssumptionNonInternalModels> GetNonInternalModelInputsData()
         {
             return new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_NonInternalModelInputs();
         }

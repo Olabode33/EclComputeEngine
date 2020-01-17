@@ -47,7 +47,7 @@ namespace IFRS9_ECL.Data
         {
             return $"SELECT [Date],MacroeconomicVariableId MacroEconomicVariableId,BestValue BestEstimateMacroEconomicValue,OptimisticValue OptimisticMacroEconomicValue, DownturnValue DowntimeMacroEconomicValue, WholesaleEclId EclId FROM WholesaleEclPdAssumptionMacroeconomicProjections where WholesaleEclId='{eclId}'";
         }
-        public static string Get_nonInternalmodelInputQuery(Guid eclId)
+        public static string Get_nonInternalmodelInputQuery()//(Guid eclId)
         {
             return $"SELECT Month, PdGroup, MarginalDefaultRate, CummulativeSurvival FROM PdInputAssumptionNonInternalModels";// where EclId='{eclId}'";
             //return $"SELECT Month,CONS_STAGE_1,CONS_STAGE_2,COMM_STAGE_1,COMM_STAGE_2, EclId FROM PDI_NonInternalModelInputs where EclId='{eclId}'";

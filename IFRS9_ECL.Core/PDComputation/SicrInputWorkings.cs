@@ -108,11 +108,26 @@ namespace IFRS9_ECL.Core.PDComputation
             sicrRow.LifetimePd = ComputeLifetimeAndRedefaultPds(lifetimePds, contractPdGroup, contractTtmMonths);
             sicrRow.RedefaultLifetimePd = ComputeLifetimeAndRedefaultPds(redefaultLifetimePds, contractPdGroup, contractTtmMonths);
             sicrRow.Stage1Transition = int.Parse(Math.Round(ComputeStageDaysPastDue(impairedDate)).ToString());
-            sicrRow.Stage2Transition = int.Parse(ComputeStageDaysPastDue(defaultDate).ToString());
+            sicrRow.Stage2Transition = int.Parse(Math.Round(ComputeStageDaysPastDue(defaultDate)).ToString());
             sicrRow.DaysPastDue = ComputeDaysPastDue(maxClassification, maxDpd);
 
             return sicrRow;
 
+        }
+
+
+        public List<SicrInputs> GetSircInputResult()
+        {
+            var qry = Queries.PD_GetSIRCInputResult(this._eclId);
+            var dt = DataAccess.i.GetData(qry);
+            var lifeTimeProjections = new List<SicrInputs>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new SicrInputs(), dr));
+            }
+
+            return lifeTimeProjections;
         }
 
 
@@ -138,7 +153,8 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double ComputeStageDaysPastDue(string date)
         {
-            return date == null ? 0 : ExcelFormulaUtil.YearFrac(DateTime.Parse(date), ECLNonStringConstants.i.reportingDate) * 365;
+            var r= date == null ? 0 : ExcelFormulaUtil.YearFrac(DateTime.Parse(date), ECLNonStringConstants.i.reportingDate) * 365;
+            return r;
         }
         protected double ComputeLifetimeAndRedefaultPds(List<LifeTimeObject> lifetimePd, string contractPdMapping, int noOfMonths)
         {

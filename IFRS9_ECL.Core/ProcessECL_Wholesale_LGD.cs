@@ -36,6 +36,11 @@ namespace IFRS9_ECL.Core
 
             var collateral_R = ECLTasks.i.Collateral_OMV_FSV(lstRaw, LGDPreCalc);
             Console.WriteLine($"Computed Collateral OVM - {DateTime.Now}");
+
+            ///
+            /// Save Collateral OMV_FSV
+            ///
+
             //Insert to Database
             ExecuteNative.SaveLGDCollaterals(collateral_R, masterGuid);
             Console.WriteLine($"Save LGD Collateral - {DateTime.Now}");

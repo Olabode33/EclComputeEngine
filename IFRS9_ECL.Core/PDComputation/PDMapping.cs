@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,16 +32,36 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var pdMappings = ComputePdMappingTable();
 
+            var c = new WholesalePdMappings();
+
+            Type myObjOriginalType = c.GetType();
+            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
+
             var dt = new DataTable();
+
+            for (int i = 0; i < myProps.Length; i++)
+            {
+                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
+            }
+            dt.Columns.Remove("AccountNo");
+            dt.Columns.Remove("ProductType");
+            dt.Columns.Remove("RatingModel");
+            dt.Columns.Remove("RatingUsed");
+            dt.Columns.Remove("ClassificationScore");
+            dt.Columns.Remove("Segment");
+
             foreach (var _d in pdMappings)
             {
                 _d.Id = Guid.NewGuid();
-                _d.Id = _eclId;
+                _d.WholesaleEclId = _eclId;
+
                 dt.Rows.Add(new object[]
                     {
-                            _d.Id, _d.ContractId, _d.PdGroup, _d.TtmMonths, _d.MaxDpd, _d.MaxClassificationScore, _d.Pd12Month, _d.LifetimePd, _d.RedefaultLifetimePD, _d.Stage1Transition, _d.Stage2Transition, _d.DaysPastDue, _d.RatingModel, _d.Segment, _d.RatingUsed, _d.ClassificationScore, _d.WholesaleEclId
+                            _d.Id, _d.ContractId, _d.PdGroup, _d.TtmMonths, _d.MaxDpd, _d.MaxClassificationScore, _d.Pd12Month, _d.LifetimePd, _d.RedefaultLifetimePD, _d.Stage1Transition, _d.Stage2Transition, _d.DaysPastDue, _d.WholesaleEclId
                     });
             }
+
+          
             var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesalePdMappings_Table);
 
             return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesalePdMappings_Table}]";
@@ -81,7 +102,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 mappingRow.RatingModel = loanbookRecord.RatingModel;
                 mappingRow.Segment = loanbookRecord.Segment;
                 mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
-                mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord);
+                mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord)??0;
                 mappingRow.MaxDpd = ComputeMaxDpdPerRecord(loanbookRecord, _NonExpLoanbook_data);
                 mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
                 mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
@@ -135,6 +156,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected int ComputeTimeToMaturityMonthsPerRecord(Loanbook_Data loanbookRecord, int expOdPerformacePastRepoting, int odPerformancePastExpiry)
         {
+
             if (loanbookRecord.ContractId.Substring(0, 3) == ECLStringConstants.i.ExpiredContractsPrefix)
             {
                 return 0;
@@ -151,6 +173,10 @@ namespace IFRS9_ECL.Core.PDComputation
                 }
                 else
                 {
+                    if(loanbookRecord.ContractEndDate==null)
+                    {
+                        return 0;
+                    }
                     endDate = DateTime.Parse(loanbookRecord.ContractEndDate.ToString());
                 }
                 var eomonth = ExcelFormulaUtil.EOMonth(endDate);
@@ -182,7 +208,7 @@ namespace IFRS9_ECL.Core.PDComputation
         protected int ComputeMaxClassificationScorePerRecord(WholesalePdMappings pdMappingWorkingRecord, List<WholesalePdMappings> pdMappingWorkings)
         {
             var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
-            return r ?? 0;
+            return r;
         }
         protected long ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
         {
@@ -215,7 +241,18 @@ namespace IFRS9_ECL.Core.PDComputation
             var current_rating = loanbookRecord.CurrentRating.Value; ;
             return current_rating > 10 ? current_rating / 10 : current_rating;
         }
-      
 
+        internal List<WholesalePdMappings> GetPdMapping()
+        {
+            var qry = Queries.PdMapping(this._eclId);
+            var _PdMapping = DataAccess.i.GetData(qry);
+
+            var pdMapping = new List<WholesalePdMappings>();
+            foreach (DataRow dr in _PdMapping.Rows)
+            {
+                pdMapping.Add(DataAccess.i.ParseDataToObject(new WholesalePdMappings(), dr));
+            }
+            return pdMapping;
+        }
     }
 }

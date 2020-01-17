@@ -41,7 +41,7 @@ namespace IFRS9_ECL.Data
             return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleEadEirProjections_Table}]";
         }
 
-        public static string SaveLGDAccountdata(List<AccountData> d, Guid masterGuid)
+        public static string SaveLGDAccountdata(List<LGDAccountData> d, Guid masterGuid)
         {
             //truncate table
             var qry = $"truncate table {ECLStringConstants.i.WholesaleLGDAccountData_Table}";
@@ -49,7 +49,7 @@ namespace IFRS9_ECL.Data
 
             if (tR >= 0)
             {
-                var c = new AccountData();
+                var c = new LGDAccountData();
 
                 Type myObjOriginalType = c.GetType();
                 PropertyInfo[] myProps = myObjOriginalType.GetProperties();
@@ -173,7 +173,7 @@ namespace IFRS9_ECL.Data
                     var g = Guid.NewGuid();
                     dt.Rows.Add(new object[]
                         {
-                            g, _d.contract_no,_d.eir_group,_d.cir_group, _d.months, _d.value, master_G.ToString()
+                            g, _d.Contract_no,_d.Eir_Group,_d.Cir_Group, _d.Month, _d.Value, master_G.ToString()
                         });
                 }
                 var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleEadLifetimeProjections_Table);

@@ -21,10 +21,10 @@ namespace IFRS9_ECL.Models
 
     public class LifeTimeProjections
     {
-        public string contract_no { get; set; }
-        public string eir_group { get; set; }
-        public string cir_group { get; set; }
-        public int months { get; set; }
-        public double value { get; set; }
+        public string Contract_no { get; set; }
+        public string Eir_Group { get; set; }
+        public string Cir_Group { get; set; }
+        public int Month { get; set; }
+        public double Value { get; set; }
     }
 }
