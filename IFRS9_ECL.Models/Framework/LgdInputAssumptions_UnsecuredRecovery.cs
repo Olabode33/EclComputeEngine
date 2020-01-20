@@ -28,5 +28,6 @@ namespace IFRS9_ECL.Models.Framework
     {
         public string Key { get; set; }
         public string Value { get; set; }
+        public int LgdGroup { get; set; }
     }
 }

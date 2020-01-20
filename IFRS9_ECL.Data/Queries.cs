@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -64,7 +65,17 @@ namespace IFRS9_ECL.Data
 
         public static string LGD_WholesaleLgdAccountDatas(Guid eclId)
         {
-            return $"select Id, CONTRACT_NO, TTR_YEARS, COST_OF_RECOVERY, GUARANTOR_PD, GUARANTOR_LGD, GUARANTEE_VALUE, GUARANTEE_LEVEL from WholesaleLGDAccountData where WholesaleEclId ='{eclId}'";
+            return $"select Id, CONTRACT_NO, TTR_YEARS, COST_OF_RECOVERY, GUARANTOR_PD, GUARANTOR_LGD, GUARANTEE_VALUE, GUARANTEE_LEVEL from WholesaleLGDAccountData where WholesaleEclId ='{eclId.ToString()}'";
+        }
+
+        public static string Credit_Index(Guid eclId)
+        {
+            return $"select ProjectionMonth,BestEstimate, Optimistic, Downturn from {ECLStringConstants.i.WholesalePDCreditIndex_Table} where WholesaleEclId='{eclId.ToString()}'";
+        }
+
+        public static string LGD_WholesaleLgdCollateralDatas(Guid eclId)
+        {
+            return $"select Id, contract_no, customer_no, debenture_omv, cash_omv, inventory_omv, plant_and_equipment_omv, residential_property_omv, commercial_property_omv, receivables_omv, shares_omv, vehicle_omv, total_omv, debenture_fsv, cash_fsv, inventory_fsv, plant_and_equipment_fsv, residential_property_fsv, commercial_property_fsv, receivables_fsv, shares_fsv, vehicle_fsv from WholesaleLGDAccountData where WholesaleEclId ='{eclId}'";
         }
 
         public static string WholesaleEadCirProjections(Guid eclId)
@@ -72,14 +83,13 @@ namespace IFRS9_ECL.Data
             return $"select cir_group, month months, value, cir_effective from WholesaleEadCirProjections where WholesaleEclId ='{eclId}'";
         }
 
-        public static string LgdCollateralCollateralProjection(Guid eclId, int collateralProjectionType)
+        public static string LgdCollateralProjection(Guid eclId, int collateralProjectionType)
         {
             return $"select CollateralProjectionType, Debenture, Cash, Inventory, Plant_And_Equipment, Residential_Property, Commercial_Property, Receivables, Shares, Vehicle, Month from WholesaleLgdCollateralProjection where WholesaleEclId='{eclId}' and CollateralProjectionType={collateralProjectionType}";
         }
-        public static string LgdCollateralData_Fsv(Guid eclId)
-        {
-            return $"select contract_no, customer_no, debenture_fsv debenture, cash_fsv cash, inventory_fsv inventory, plant_and_equipment_fsv plant_and_equipment, residential_property_fsv residential_property, commercial_property_fsv commercial_property, receivables_fsv receivables, shares_fsv shares, vehicle_fsv vehicle from WholesaleLGDCollateral where WholesaleEclId='{eclId}'";
-        }
+
+
+
 
         public static string PdMapping(Guid eclId)
         {
@@ -93,7 +103,7 @@ namespace IFRS9_ECL.Data
 
         public static string eclAssumptions(Guid eclId)
         {
-            return $"select Key, Value from WholesaleEclAssumptions where WholesaleEclId='{eclId}'";
+            return $"select Key, Value, LgdGroup from WholesaleEclAssumptions where WholesaleEclId='{eclId}'";
         }
     }
 }

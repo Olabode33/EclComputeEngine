@@ -4,7 +4,7 @@ using System.Text;
 
 namespace IFRS9_ECL.Models
 {
-    public class Collateral
+    public class LGDCollateralData
     {
         public Guid Id { get; set; }
         public string contract_no { get; set; }

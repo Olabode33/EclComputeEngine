@@ -57,5 +57,32 @@ namespace IFRS9_ECL.Core
 
             return true;
         }
+        public List<LGDAccountData> GetLgdContractData(Guid _eclId)
+        {
+            var qry = Queries.LGD_WholesaleLgdAccountDatas(_eclId);
+            var dt = DataAccess.i.GetData(qry);
+            var lgdAccountData = new List<LGDAccountData>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                lgdAccountData.Add(DataAccess.i.ParseDataToObject(new LGDAccountData(), dr));
+            }
+
+            return lgdAccountData;
+        }
+
+        public List<LGDCollateralData> GetLGDCollateralData(Guid _eclId)
+        {
+            var qry = Queries.LGD_WholesaleLgdCollateralDatas(_eclId);
+            var dt = DataAccess.i.GetData(qry);
+            var lgdCollateralData = new List<LGDCollateralData>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                lgdCollateralData.Add(DataAccess.i.ParseDataToObject(new LGDCollateralData(), dr));
+            }
+
+            return lgdCollateralData;
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected IrFactorWorkings _irFactorWorkings;
         protected UpdatedFSVsWorkings _updatedFSVsWorkings;
         protected LifetimeEadWorkings _lifetimeEad;
+        protected ScenarioLifetimeLGD _scenarioLifetimeLGD;
 
         ECL_Scenario _scenario;
         Guid _eclId;
@@ -26,6 +27,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _lifetimeEad = new LifetimeEadWorkings(eclId);
             _irFactorWorkings = new IrFactorWorkings(eclId);
             _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId);
+            _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId);
         }
         public void Run()
         {
@@ -51,12 +53,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 var tempFsv = updatedFsv.FirstOrDefault(x => x.ContractNo == contractId);
                 double[] fsvArray = new double[9];
                 fsvArray[0] = tempFsv.Cash;
-                fsvArray[1] = tempFsv.Commercial_Property;
+                fsvArray[1] = tempFsv.CommercialProperty;
                 fsvArray[2] = tempFsv.Debenture;
                 fsvArray[3] = tempFsv.Inventory;
-                fsvArray[4] = tempFsv.Plant_And_Equipment;
+                fsvArray[4] = tempFsv.PlantAndEquipment;
                 fsvArray[5] = tempFsv.Receivables;
-                fsvArray[6] = tempFsv.Residential_Property;
+                fsvArray[6] = tempFsv.ResidentialProperty;
                 fsvArray[7] = tempFsv.Shares;
                 fsvArray[8] = tempFsv.Vehicle;
 
@@ -118,7 +120,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private List<LGDAccountData> GetContractData()
         {
-            return this._lifetimeEad.GetTempContractData();
+            return ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
         }
         protected List<IrFactor> GetMarginalDiscountFactor()
         {
@@ -134,13 +136,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LgdCollateralCollateralProjection(this._eclId, 0);
+                    qry = Queries.LgdCollateralProjection(this._eclId, 0);
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LgdCollateralCollateralProjection(this._eclId,1);
+                    qry = Queries.LgdCollateralProjection(this._eclId,1);
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LgdCollateralCollateralProjection(this._eclId,2);
+                    qry = Queries.LgdCollateralProjection(this._eclId,2);
                     break;
                 default:
                     return null;
@@ -154,11 +156,63 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LgdCollateralProjection(), dr));
             }
+
+            if(lifetimePd.Count!=61)
+            {
+                var lifetimePd_Month0 = lifetimePd.FirstOrDefault(o => o.Month == 0);
+                var assumptions=_scenarioLifetimeLGD.GetECLLgdAssumptions();
+                if(_scenario== ECL_Scenario.Best)
+                {
+                    assumptions=assumptions.Where(o => o.LgdGroup == 5).ToList();
+                }
+                if (_scenario == ECL_Scenario.Optimistic)
+                {
+                    assumptions = assumptions.Where(o => o.LgdGroup == 6).ToList();
+                }
+                if (_scenario == ECL_Scenario.Downturn)
+                {
+                    assumptions = assumptions.Where(o => o.LgdGroup == 7).ToList();
+                }
+
+                var debenture=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
+                var cash = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
+                var commercialProperty = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
+                var inventory = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
+                var plantEquipment = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
+                var receivables = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
+                var residentialProperty = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
+                var shares = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
+                var vehicle = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
+
+                var itms = new List<LgdCollateralProjection>();
+
+                itms.Add(lifetimePd_Month0);
+
+                for(int i=1; i<=60; i++)
+                {
+                    var col = new LgdCollateralProjection();
+
+                    col.Month = i;
+                    col.Debenture=Math.Max(Math.Pow(itms[i-1].Debenture * (1 + debenture), (1 / 12)), 0);
+                    col.Cash = Math.Max(Math.Pow(itms[i - 1].Cash * (1 + cash), (1 / 12)), 0);
+                    col.Commercial_Property = Math.Max(Math.Pow(itms[i - 1].Commercial_Property * (1 + commercialProperty), (1 / 12)), 0);
+                    col.Inventory = Math.Max(Math.Pow(itms[i - 1].Inventory * (1 + inventory), (1 / 12)), 0);
+                    col.Plant_And_Equipment = Math.Max(Math.Pow(itms[i - 1].Plant_And_Equipment * (1 + plantEquipment), (1 / 12)), 0);
+                    col.Receivables = Math.Max(Math.Pow(itms[i - 1].Receivables * (1 + receivables), (1 / 12)), 0);
+                    col.Residential_Property = Math.Max(Math.Pow(itms[i - 1].Residential_Property * (1 + residentialProperty), (1 / 12)), 0);
+                    col.Shares = Math.Max(Math.Pow(itms[i - 1].Shares * (1 + shares), (1 / 12)), 0);
+                    col.Vehicle = Math.Max(Math.Pow(itms[i - 1].Vehicle * (1 + vehicle), (1 / 12)), 0);
+
+                    itms.Add(col);
+                }
+                lifetimePd = itms;
+            }
+            
             Console.WriteLine("Completed pass data to object");
 
             return lifetimePd;
         }
-        protected List<LgdCollateralFsvProjectionUpdate> GetUpdatedFsvResult()
+        protected List<updatedFSV> GetUpdatedFsvResult()
         {
             return _updatedFSVsWorkings.ComputeUpdatedFSV();
         }

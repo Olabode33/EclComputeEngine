@@ -206,7 +206,7 @@ namespace IFRS9_ECL.Core
         //}
 
 
-        internal List<CoR> CalculateCoR_Main(List<LGDPrecalculationOutput> lGDPreCalc, List<Loanbook_Data> loanbook_Data, List<Collateral> lstCollateral)
+        internal List<CoR> CalculateCoR_Main(List<LGDPrecalculationOutput> lGDPreCalc, List<Loanbook_Data> loanbook_Data, List<LGDCollateralData> lstCollateral)
         {
             var CoR_DT = new List<CoR>();
             LGD_Inputs inputs = new LGD_Inputs();
@@ -388,7 +388,7 @@ namespace IFRS9_ECL.Core
             //return CoR_DT;
         }
 
-        public List<LGDAccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<Collateral> collateralTable, List<CoR> coR)
+        public List<LGDAccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<LGDCollateralData> collateralTable, List<CoR> coR)
         {
             var accountData = new List<LGDAccountData>();
 
@@ -552,9 +552,9 @@ namespace IFRS9_ECL.Core
 
             return value;
         }
-        internal List<Collateral> Collateral_OMV_FSV(List<Loanbook_Data> lstRaw, List<LGDPrecalculationOutput> lGDPreCalc)
+        internal List<LGDCollateralData> Collateral_OMV_FSV(List<Loanbook_Data> lstRaw, List<LGDPrecalculationOutput> lGDPreCalc)
         {
-            var collaterals= new List<Collateral>();
+            var collaterals= new List<LGDCollateralData>();
             LGD_Inputs input = new LGD_Inputs();
 
             var pd_x_ead_List = lGDPreCalc.Select(O => O.pd_x_ead).ToList();
@@ -563,7 +563,7 @@ namespace IFRS9_ECL.Core
             //foreach (var itm in lstRaw)
                 for(int i=0; i< lstRaw.Count; i++)
             {
-                var collateralTable = new Collateral();
+                var collateralTable = new LGDCollateralData();
 
                 input.debenture_omv = lstRaw[i].DebentureOMV??0;
                 input.cash_omv = lstRaw[i].CashOMV ?? 0;
@@ -786,7 +786,7 @@ namespace IFRS9_ECL.Core
             
         }
 
-        private Collateral SumProduct(List<double> pd_x_ead_List, Collateral collateralTable, List<int> debenture_Omv_array, List<int> cash_Omv_array, List<int> inventory_Omv_array, List<int> plant_Equipment_Omv_array, List<int> residential_Omv_array, List<int> commercial_Omv_array, List<int> receivables_Omv_array, List<int> shares_Omv_array, List<int> vehicle_Omv_array, List<int> debenture_Fsv_array, List<int> cash_Fsv_array, List<int> inventory_Fsv_array, List<int> plant_Equipment_Fsv_array, List<int> residential_Fsv_array, List<int> commercial_Fsv_array, List<int> receivables_Fsv_array, List<int> shares_Fsv_array, List<int> vehicle_Fsv_array, List<int> customerNo_array, List<int> projectFinance_array, LGD_Inputs inputs)
+        private LGDCollateralData SumProduct(List<double> pd_x_ead_List, LGDCollateralData collateralTable, List<int> debenture_Omv_array, List<int> cash_Omv_array, List<int> inventory_Omv_array, List<int> plant_Equipment_Omv_array, List<int> residential_Omv_array, List<int> commercial_Omv_array, List<int> receivables_Omv_array, List<int> shares_Omv_array, List<int> vehicle_Omv_array, List<int> debenture_Fsv_array, List<int> cash_Fsv_array, List<int> inventory_Fsv_array, List<int> plant_Equipment_Fsv_array, List<int> residential_Fsv_array, List<int> commercial_Fsv_array, List<int> receivables_Fsv_array, List<int> shares_Fsv_array, List<int> vehicle_Fsv_array, List<int> customerNo_array, List<int> projectFinance_array, LGD_Inputs inputs)
         {
             for (int i = 0; i < pd_x_ead_List.Count; i++)
             {

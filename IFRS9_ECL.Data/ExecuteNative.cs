@@ -78,7 +78,7 @@ namespace IFRS9_ECL.Data
             return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleLGDAccountData_Table}]";
         }
 
-        public static string SaveLGDCollaterals(List<Collateral> d, Guid masterGuid)
+        public static string SaveLGDCollaterals(List<LGDCollateralData> d, Guid masterGuid)
         {
             //truncate table
             var qry = $"truncate table {ECLStringConstants.i.WholesaleLGDCollateral_Table}";
@@ -86,7 +86,7 @@ namespace IFRS9_ECL.Data
 
             if (tR >= 0)
             {
-                var c = new Collateral();
+                var c = new LGDCollateralData();
 
                 Type myObjOriginalType = c.GetType();
                 PropertyInfo[] myProps = myObjOriginalType.GetProperties();

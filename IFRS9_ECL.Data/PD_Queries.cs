@@ -77,53 +77,6 @@ namespace IFRS9_ECL.Data
         //{
         //    return $"SELECT [Assumptions],[Value], EclId FROM [PDI_Assumptions] where EclId='{eclId}'";
         //}
-        public static string Get_impairmentAssumptionsQuery(Guid eclId)
-        {
-            return $"SELECT [Assumption] FROM [ImpairmentAssumptions] where EclId='{eclId}'";
-        }
-        public static string Get_tempLgdContractDataQuery(string testAccountNo)
-        {
-            return $"SELECT [CONTRACT_NO] ,[ACCOUNT_NO] ,[CUSTOMER_NO] ,[PRODUCT_TYPE] ,[TTR_YEARS] ,[COST_OF_RECOVERY_%] COST_OF_RECOVERY, [GUARANTOR_PD], [GUARANTOR_LGD], [GUARANTEE_VALUE], [GUARANTEE_LEVEL] FROM [TempLGDContractData] Where [CONTRACT_NO] = '{testAccountNo}'"; 
-        }
-        public static string Get_tempLgdCollateralProjectionOptimisticQuery
-        {
-            get { return "SELECT [MONTH],[CASH],[COMMERCIAL_PROPERTY],[DEBENTURE],[INVENTORY],[PLANT_AND_EQUIPMENT],[RECEIVABLES],[RESIDENTIAL_PROPERTY],[SHARES],[VEHICLE] FROM [TempLGDCollateralProjectionOptimistic]"; }
-        }
-        public static string Get_tempLgdCollateralProjectionDownturnQuery
-        {
-            get { return "SELECT [MONTH],[CASH],[COMMERCIAL_PROPERTY],[DEBENTURE],[INVENTORY],[PLANT_AND_EQUIPMENT],[RECEIVABLES],[RESIDENTIAL_PROPERTY],[SHARES],[VEHICLE] FROM [TempLGDCollateralProjectionDownturn]"; }
-        }
-        public static string Get_tempLgdCollateralProjectionBestQuery
-        {
-            get { return "SELECT [MONTH],[CASH],[COMMERCIAL_PROPERTY],[DEBENTURE],[INVENTORY],[PLANT_AND_EQUIPMENT],[RECEIVABLES],[RESIDENTIAL_PROPERTY],[SHARES],[VEHICLE] FROM [TempLGDCollateralProjectionBest]"; }
-        }
-        public static string Get_tempLgdCollateralTypeOmvQuery
-        {
-            get { return "SELECT [CONTRACT_NO],[CASH],[COMMERCIAL_PROPERTY],[DEBENTURE],[INVENTORY],[PLANT_AND_EQUIPMENT],[RECEIVABLES],[RESIDENTIAL_PROPERTY],[SHARES],[VEHICLE] FROM [TempLGDCollateralTypeOMV]"; }
-        }
-        public static string Get_tempLgdCollateralTypeFsvQuery
-        {
-            get
-            {
-                return "SELECT [CONTRACT_NO],[CASH],[COMMERCIAL_PROPERTY],[DEBENTURE],[INVENTORY],[PLANT_AND_EQUIPMENT],[RECEIVABLES],[RESIDENTIAL_PROPERTY],[SHARES],[VEHICLE] FROM [TempLGDCollateralTypeFSV]";
-            }
-        }
-        public static string Get_tempEadInputQuery
-        {
-            get { return "SELECT [CONTRACT_ID] ,[EIR_GROUP] ,[CIR_GROUP], [Month] from TempEADInputs"; }
-        }
-        public static string Get_tempEirProjectionsQuery
-        {
-            get { return "SELECT [EIR_GROUPS],[Month] from TempEADEirProjections"; }
-        }
-        public static string Get_tempCirProjectionQuery
-        {
-            get { return "SELECT [CIR_GROUPS],[Month] from TempEADCirProjections"; }
-        }
-        public static string Get_tempLgdInputAssumptions
-        {
-            get { return "SELECT [SEGMENT_PRODUCT_TYPE],[CURE_RATE],[Scenario],[0] _0,[90] _90,[180] _180,[270] _270,[360] _360 FROM [LgdInputAssumptions]"; }
-        }
-       
+
     }
 }

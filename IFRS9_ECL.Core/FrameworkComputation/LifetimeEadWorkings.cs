@@ -40,7 +40,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var eadInputs = GetTempEadInputData();
             var sircInputs = GetSircInputResult();
-            var contractData = GetTempContractData();
+            var contractData = ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
             var marginalAccumulationFactor = GetMarginalAccumulationFactorResult();
 
             var refined_Raw_Data = GetRefinedLoanBookData();
@@ -160,19 +160,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return cirProjectionData;
         }
 
-        public List<LGDAccountData> GetTempContractData()
-        {
-            var qry = Queries.LGD_WholesaleLgdAccountDatas(this._eclId);
-            var dt = DataAccess.i.GetData(qry);
-            var lifeTimeProjections = new List<LGDAccountData>();
-
-            foreach (DataRow dr in dt.Rows)
-            {
-                lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new LGDAccountData(), dr));
-            }
-
-            return lifeTimeProjections;
-        }
+        
 
         private List<SicrInputs> GetSircInputResult()
         {

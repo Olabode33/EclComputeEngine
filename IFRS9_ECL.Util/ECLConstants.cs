@@ -5,7 +5,7 @@ namespace IFRS9_ECL.Util
     public class ECLStringConstants
     {
         public static readonly ECLStringConstants i = new ECLStringConstants();
-        public string yes= "yes";
+        public string yes = "yes";
 
         public string WholesaleEadLifetimeProjections_Table { get { return "WholesaleEadLifetimeProjections"; } }
         public string WholesaleEadEirProjections_Table { get { return "WholesaleEadEirProjections"; } }
@@ -92,7 +92,7 @@ namespace IFRS9_ECL.Util
 
 
         public string CustomerNo_array { get { return "CustomerNo_array"; } }
-        
+
 
 
         ///this is called EXP_OD_PERFORMACE_PAST_EXPIRY on the excel and it is obtained from the EAD calibration. It will be obtained from the DB
@@ -111,7 +111,7 @@ namespace IFRS9_ECL.Util
         public double Consumer { get { return 1; } } ///It will be obtained from the DB
         public double NGN_Currency { get { return 1; } }
         public double Conversion_Factor_OBE { get { return 1; } } ///It will be obtained from the DB this is in percentage
-        public DateTime reportingDate { get {return new DateTime(2016, 12, 31); } }
+        public DateTime reportingDate { get { return new DateTime(2016, 12, 31); } }
 
         public double IndexWeight1 = 0.575691023137874;
         public double IndexWeight2 = 0.424308976862126;
@@ -120,7 +120,7 @@ namespace IFRS9_ECL.Util
         public int prepaymentFactor { get { return 0; } }
 
         public string SnpMapping = "SnpMapping";
-        public int MaxMarginalLifetimeRedefaultPdMonth= 120;
+        public int MaxMarginalLifetimeRedefaultPdMonth = 120;
     }
 
 
@@ -172,6 +172,20 @@ namespace IFRS9_ECL.Util
         public const int ScenerioWorkingMaxMonth = 12;
         public const int ProjectionMonth = 207;
         public const int TempExcelVariable_LIM_CM = 60;
+
+        public const string CreditQualityCriteriaNone = "None";
+        public const string CreditQualityCriteria12MonthPd = "12-month PD";
+        public const string CreditQualityCriteriaLifetimePd = "Lifetime PD";
+
+        public const double CollateralHaircutApplied_Cash = 0.0;
+        public const double CollateralHaircutApplied_CommercialProperty = 0.32;
+        public const double CollateralHaircutApplied_Debenture = 0.26;
+        public const double CollateralHaircutApplied_Invertory = 0.50;
+        public const double CollateralHaircutApplied_PlantEquipment = 0.32;
+        public const double CollateralHaircutApplied_Receivables = 0.28;
+        public const double CollateralHaircutApplied_ResidentialProperty = 0.24;
+        public const double CollateralHaircutApplied_Shares = 0.0;
+        public const double CollateralHaircutApplied_Vehicle = 0.47;
     }
 
 
@@ -195,6 +209,8 @@ namespace IFRS9_ECL.Util
         public static string ForwardTransitionStage2to3 = "ForwardTransitionsStage2toStage3";
         public static string BackwardTransitionsStage2to1 = "BackwardTransitionsProbationPeriodStage2to1";
         public static string BackwardTransitionsStage3to2 = "BackwardTransitionsProbationPeriodStage3to2";
+        public static string CreditRatingRank = "CreditRatingRank";
+
         public static string CreditRatingRank1 = "CreditRatingRank1";
         public static string CreditRatingRank2 = "CreditRatingRank2";
         public static string CreditRatingRank3 = "CreditRatingRank3";
@@ -216,5 +232,22 @@ namespace IFRS9_ECL.Util
         public static string CreditRatingRank19 = "CreditRatingRank19";
         public static string CreditRatingRank20 = "CreditRatingRank20";
 
+
+
+    }
+
+
+
+    public static class LGDCollateralGrowthAssumption
+    {
+        public static string Debenture = "debenture";
+        public static string Cash = "cash";
+        public static string Inventory = "inventory";
+        public static string PlantEquipment = "plantequipment";
+        public static string ResidentialProperty = "residentialproperty";
+        public static string CommercialProperty = "commercialproperty";
+        public static string Receivables = "receivables";
+        public static string Shares = "shares";
+        public static string Vehicle = "vehicle";
     }
 }

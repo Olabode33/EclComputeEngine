@@ -42,7 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountData.cs" />
-    <Compile Include="Collateral.cs" />
+    <Compile Include="Framework\updatedFSV.cs" />
+    <Compile Include="LGDCollateralData.cs" />
     <Compile Include="CoR.cs" />
     <Compile Include="Framework\LgdCollateralProjection.cs" />
     <Compile Include="Framework\FinalEcl.cs" />

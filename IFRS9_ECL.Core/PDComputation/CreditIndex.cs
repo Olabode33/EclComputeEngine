@@ -61,8 +61,8 @@ namespace IFRS9_ECL.Core.PDComputation
 
         public List<CreditIndex_Output> GetCreditIndexResult()
         {
-                
-        var qry = $"select ProjectionMonth,BestEstimate, Optimistic, Downturn from {ECLStringConstants.i.WholesalePDCreditIndex_Table} where WholesaleEclId='{this._eclId}'";
+
+            var qry = Queries.Credit_Index(this._eclId);
             var _lstRaw = DataAccess.i.GetData(qry);
 
             var creditIndex = new List<CreditIndex_Output>();

@@ -3,6 +3,7 @@ using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.PD;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         }
 
+        public ScenarioLifetimeLGD(Guid eclId)
+        {
+            this._eclId = eclId;
+        }
+
         protected ECL_Scenario _scenario;
         protected SicrWorkings _sicrWorkings;
         protected LifetimeEadWorkings _lifetimeEadWorkings;
@@ -48,12 +54,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             var lifetimeLGD = new List<LifetimeLgd>();
 
-            var contractData = GetContractData();
+            var contractData = ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
             var pdMapping = GetPdIndexMappingResult();
             var lgdAssumptions = GetLgdAssumptionsData();
             var sicrInput = GetSicrResult();
             var stageClassification = GetStagingClassificationResult();
-            var impairmentAssumptions = GetImpairmentAssumptions();
+            var impairmentAssumptions = GetECLLgdAssumptions();
             var lifetimePd = GetScenarioLifetimePdResult();
             var redefaultPd = GetScenarioRedfaultLifetimePdResult();
             var lifetimeEAD = GetLifetimeEadResult();
@@ -66,45 +72,63 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             foreach (var row in contractData)
             {
-                string contractId = row.contract_no;
-                double costOfRecovery = row.CostOfRecovery;
-                double guarantorPd = row.GuaranteePd;
-                double guarantorLgd = row.Field<double>(TempLgdContractDataColumns.GuaranteeLgd);
-                double guaranteeValue = row.Field<double>(TempLgdContractDataColumns.GuaranteeValue);
-                double guaranteeLevel = row.Field<double>(TempLgdContractDataColumns.GuaranteeLevel);
+                string contractId = row.CONTRACT_NO;
+                double costOfRecovery = row.COST_OF_RECOVERY;
+                double guarantorPd = row.GUARANTOR_PD;
+                double guarantorLgd = row.GUARANTOR_LGD;
+                double guaranteeValue = row.GUARANTEE_VALUE;
+                double guaranteeLevel = row.GUARANTEE_LEVEL;
 
-                int loanStage = stageClassification.AsEnumerable()
-                                                   .FirstOrDefault(x => x.Field<string>(StageClassificationColumns.ContractId) == contractId)
-                                                   .Field<int>(StageClassificationColumns.Stage);
+                int loanStage = stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
 
-                DataRow pdMappingRow = pdMapping.AsEnumerable().FirstOrDefault(x => x.Field<string>(LoanBookColumns.ContractID) == contractId);
-                string pdGroup = pdMappingRow.Field<string>(PdMappingColumns.PdGroup);
-                string segment = pdMappingRow.Field<string>(LoanBookColumns.Segment);
-                string productType = pdMappingRow.Field<string>(LoanBookColumns.ProductType);
+                var pdMappingRow = pdMapping.FirstOrDefault(x => x.ContractId == contractId);
+                string pdGroup = pdMappingRow.PdGroup;
+                string segment = pdMappingRow.Segment;
+                string productType = pdMappingRow.ProductType;
 
-                DataRow sicrInputRow = sicrInput.AsEnumerable().FirstOrDefault(x => x.Field<string>(SicrInputsColumns.ContractId) == contractId);
-                double redefaultLifetimePd = sicrInputRow.Field<double>(SicrInputsColumns.RedefaultLifetimePd);
-                long daysPastDue = sicrInputRow.Field<long>(SicrInputsColumns.DaysPastDue);
+                var sicrInputRow = sicrInput.FirstOrDefault(x => x.ContractId == contractId);
+                double redefaultLifetimePd = sicrInputRow.RedefaultLifetimePd;
+                long daysPastDue = sicrInputRow.DaysPastDue;
 
-                DataRow bestAssumption = FindDataRowInTable(lgdAssumptions, LgdInputAssumptionColumns.SegementProductType, segment + "_" + productType,
-                                                                            LgdInputAssumptionColumns.Scenario, TempEclData.ScenarioBest);
-                DataRow downturnAssumption = FindDataRowInTable(lgdAssumptions, LgdInputAssumptionColumns.SegementProductType, segment + "_" + productType,
-                                                                                LgdInputAssumptionColumns.Scenario, TempEclData.ScenarioDownturn);
+                var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type == $"{segment}_{productType}");
 
-                double cureRates = bestAssumption.Field<double>(LgdInputAssumptionColumns.CureRate);
+                double cureRates = best_downTurn_Assumption.Cure_Rate;
 
                 long lgdAssumptionColumn = Math.Max(daysPastDue - stage2to3Forward, 0);
-                double unsecuredRecoveriesBest = bestAssumption.Field<double>(lgdAssumptionColumn.ToString());
-                double unsecuredRecoveriesDownturn = downturnAssumption.Field<double>(lgdAssumptionColumn.ToString());
 
+                double unsecuredRecoveriesBest = 0;
+                double unsecuredRecoveriesDownturn = 0;
 
-                for (int month = 0; month < TempEclData.TempExcelVariable_LIM_MONTH; month++)
+                if (lgdAssumptionColumn==0)
                 {
+                    unsecuredRecoveriesBest = best_downTurn_Assumption.Days_0;
+                    unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_0;
+                }
+                if (lgdAssumptionColumn == 90)
+                {
+                    unsecuredRecoveriesBest = best_downTurn_Assumption.Days_90;
+                    unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_90;
+                }
+                if (lgdAssumptionColumn == 180)
+                {
+                    unsecuredRecoveriesBest = best_downTurn_Assumption.Days_180;
+                    unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_180;
+                }
+                if (lgdAssumptionColumn == 270)
+                {
+                    unsecuredRecoveriesBest = best_downTurn_Assumption.Days_270;
+                    unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_270;
+                }
+                if (lgdAssumptionColumn == 360)
+                {
+                    unsecuredRecoveriesBest = best_downTurn_Assumption.Days_360;
+                    unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_360;
+                }
 
-                    if (month == 10)
-                    {
-                        string stop = "stop";
-                    }
+
+
+                for (int month = 0; month < FrameworkConstants.TempExcelVariable_LIM_MONTH; month++)
+                {
 
                     double monthLifetimeEAD = GetLifetimeEADPerMonth(lifetimeEAD, contractId, month);  //Excel lifetimeEAD!F
                     double monthCreditIndex = GetCreditIndexPerMonth(creditIndex, month);           // Excel $O$3
@@ -112,9 +136,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     double sumRedefaultPds = ComputeLifetimeRedefaultPdValuePerMonth(redefaultPd, pdGroup, month); //Excel SUM(OFFSET(RD_PD_BE, $C8-1, 1, 1, O$7)))
                     double lifetimeCollateralValue = ComputeLifetimeCollateralValuePerMonth(lifetimeCollateral, contractId, month);  // Excel 'Lifetime Collateral (BE)'!E4
 
-
-
-                    DataRow newRow = lifetimeLGD.NewRow();
+                    var newRow = new LifetimeLgd();
 
                     double month1pdValue = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePd, pdGroup, 1);  // Excel INDEX(PD_BE,$C8, 2)
                     double resultUsingMonth1pdValue = month1pdValue == 1.0 ? 1.0 : 0.0; // IF(INDEX(PD_BE,$C8, 2) = 1,1,0),
@@ -132,7 +154,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     double multiplerMinColl = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCor;
                     ///
 
-                    double creditIndexHurdle = Convert.ToDouble(GetImpairmentAssumptionValue(impairmentAssumptions, ImpairmentRowKeys.CreditIndexThreshold));
+                    double creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value);
 
                     double ifCreditIndexHurdle;
                     if (monthCreditIndex > creditIndexHurdle)
@@ -149,22 +171,22 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     double lifetimeLgdValue = monthLifetimeEAD == 0 ? 0 : minMaxCureRateResult * minMaxCreditIndexHurdle;
 
 
-                    newRow[LifetimeLgdColumns.ContractId] = contractId;
-                    newRow[LifetimeLgdColumns.PdIndex] = pdGroup;
-                    newRow[LifetimeLgdColumns.LgdIndex] = segment + "_" + productType;
-                    newRow[LifetimeLgdColumns.RedefaultLifetimePD] = redefaultLifetimePd;
-                    newRow[LifetimeLgdColumns.CureRate] = cureRates;
-                    newRow[LifetimeLgdColumns.UrBest] = unsecuredRecoveriesBest;
-                    newRow[LifetimeLgdColumns.URDownturn] = unsecuredRecoveriesDownturn;
-                    newRow[LifetimeLgdColumns.Cor] = costOfRecovery;
-                    newRow[LifetimeLgdColumns.GPd] = guarantorPd;
-                    newRow[LifetimeLgdColumns.GuarantorLgd] = guarantorLgd;
-                    newRow[LifetimeLgdColumns.GuaranteeValue] = guaranteeValue;
-                    newRow[LifetimeLgdColumns.GuaranteeLevel] = guaranteeLevel;
-                    newRow[LifetimeLgdColumns.Stage] = loanStage;
-                    newRow[LifetimeLgdColumns.Month] = month;
-                    newRow[LifetimeLgdColumns.Value] = lifetimeLgdValue;
-                    lifetimeLGD.Rows.Add(newRow);
+                    newRow.ContractId = contractId;
+                    newRow.PdIndex = pdGroup;
+                    newRow.LgdIndex = segment + "_" + productType;
+                    newRow.RedefaultLifetimePD = redefaultLifetimePd;
+                    newRow.CureRate = cureRates;
+                    newRow.UrBest = unsecuredRecoveriesBest;
+                    newRow.URDownturn = unsecuredRecoveriesDownturn;
+                    newRow.Cor = costOfRecovery;
+                    newRow.GPd = guarantorPd;
+                    newRow.GuarantorLgd = guarantorLgd;
+                    newRow.GuaranteeValue = guaranteeValue;
+                    newRow.GuaranteeLevel = guaranteeLevel;
+                    newRow.Stage = loanStage;
+                    newRow.Month = month;
+                    newRow.Value = lifetimeLgdValue;
+                    lifetimeLGD.Add(newRow);
                 }
             }
 
@@ -172,76 +194,54 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return lifetimeLGD;
         }
 
-        protected DataRow FindDataRowInTable(DataTable dataTable, string searchColumn, string searchValue, string searchColumn2, string searchValue2)
+
+
+        private double ComputeLifetimeCollateralValuePerMonth(List<LifetimeCollateral> lifetimeCollateral, string contractId, int month)
         {
-            DataRow row = dataTable.AsEnumerable().FirstOrDefault(x => x.Field<string>(searchColumn) == searchValue
-                                                                    && x.Field<string>(searchColumn2) == searchValue2);
-            return row;
-        }
-        protected DataRow FindDataRowInTable(DataTable dataTable, string searchColumn, string searchValue, string searchColumn2, int searchValue2)
-        {
-            DataRow row = dataTable.AsEnumerable().FirstOrDefault(x => x.Field<string>(searchColumn) == searchValue
-                                                                    && x.Field<int>(searchColumn2) == searchValue2);
-            return row;
-        }
-        protected double GetLifetimeEADPerMonth(DataTable lifetimeEAD, string contractId, int month)
-        {
-            return lifetimeEAD.AsEnumerable().FirstOrDefault(x => x.Field<string>(LifetimeEadColumns.ContractId) == contractId
-                                                                                                      && x.Field<int>(LifetimeEadColumns.ProjectionMonth) == month)
-                                                                                    .Field<double>(LifetimeEadColumns.ProjectionValue);
+            double lifetimeCollateralValue = lifetimeCollateral.FirstOrDefault(x => x.ContractId == contractId
+                                                                                                        && x.ProjectionMonth == month).ProjectionValue;
+            return lifetimeCollateralValue;
         }
 
-        protected double GetCreditIndexPerMonth(DataTable creditIndex, int month)
+        private double ComputeLifetimeRedefaultPdValuePerMonth(List<LifeTimeObject> redefaultPd, string pdGroup, int month)
         {
-            string creditIndexColumn = CreditIndexColumns.BestEstimate;
-
-            switch (_scenario)
-            {
-                case TempEclData.ScenarioBest:
-                    creditIndexColumn = CreditIndexColumns.BestEstimate;
-                    break;
-                case TempEclData.ScenarioOptimistic:
-                    creditIndexColumn = CreditIndexColumns.Optimistic;
-                    break;
-                case TempEclData.ScenarioDownturn:
-                    creditIndexColumn = CreditIndexColumns.Downturn;
-                    break;
-                default:
-                    creditIndexColumn = CreditIndexColumns.BestEstimate;
-                    break;
-            }
-
-            return creditIndex.AsEnumerable().FirstOrDefault(x => x.Field<string>(CreditIndexColumns.ProjectionMonth) == (month > 60 ? "60" : month.ToString()))
-                                                                                    .Field<double>(creditIndexColumn);
-        }
-
-        protected double ComputeLifetimeRedefaultPdValuePerMonth(DataTable lifetimePd, string pdGroup, int month)
-        {
-            double[] pds = lifetimePd.AsEnumerable().Where(x => x.Field<string>(MarginalLifetimeRedefaultPdColumns.PdGroup) == pdGroup
-                                                                          && x.Field<long>(MarginalLifetimeRedefaultPdColumns.ProjectionMonth) >= 1
-                                                                          && x.Field<long>(MarginalLifetimeRedefaultPdColumns.ProjectionMonth) <= month)
-                                                                   .Select(x =>
-                                                                   {
-                                                                       return x.Field<double>(MarginalLifetimeRedefaultPdColumns.Value);
-                                                                   }).ToArray();
+            double[] pds = redefaultPd.Where(x => x.PdGroup == pdGroup
+                                                              && x.Month >= 1
+                                                              && x.Month <= month)
+                                                       .Select(x =>
+                                                       {
+                                                           return x.Value;
+                                                       }).ToArray();
             return pds.Aggregate(0.0, (acc, x) => acc + x);
         }
 
-        protected double ComputeLifetimeCollateralValuePerMonth(DataTable lifetimeCollateral, string contractId, int month)
+        private double GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month)
         {
-            double lifetimeCollateralValue = lifetimeCollateral.AsEnumerable().FirstOrDefault(x => x.Field<string>(LifetimeCollateralColumns.ContractId) == contractId
-                                                                                                                    && x.Field<int>(LifetimeCollateralColumns.ProjectionMonth) == month)
-                                                                                                  .Field<double>(LifetimeCollateralColumns.ProjectionValue);
-            return lifetimeCollateralValue;
-        }
-        protected string GetImpairmentAssumptionValue(DataTable assumptions, string assumptionKey)
-        {
-            return assumptions.AsEnumerable()
-                              .FirstOrDefault(x => x.Field<string>(ImpairmentRowKeys.ColumnAssumption) == assumptionKey)
-                              .Field<string>(ImpairmentRowKeys.ColumnValue);
+
+            var _creditIndx = creditIndex.FirstOrDefault(x => x.ProjectionMonth == (month > 60 ? 60 : month));
+
+            if (this._scenario == ECL_Scenario.Best)
+                return _creditIndx.BestEstimate;
+
+            if (this._scenario == ECL_Scenario.Downturn)
+                return _creditIndx.Downturn;
+
+            if (this._scenario == ECL_Scenario.Optimistic)
+                return _creditIndx.Optimistic;
+
+            return 0;
         }
 
-        protected List<EclAssumptions> GetImpairmentAssumptions()
+        private double GetLifetimeEADPerMonth(List<LifetimeEad> lifetimeEAD, string contractId, int month)
+        {
+            return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
+        }
+
+      
+
+
+
+        public List<EclAssumptions> GetECLLgdAssumptions()
         {
             var qry = Queries.eclAssumptions(this._eclId);
             var dt = DataAccess.i.GetData(qry);
@@ -254,9 +254,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             return eclAssumptions;
         }
-        protected List<Refined_Raw_Retail_Wholesale> GetContractData()
+        protected List<Loanbook_Data> GetContractData()
         {
-            return _lifetimeEadWorkings.GetRefinedLoanBookData();
+            return _lifetimeEadWorkings.GetLoanBookData();
         }
         protected List<WholesalePdMappings> GetPdIndexMappingResult()
         {
