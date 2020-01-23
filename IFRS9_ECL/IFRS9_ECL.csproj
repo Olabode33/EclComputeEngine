@@ -61,6 +61,10 @@
       <Project>{D403EC2B-8541-479B-A384-F7524441F654}</Project>
       <Name>IFRS9_ECL.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IFRS9_ECL.Util\IFRS9_ECL.Util.csproj">
+      <Project>{8435EE6B-A9B5-4F93-B846-ACDCABF2CE4C}</Project>
+      <Name>IFRS9_ECL.Util</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

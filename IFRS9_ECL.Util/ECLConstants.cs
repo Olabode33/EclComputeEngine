@@ -7,24 +7,33 @@ namespace IFRS9_ECL.Util
         public static readonly ECLStringConstants i = new ECLStringConstants();
         public string yes = "yes";
 
-        public string WholesaleEadLifetimeProjections_Table { get { return "WholesaleEadLifetimeProjections"; } }
-        public string WholesaleEadEirProjections_Table { get { return "WholesaleEadEirProjections"; } }
-        public string WholesaleEadCirProjections_Table { get { return "WholesaleEadCirProjections"; } }
-        public string WholesaleLGDCollateral_Table { get { return "WholesaleLGDCollateral"; } }
-        public string WholesaleLGDAccountData_Table { get { return "WholesaleLGDAccountData"; } }
+        public string EadLifetimeProjections_Table(EclType eclType) { return $"{eclType.ToString()}EadLifetimeProjections"; }
+        public string EadEirProjections_Table(EclType eclType) { return $"{eclType.ToString()}EadEirProjections";  }
+        public string EadCirProjections_Table(EclType eclType) { return $"{eclType.ToString()}EadCirProjections";  }
+        public string LGDCollateral_Table(EclType eclType) { return $"{eclType.ToString()}LGDCollateral";  }
+        public string LGDAccountData_Table(EclType eclType) { return $"{eclType.ToString()}LGDAccountData";  }
 
 
         //Wholesale PD tables
-        public string WholesalePDCreditIndex_Table { get { return "WholesalePDCreditIndex"; } }
-        public string WholesalePdMappings_Table { get { return "WholesalePdMappings"; } }
+        public string PDCreditIndex_Table(EclType eclType) { return $"{eclType.ToString()}PDCreditIndex";  }
+        public string PdMappings_Table(EclType eclType) { return $"{eclType.ToString()}PdMappings"; }
 
-        public string WholesalePdLifetimeBests_Table { get { return "WholesalePdLifetimeBests"; } }
-        public string WholesalePdLifetimeDownturns_Table { get { return "WholesalePdLifetimeDownturns"; } }
-        public string WholesalePdLifetimeOptimistics_Table { get { return "WholesalePdLifetimeOptimistics"; } }
+        public string PdLifetimeBests_Table(EclType eclType)
+        {
+            return $"{eclType.ToString()}PdLifetimeBests";
+        }
+        public string PdLifetimeDownturns_Table(EclType eclType)
+        {
+            return $"{eclType.ToString()}PdLifetimeDownturns";
+        }
+        public string PdLifetimeOptimistics_Table(EclType eclType)
+        {
+            return $"{eclType.ToString()}PdLifetimeOptimistics";
+        }
 
-        public string WholesalePdRedefaultLifetimeBests_Table { get { return "WholesalePdRedefaultLifetimeBests"; } }
-        public string WholesalePdRedefaultLifetimeDownturns_Table { get { return "WholesalePdRedefaultLifetimeDownturns"; } }
-        public string WholesalePdRedefaultLifetimeOptimistics_Table { get { return "WholesalePdRedefaultLifetimeOptimistics"; } }
+        public string PdRedefaultLifetimeBests_Table(EclType eclType) { return $"{eclType.ToString()}PdRedefaultLifetimeBests";  }
+        public string PdRedefaultLifetimeDownturns_Table(EclType eclType) { return $"{eclType.ToString()}WholesalePdRedefaultLifetimeDownturns";  }
+        public string PdRedefaultLifetimeOptimistics_Table(EclType eclType) { return $"{eclType.ToString()}PdRedefaultLifetimeOptimistics";  }
 
 
 
@@ -92,7 +101,6 @@ namespace IFRS9_ECL.Util
 
 
         public string CustomerNo_array { get { return "CustomerNo_array"; } }
-
 
 
         ///this is called EXP_OD_PERFORMACE_PAST_EXPIRY on the excel and it is obtained from the EAD calibration. It will be obtained from the DB
@@ -249,5 +257,14 @@ namespace IFRS9_ECL.Util
         public static string Receivables = "receivables";
         public static string Shares = "shares";
         public static string Vehicle = "vehicle";
+        public static string Collateral = "collateral";
+    }
+
+    public enum EclType
+    {
+        None=-1,
+        Retail,
+        Wholesale,
+        Obe
     }
 }

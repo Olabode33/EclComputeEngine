@@ -13,10 +13,12 @@ namespace IFRS9_ECL.Core.PDComputation
     {
         ECL_Scenario _Scenario;
         Guid _eclId;
-        public IndexForecastWorkings(ECL_Scenario eCL_Scenario, Guid eclId)
+        EclType _eclType;
+        public IndexForecastWorkings(ECL_Scenario eCL_Scenario, Guid eclId, EclType eclType)
         {
             this._Scenario = eCL_Scenario;
             this._eclId = eclId;
+            this._eclType = eclType;
         }
 
         public List<IndexForecast> ComputeIndexForecast()
@@ -150,22 +152,22 @@ namespace IFRS9_ECL.Core.PDComputation
 
         protected double ComputeHistoricIndexStandardDeviation()
         {
-            return ExcelFormulaUtil.CalculateStdDev(new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_HistoricIndex().Select(o=>o.Actual));
+            return ExcelFormulaUtil.CalculateStdDev(new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex().Select(o=>o.Actual));
         }
         protected double ComputeHistoricIndexMean()
         {
-            return new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_HistoricIndex().Average(o => o.Actual);
+            return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex().Average(o => o.Actual);
         }
 
         private List<PDI_MacroEconomics> GetScenarioProjectionData()
         {
-            var obj = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_MacroEconomics();
+            var obj = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_MacroEconomics();
             return obj;
         }
 
         protected List<PDI_StatisticalInputs> GetStatisticalInputData()
         {
-            var obj = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_StatisticalInputs();
+            var obj = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_StatisticalInputs();
             return obj;
         }
 

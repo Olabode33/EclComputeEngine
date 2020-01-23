@@ -15,18 +15,20 @@ namespace IFRS9_ECL.Core.FrameworkComputation
     public class SicrWorkings
     {
         private Guid eclId;
+        EclType _eclType;
         protected LifetimeEadWorkings _lifetimeEadWorkings;
         protected SicrInputWorkings _sicrInputs;
         protected PDMapping _pdMapping;
         protected ScenarioLifetimeLGD scenarioLifetimeLGD;
 
-        public SicrWorkings(Guid eclId)
+        public SicrWorkings(Guid eclId, EclType eclType)
         {
             this.eclId = eclId;
-            _lifetimeEadWorkings = new LifetimeEadWorkings(eclId);
-            _sicrInputs = new SicrInputWorkings(eclId);
-            _pdMapping = new PDMapping(eclId);
-            scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId);
+            this._eclType = eclType;
+            _lifetimeEadWorkings = new LifetimeEadWorkings(eclId, this._eclType);
+            _sicrInputs = new SicrInputWorkings(eclId, this._eclType);
+            _pdMapping = new PDMapping(eclId, this._eclType);
+            scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
         
         internal List<StageClassification> ComputeStageClassification()

@@ -16,11 +16,13 @@ namespace IFRS9_ECL.Core.PDComputation
         private ECL_Scenario _scenario;
         protected ScenarioMarginalPd _scenarioMarginalPd;
         Guid _eclId;
-        public ScenarioRedefaultLifetimePds(ECL_Scenario scenario, Guid eclId)
+        EclType _eclType;
+        public ScenarioRedefaultLifetimePds(ECL_Scenario scenario, Guid eclId, EclType eclType)
         {
             _scenario = scenario;
             this._eclId = eclId;
-            _scenarioMarginalPd = new ScenarioMarginalPd(_scenario, this._eclId);
+            this._eclType = eclType;
+            _scenarioMarginalPd = new ScenarioMarginalPd(_scenario, this._eclId, this._eclType);
         }
         public string Run()
         {
@@ -53,15 +55,15 @@ namespace IFRS9_ECL.Core.PDComputation
 
             if (_scenario == ECL_Scenario.Best)
             {
-                tableName = ECLStringConstants.i.WholesalePdRedefaultLifetimeBests_Table;
+                tableName = ECLStringConstants.i.PdRedefaultLifetimeBests_Table(this._eclType);
             }
             else if (_scenario == ECL_Scenario.Downturn)
             {
-                tableName = ECLStringConstants.i.WholesalePdRedefaultLifetimeDownturns_Table;
+                tableName = ECLStringConstants.i.PdRedefaultLifetimeDownturns_Table(this._eclType);
             }
             else if (_scenario == ECL_Scenario.Optimistic)
             {
-                tableName = ECLStringConstants.i.WholesalePdRedefaultLifetimeOptimistics_Table;
+                tableName = ECLStringConstants.i.PdRedefaultLifetimeOptimistics_Table(this._eclType);
             }
 
             var r = DataAccess.i.ExecuteBulkCopy(dt, tableName);
@@ -118,7 +120,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<PDI_Assumptions> GetPdInputAssumptions()
         {
-            return new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
+            return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
         }
         protected List<LifeTimeObject> GetScenarioMarginalPd()
         {

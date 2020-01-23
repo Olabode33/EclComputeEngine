@@ -18,3 +18,5 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\obj\Debug\IFRS9_
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.pdb
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\bin\Debug\MathNet.Numerics.dll
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\bin\Debug\MathNet.Numerics.xml
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\bin\Debug\log4net.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Core\bin\Debug\log4net.xml

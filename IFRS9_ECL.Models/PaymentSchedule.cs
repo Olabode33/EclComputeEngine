@@ -6,26 +6,26 @@ namespace IFRS9_ECL.Models
 {
     public class PaymentSchedule
     {
-        public string CONTRACT_REF_NO { get; set; }
-        public DateTime START_DATE { get; set; }
-        public string COMPONENT { get; set; }
-        public int NO_OF_SCHEDULES { get; set; }
-        public string FREQUENCY { get; set; }
-        public double AMOUNT { get; set; }
-        public string CONTRACT_ID { get; set; }
-        public string PAYMENT_TYPE { get; set; }
-        public string MONTHS { get; set; }
-        public double VALUE { get; set; }
+        public string ContractRefNo { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Component { get; set; }
+        public int NoOfSchedules { get; set; }
+        public string Frequency { get; set; }
+        public double Amount { get; set; }
+        public string ContractId { get; set; }
+        public string PaymentType { get; set; }
+        public string Months { get; set; }
+        public double Value { get; set; }
     }
 
     public class TempPaymentSchedule
     {
-        public string CONTRACT_REF_NO { get; set; }
-        public DateTime START_DATE { get; set; }
-        public string COMPONENT { get; set; }
-        public int NO_OF_SCHEDULES { get; set; }
-        public string FREQUENCY { get; set; }
-        public double AMOUNT { get; set; }
+        public string ContractRefNo { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Component { get; set; }
+        public int NoOfSchedules { get; set; }
+        public string Frequency { get; set; }
+        public double Amount { get; set; }
     }
 
 }

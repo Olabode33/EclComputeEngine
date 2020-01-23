@@ -2,4 +2,7 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Debug\IFRS9_
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Debug\IFRS9_ECL.Util.pdb
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.dll
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.pdb
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Debug\log4net.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\bin\Debug\log4net.xml
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.csproj.CopyComplete
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.csprojAssemblyReference.cache

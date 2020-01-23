@@ -17,23 +17,26 @@ namespace IFRS9_ECL.Core.FrameworkComputation
     public class ScenarioLifetimeLGD
     {
         private Guid _eclId;
+        EclType _eclType;
 
-        public ScenarioLifetimeLGD(Guid eclId, ECL_Scenario scenario)
+        public ScenarioLifetimeLGD(Guid eclId, ECL_Scenario scenario, EclType eclType)
         {
             this._eclId = eclId;
             this._scenario = scenario;
-            _sicrInputs = new SicrInputWorkings(this._eclId);
-            _sicrWorkings = new SicrWorkings(this._eclId);
-            _lifetimeEadWorkings = new LifetimeEadWorkings(this._eclId);
-            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(this._scenario, this._eclId);
-            _pdMapping = new PDMapping(this._eclId);
-            _creditIndex = new CreditIndex(this._eclId);
+            this._eclType = eclType;
+            _sicrInputs = new SicrInputWorkings(this._eclId, _eclType);
+            _sicrWorkings = new SicrWorkings(this._eclId, _eclType);
+            _lifetimeEadWorkings = new LifetimeEadWorkings(this._eclId, _eclType);
+            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(this._scenario, this._eclId, _eclType);
+            _pdMapping = new PDMapping(this._eclId, _eclType);
+            _creditIndex = new CreditIndex(this._eclId, _eclType);
 
         }
 
-        public ScenarioLifetimeLGD(Guid eclId)
+        public ScenarioLifetimeLGD(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
+            this._eclType = eclType;
         }
 
         protected ECL_Scenario _scenario;
@@ -54,7 +57,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             var lifetimeLGD = new List<LifetimeLgd>();
 
-            var contractData = ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
+            var contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData();
             var pdMapping = GetPdIndexMappingResult();
             var lgdAssumptions = GetLgdAssumptionsData();
             var sicrInput = GetSicrResult();
@@ -243,7 +246,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<EclAssumptions> GetECLLgdAssumptions()
         {
-            var qry = Queries.eclAssumptions(this._eclId);
+            var qry = Queries.eclAssumptions(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var eclAssumptions = new List<EclAssumptions>();
 
@@ -264,7 +267,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
         protected List<LgdInputAssumptions_UnsecuredRecovery> GetLgdAssumptionsData()
         {
-            var qry = Queries.LGD_InputAssumptions_UnsecuredRecovery(this._eclId);
+            var qry = Queries.LGD_InputAssumptions_UnsecuredRecovery(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var ldg_inputassumption = new List<LgdInputAssumptions_UnsecuredRecovery>();
 
@@ -308,13 +311,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeBests_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeBests_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeOptimistics_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeDownturns_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeDownturns_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 default:
                     return null;
@@ -337,13 +340,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdRedefaultLifetimeBests_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeBests_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdRedefaultLifetimeOptimistics_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeOptimistics_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdRedefaultLifetimeDownturns_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeDownturns_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 default:
                     return null;

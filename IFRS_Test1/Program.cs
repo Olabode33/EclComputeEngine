@@ -1,4 +1,5 @@
 ﻿using IFRS9_ECL.Core;
+using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace IFRS_Test1
                 //Process Wholesale
                 var masterGuid = Guid.NewGuid();
                 // ProcessECL_Wholesale_EAD.i.ProcessTask(masterGuid);
-                ProcessECL_Wholesale_LGD.i.ProcessTask(masterGuid);
+                new ProcessECL_LGD(masterGuid, EclType.Retail).ProcessTask();
 
                 //new ProcessECL_Wholesale_PD(masterGuid).ProcessTask();
                 Console.WriteLine($"End Time {DateTime.Now}");

@@ -21,13 +21,15 @@ namespace IFRS9_ECL.Core.PDComputation
         protected IndexForecastWorkings _indexForecastDownturn;
 
         Guid _eclId;
-        public CreditIndex(Guid eclId)
+        EclType _eclType;
+        public CreditIndex(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
-            _vasicekWorkings = new VasicekWorkings(ECL_Scenario.Best, this._eclId);
-            _indexForecastBest = new IndexForecastWorkings(ECL_Scenario.Best, this._eclId);
-            _indexForecastOptimistics = new IndexForecastWorkings(ECL_Scenario.Optimistic, this._eclId);
-            _indexForecastDownturn = new IndexForecastWorkings(ECL_Scenario.Downturn, this._eclId);
+            this._eclType = eclType;
+            _vasicekWorkings = new VasicekWorkings(ECL_Scenario.Best, this._eclId, this._eclType);
+            _indexForecastBest = new IndexForecastWorkings(ECL_Scenario.Best, this._eclId, this._eclType);
+            _indexForecastOptimistics = new IndexForecastWorkings(ECL_Scenario.Optimistic, this._eclId, this._eclType);
+            _indexForecastDownturn = new IndexForecastWorkings(ECL_Scenario.Downturn, this._eclId, this._eclType);
         }
 
         public string Run()
@@ -54,15 +56,15 @@ namespace IFRS9_ECL.Core.PDComputation
                             _d.Id, _d.ProjectionMonth, _d.BestEstimate, _d.Optimistic, _d.Downturn, _d.WholesaleEclId
                     });
             }
-            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesalePDCreditIndex_Table);
+            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PDCreditIndex_Table(this._eclType));
 
-            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesalePDCreditIndex_Table}]";
+            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PDCreditIndex_Table(this._eclType)}]";
         }
 
         public List<CreditIndex_Output> GetCreditIndexResult()
         {
 
-            var qry = Queries.Credit_Index(this._eclId);
+            var qry = Queries.Credit_Index(this._eclId, this._eclType);
             var _lstRaw = DataAccess.i.GetData(qry);
 
             var creditIndex = new List<CreditIndex_Output>();

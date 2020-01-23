@@ -17,11 +17,13 @@ namespace IFRS9_ECL.Core.PDComputation
         protected ScenarioMarginalPd _scenarioMarginalPd;
 
         Guid _eclId;
-        public ScenarioLifetimePd(ECL_Scenario scenario, Guid eclId)
+        EclType _eclType;
+        public ScenarioLifetimePd(ECL_Scenario scenario, Guid eclId, EclType eclType)
         {
             _scenario = scenario;
             this._eclId = eclId;
-            _scenarioMarginalPd = new ScenarioMarginalPd(_scenario, eclId);
+            this._eclType = eclType;
+            _scenarioMarginalPd = new ScenarioMarginalPd(_scenario, eclId, this._eclType);
         }
 
         public string Run()
@@ -52,15 +54,15 @@ namespace IFRS9_ECL.Core.PDComputation
 
             if(_scenario== ECL_Scenario.Best)
             {
-                tableName = ECLStringConstants.i.WholesalePdLifetimeBests_Table;
+                tableName = ECLStringConstants.i.PdLifetimeBests_Table(this._eclType);
             }
             else if (_scenario == ECL_Scenario.Downturn)
             {
-                tableName = ECLStringConstants.i.WholesalePdLifetimeDownturns_Table;
+                tableName = ECLStringConstants.i.PdLifetimeDownturns_Table(this._eclType);
             }
             else if (_scenario == ECL_Scenario.Optimistic)
             {
-                tableName = ECLStringConstants.i.WholesalePdLifetimeOptimistics_Table;
+                tableName = ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType);
             }
 
             var r = DataAccess.i.ExecuteBulkCopy(dt, tableName);

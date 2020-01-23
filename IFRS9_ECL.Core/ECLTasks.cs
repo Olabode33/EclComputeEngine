@@ -1,4 +1,5 @@
 ﻿using Excel.FinancialFunctions;
+using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Raw;
@@ -14,8 +15,18 @@ namespace IFRS9_ECL.Core
 {
     public class ECLTasks
     {
-        public static readonly ECLTasks i = new ECLTasks();
+        private Guid _eclId;
+        private EclType _eclType;
+        ScenarioLifetimeLGD _scenarioLifetimeLGD;
+        public ECLTasks(Guid eclId, EclType eclType)
+        {
+            this._eclId = eclId;
+            this._eclType = eclType;
+            _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, eclType);
+        }
+
         public double Conversion_Factor_OBE = 1;
+
 
         public List<Refined_Raw_Retail_Wholesale> GenerateContractIdandRefinedData(List<Loanbook_Data> lstRaw)
         {
@@ -24,7 +35,7 @@ namespace IFRS9_ECL.Core
             foreach (var rr in lstRaw)
             {
                 i++;
-                Console.WriteLine(i);
+                //Console.WriteLine(i);
                 var refined = new Refined_Raw_Retail_Wholesale();
                 refined.contract_no=GenerateContractId(rr);
 
@@ -88,143 +99,44 @@ namespace IFRS9_ECL.Core
         }
 
 
-
-        //internal List<CoR> CalculateCoR_Main(List<LGDPrecalculationOutput> lGDPreCalc, List<Collateral> lstCollateral)
-        //{
-        //    var CoR_DT = new List<CoR>();
-        //    LGD_Inputs inputs = new LGD_Inputs();
-        //    //create temporary table
-        //    //DataTable temporaryDT = new DataTable();
-        //    //temporaryDT.Columns.Add(ColumnNames.debenture, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.cash, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.inventory, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.plant_and_equipment, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.residential_property, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.commercial_property, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.receivables, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.shares, typeof(string));
-        //    //temporaryDT.Columns.Add(ColumnNames.vehicle, typeof(string));
-
-        //    var dt = DataAccess.i.GetData("Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, costOfRecovery from LGD_Assumptions");
-
-        //    var lgd_Assumptions = new List<LGD_Assumptions>();
-
-        //    foreach (DataRow dr in dt.Rows)
-        //    {
-        //        lgd_Assumptions.Add(DataAccess.i.ParseDataToObject(new LGD_Assumptions(), dr));
-        //    }
-
-
-
-        //    for (int i = 0; i < lstCollateral.Count; i++)
-        //    {
-        //        inputs.new_contract_no = lstCollateral[i].contract_no;
-        //        inputs.debenture_omv = lstCollateral[i].debenture_omv;
-        //        inputs.cash_omv = lstCollateral[i].cash_omv;
-        //        inputs.inventory_omv = lstCollateral[i].inventory_omv;
-        //        inputs.plant_and_equipment_omv = lstCollateral[i].plant_and_equipment_omv;
-        //        inputs.residential_property_omv = lstCollateral[i].residential_property_omv;
-        //        inputs.commercial_property_omv = lstCollateral[i].commercial_property_omv;
-        //        inputs.shares_omv = lstCollateral[i].shares_omv;
-        //        inputs.vehicle_omv = lstCollateral[i].vehicle_omv;
-
-        //        inputs.project_finance_ind = lGDPreCalc[i].project_finance_ind;
-        //        inputs.total = lstCollateral[i].total_omv;
-
-        //        var lgd_first = lgd_Assumptions.FirstOrDefault();
-        //        if (lgd_first == null) lgd_first = new LGD_Assumptions();
-        //        var lgd_last = lgd_Assumptions.LastOrDefault();
-        //        if (lgd_last == null) lgd_last = new LGD_Assumptions();
-
-        //        double value_debenture = CalculateCoR(inputs.debenture_omv, lgd_first.collateral_value, lgd_first.debenture, lgd_last.debenture);
-        //        double value_cash = CalculateCoR(inputs.cash_omv, lgd_first.collateral_value, lgd_first.cash, lgd_first.cash);
-        //        double value_inventory = CalculateCoR(inputs.inventory_omv, lgd_first.collateral_value, lgd_first.inventory, lgd_first.inventory);
-        //        double value_plant_and_equipment = CalculateCoR(inputs.plant_and_equipment_omv, lgd_first.collateral_value, lgd_first.plant_and_equipment, lgd_first.plant_and_equipment);
-        //        double value_residential = CalculateCoR(inputs.residential_property_omv, lgd_first.collateral_value, lgd_first.residential_property, lgd_first.residential_property);
-        //        double value_commercial = CalculateCoR(inputs.commercial_property_omv, lgd_first.collateral_value, lgd_first.commercial_property, lgd_first.commercial_property);
-        //        double value_shares = CalculateCoR(inputs.shares_omv, lgd_first.collateral_value, lgd_first.shares, lgd_first.shares);
-        //        double value_vehicle = CalculateCoR(inputs.vehicle_omv, lgd_first.collateral_value, lgd_first.vehicle, lgd_first.vehicle);
-
-               
-
-        //        ///CALCULATE Weighted Average CoR
-        //        double sum = value_debenture + value_cash + value_inventory + value_plant_and_equipment + value_residential + value_commercial + value_shares + value_vehicle;
-        //        double collateralValue = lgd_first.collateral_value;
-        //        double[] vs = { value_debenture, value_cash, value_inventory, value_plant_and_equipment, value_residential, value_commercial, value_shares, value_vehicle };
-        //        double main_value;
-
-        //        double result = 0;
-        //        //if (sum > collateralValue)
-        //        if(lstCollateral[i].total_omv>collateralValue)
-        //        { //////TO TRANSPOSE
-
-        //            var lgd_filtered = lgd_Assumptions.Where(o => o.costOfRecovery.Contains("=>")).FirstOrDefault();
-        //            if (lgd_filtered == null) lgd_filtered = new LGD_Assumptions();
-
-        //            result = result + (value_debenture * lgd_filtered.debenture);
-        //            result = result + (value_cash * lgd_filtered.cash);
-        //            result = result + (value_inventory * lgd_filtered.inventory);
-        //            result = result + (value_plant_and_equipment * lgd_filtered.plant_and_equipment);
-        //            result = result + (value_residential * lgd_filtered.residential_property);
-        //            result = result + (value_commercial * lgd_filtered.commercial_property);
-        //            result = result + (value_shares * lgd_filtered.shares);
-        //            result = result + (value_vehicle * lgd_filtered.vehicle);
-
-        //        }
-        //        else
-        //        {
-        //            var lgd_filtered = lgd_Assumptions.Where(o => o.costOfRecovery.Contains("<")).FirstOrDefault();
-        //            if (lgd_filtered == null) lgd_filtered = new LGD_Assumptions();
-
-        //            result = result + (value_debenture * lgd_filtered.debenture);
-        //            result = result + (value_cash * lgd_filtered.cash);
-        //            result = result + (value_inventory * lgd_filtered.inventory);
-        //            result = result + (value_plant_and_equipment * lgd_filtered.plant_and_equipment);
-        //            result = result + (value_residential * lgd_filtered.residential_property);
-        //            result = result + (value_commercial * lgd_filtered.commercial_property);
-        //            result = result + (value_shares * lgd_filtered.shares);
-        //            result = result + (value_vehicle * lgd_filtered.vehicle);
-
-        //        }
-
-        //        main_value = (sum == 0) ? 0 : result / sum;
-        //        double CoR;
-        //        ////Calculate COR
-        //        if (inputs.project_finance_ind == 1)
-        //        {
-        //            //AP4  - main_value
-        //            CoR = main_value;
-        //        }
-        //        else
-        //        {
-        //            CoR = (inputs.total != 0) ? sum / inputs.total : 0;
-        //        }
-
-        //        CoR_DT.Add(new Models.CoR { contract_no = inputs.new_contract_no, cor = CoR });
-        //    }
-        //    return CoR_DT;
-        //}
-
-
         internal List<CoR> CalculateCoR_Main(List<LGDPrecalculationOutput> lGDPreCalc, List<Loanbook_Data> loanbook_Data, List<LGDCollateralData> lstCollateral)
         {
             var CoR_DT = new List<CoR>();
             LGD_Inputs inputs = new LGD_Inputs();
 
-            var dt = DataAccess.i.GetData(Queries.LGD_Assumption);
+            var lgd_Assumptions_2 = _scenarioLifetimeLGD.GetECLLgdAssumptions();
 
-            var lgd_Assumptions = new List<LGD_Assumptions>();
+            var lgd_Assumptions_2_first = lgd_Assumptions_2.Where(o => o.LgdGroup == 3).ToList();
+            var lgd_Assumptions_2_last = lgd_Assumptions_2.Where(o => o.LgdGroup == 4).ToList();
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                lgd_Assumptions.Add(DataAccess.i.ParseDataToObject(new LGD_Assumptions(), dr));
-            }
+            var lgd_first = new LGD_Assumptions_CollateralType_TTR_Years();
+
+            lgd_first.collateral_value = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value);
+            lgd_first.debenture = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
+            lgd_first.cash = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
+            lgd_first.commercial_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
+            lgd_first.Receivables = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
+            lgd_first.inventory = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
+            lgd_first.plant_and_equipment = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
+            lgd_first.residential_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
+            lgd_first.shares = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
+            lgd_first.vehicle = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
+
+            var lgd_last = new LGD_Assumptions_CollateralType_TTR_Years();
 
 
-            var lgd_first = lgd_Assumptions.FirstOrDefault();
-            if (lgd_first == null) lgd_first = new LGD_Assumptions();
-            var lgd_last = lgd_Assumptions.LastOrDefault();
-            if (lgd_last == null) lgd_last = new LGD_Assumptions();
+            lgd_last.collateral_value = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value);
+            lgd_last.debenture = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
+            lgd_last.cash = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
+            lgd_last.commercial_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
+            lgd_last.Receivables = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
+            lgd_last.inventory = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
+            lgd_last.plant_and_equipment = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
+            lgd_last.residential_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
+            lgd_last.shares = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
+            lgd_last.vehicle = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
+
+            
 
             for (int i = 0; i < loanbook_Data.Count; i++)
             {
@@ -252,7 +164,7 @@ namespace IFRS9_ECL.Core
                     if (inputs.total> lgd_first.collateral_value)
                     {
                         //Sum product of Raw Data and LGD Assumption First Row
-                        double[] lgdAssumption = { lgd_first.debenture, lgd_first.cash, lgd_first.inventory, lgd_first.plant_and_equipment, lgd_first.residential_property, lgd_first.commercial_property, lgd_first.shares, lgd_first.vehicle };
+                        double[] lgdAssumption = { lgd_first.debenture, lgd_first.cash, lgd_first.inventory, lgd_first.plant_and_equipment, lgd_first.residential_property, lgd_first.commercial_property, lgd_first.Receivables, lgd_first.shares, lgd_first.vehicle };
 
                         if (inputs.total != 0)
                             weight_Avg_cor = SumProduct(rawData, lgdAssumption) / inputs.total;
@@ -261,7 +173,7 @@ namespace IFRS9_ECL.Core
                     else
                     {
                         //Sum product of Raw Data and LGD Assumption Second Row
-                        double[] lgdAssumption = { lgd_last.debenture, lgd_last.cash, lgd_last.inventory, lgd_last.plant_and_equipment, lgd_last.residential_property, lgd_last.commercial_property, lgd_last.shares, lgd_last.vehicle };
+                        double[] lgdAssumption = { lgd_last.debenture, lgd_last.cash, lgd_last.inventory, lgd_last.plant_and_equipment, lgd_last.residential_property, lgd_last.commercial_property, lgd_last.Receivables, lgd_last.shares, lgd_last.vehicle };
 
                         if (inputs.total != 0)
                             weight_Avg_cor =SumProduct(rawData, lgdAssumption)/ inputs.total;
@@ -271,16 +183,17 @@ namespace IFRS9_ECL.Core
                 else
                 {
                     double cor_debenture = CalculateCoR(lstCollateral[i].debenture_omv, lgd_first.collateral_value, lgd_first.debenture, lgd_last.debenture);
-                    double cor_cash = CalculateCoR(lstCollateral[i].cash_omv, lgd_first.collateral_value, lgd_first.cash, lgd_first.cash);
-                    double cor_inventory = CalculateCoR(lstCollateral[i].inventory_omv, lgd_first.collateral_value, lgd_first.inventory, lgd_first.inventory);
-                    double cor_plant_and_equipment = CalculateCoR(lstCollateral[i].plant_and_equipment_omv, lgd_first.collateral_value, lgd_first.plant_and_equipment, lgd_first.plant_and_equipment);
-                    double cor_residential = CalculateCoR(lstCollateral[i].residential_property_omv, lgd_first.collateral_value, lgd_first.residential_property, lgd_first.residential_property);
-                    double cor_commercial = CalculateCoR(lstCollateral[i].commercial_property_omv, lgd_first.collateral_value, lgd_first.commercial_property, lgd_first.commercial_property);
-                    double cor_shares = CalculateCoR(lstCollateral[i].shares_omv, lgd_first.collateral_value, lgd_first.shares, lgd_first.shares);
-                    double cor_vehicle = CalculateCoR(lstCollateral[i].vehicle_omv, lgd_first.collateral_value, lgd_first.vehicle, lgd_first.vehicle);
+                    double cor_cash = CalculateCoR(lstCollateral[i].cash_omv, lgd_first.collateral_value, lgd_first.cash, lgd_last.cash);
+                    double cor_inventory = CalculateCoR(lstCollateral[i].inventory_omv, lgd_first.collateral_value, lgd_first.inventory, lgd_last.inventory);
+                    double cor_plant_and_equipment = CalculateCoR(lstCollateral[i].plant_and_equipment_omv, lgd_first.collateral_value, lgd_last.plant_and_equipment, lgd_first.plant_and_equipment);
+                    double cor_residential = CalculateCoR(lstCollateral[i].residential_property_omv, lgd_first.collateral_value, lgd_last.residential_property, lgd_first.residential_property);
+                    double cor_commercial = CalculateCoR(lstCollateral[i].commercial_property_omv, lgd_first.collateral_value, lgd_last.commercial_property, lgd_first.commercial_property);
+                    double cor_receivables = CalculateCoR(lstCollateral[i].receivables_omv, lgd_first.collateral_value, lgd_first.Receivables, lgd_last.Receivables);
+                    double cor_shares = CalculateCoR(lstCollateral[i].shares_omv, lgd_first.collateral_value, lgd_first.shares, lgd_last.shares);
+                    double cor_vehicle = CalculateCoR(lstCollateral[i].vehicle_omv, lgd_first.collateral_value, lgd_first.vehicle, lgd_last.vehicle);
 
-                    double cor_sum = cor_debenture + cor_cash + cor_inventory + cor_plant_and_equipment + cor_residential + cor_commercial + cor_shares + cor_vehicle;
-                    double omv_sum = lstCollateral[i].debenture_omv + lstCollateral[i].cash_omv + lstCollateral[i].inventory_omv + lstCollateral[i].plant_and_equipment_omv + lstCollateral[i].residential_property_omv + lstCollateral[i].commercial_property_omv + lstCollateral[i].shares_omv + lstCollateral[i].vehicle_omv;
+                    double cor_sum = cor_debenture + cor_cash + cor_inventory + cor_plant_and_equipment + cor_residential + cor_commercial + cor_receivables + cor_shares + cor_vehicle;
+                    double omv_sum = lstCollateral[i].debenture_omv + lstCollateral[i].cash_omv + lstCollateral[i].inventory_omv + lstCollateral[i].plant_and_equipment_omv + lstCollateral[i].residential_property_omv + lstCollateral[i].commercial_property_omv + lstCollateral[i].receivables_omv + lstCollateral[i].shares_omv + lstCollateral[i].vehicle_omv;
 
                     
                         double cor_Val = 0;
@@ -296,114 +209,28 @@ namespace IFRS9_ECL.Core
 
 
 
-
-
-
-            //for (int i = 0; i < loanbook_Data.Count; i++)
-            //{
-            //    inputs.new_contract_no = loanbook_Data[i].ContractNo;
-            //    inputs.debenture_omv = loanbook_Data[i].DebentureOMV??0;
-            //    inputs.cash_omv = loanbook_Data[i].CashOMV ?? 0;
-            //    inputs.inventory_omv = loanbook_Data[i].InventoryOMV ?? 0;
-            //    inputs.plant_and_equipment_omv = loanbook_Data[i].PlantEquipmentOMV ?? 0;
-            //    inputs.residential_property_omv = loanbook_Data[i].ResidentialPropertyOMV ?? 0;
-            //    inputs.commercial_property_omv = loanbook_Data[i].CommercialPropertyOMV ?? 0;
-            //    inputs.shares_omv = loanbook_Data[i].SharesOMV ?? 0;
-            //    inputs.vehicle_omv = loanbook_Data[i].VehicleOMV ?? 0;
-
-            //    inputs.project_finance_ind = lGDPreCalc[i].project_finance_ind;
-            //    inputs.total = inputs.debenture_omv+ inputs.cash_omv+ inputs.inventory_omv+ inputs.plant_and_equipment_omv+ inputs.residential_property_omv+ inputs.commercial_property_omv+ inputs.shares_omv+ inputs.vehicle_omv;
-
-            //    //var lgd_first = lgd_Assumptions.FirstOrDefault();
-            //    //if (lgd_first == null) lgd_first = new LGD_Assumptions();
-            //    //var lgd_last = lgd_Assumptions.LastOrDefault();
-            //    //if (lgd_last == null) lgd_last = new LGD_Assumptions();
-
-            //    double value_debenture = CalculateCoR(inputs.debenture_omv, lgd_first.collateral_value, lgd_first.debenture, lgd_last.debenture);
-            //    double value_cash = CalculateCoR(inputs.cash_omv, lgd_first.collateral_value, lgd_first.cash, lgd_first.cash);
-            //    double value_inventory = CalculateCoR(inputs.inventory_omv, lgd_first.collateral_value, lgd_first.inventory, lgd_first.inventory);
-            //    double value_plant_and_equipment = CalculateCoR(inputs.plant_and_equipment_omv, lgd_first.collateral_value, lgd_first.plant_and_equipment, lgd_first.plant_and_equipment);
-            //    double value_residential = CalculateCoR(inputs.residential_property_omv, lgd_first.collateral_value, lgd_first.residential_property, lgd_first.residential_property);
-            //    double value_commercial = CalculateCoR(inputs.commercial_property_omv, lgd_first.collateral_value, lgd_first.commercial_property, lgd_first.commercial_property);
-            //    double value_shares = CalculateCoR(inputs.shares_omv, lgd_first.collateral_value, lgd_first.shares, lgd_first.shares);
-            //    double value_vehicle = CalculateCoR(inputs.vehicle_omv, lgd_first.collateral_value, lgd_first.vehicle, lgd_first.vehicle);
-
-
-
-            //    ///CALCULATE Weighted Average CoR
-            //    double sum = value_debenture + value_cash + value_inventory + value_plant_and_equipment + value_residential + value_commercial + value_shares + value_vehicle;
-            //    double collateralValue = lgd_first.collateral_value;
-            //    double[] vs = { value_debenture, value_cash, value_inventory, value_plant_and_equipment, value_residential, value_commercial, value_shares, value_vehicle };
-            //    double main_value;
-
-            //    double result = 0;
-            //    //if (sum > collateralValue)
-            //    if(loanbook_Data[i].total_omv>collateralValue)
-            //    { //////TO TRANSPOSE
-
-            //        var lgd_filtered = lgd_Assumptions.Where(o => o.costOfRecovery.Contains("=>")).FirstOrDefault();
-            //        if (lgd_filtered == null) lgd_filtered = new LGD_Assumptions();
-
-            //        result = result + (value_debenture * lgd_filtered.debenture);
-            //        result = result + (value_cash * lgd_filtered.cash);
-            //        result = result + (value_inventory * lgd_filtered.inventory);
-            //        result = result + (value_plant_and_equipment * lgd_filtered.plant_and_equipment);
-            //        result = result + (value_residential * lgd_filtered.residential_property);
-            //        result = result + (value_commercial * lgd_filtered.commercial_property);
-            //        result = result + (value_shares * lgd_filtered.shares);
-            //        result = result + (value_vehicle * lgd_filtered.vehicle);
-
-            //    }
-            //    else
-            //    {
-            //        var lgd_filtered = lgd_Assumptions.Where(o => o.costOfRecovery.Contains("<")).FirstOrDefault();
-            //        if (lgd_filtered == null) lgd_filtered = new LGD_Assumptions();
-
-            //        result = result + (value_debenture * lgd_filtered.debenture);
-            //        result = result + (value_cash * lgd_filtered.cash);
-            //        result = result + (value_inventory * lgd_filtered.inventory);
-            //        result = result + (value_plant_and_equipment * lgd_filtered.plant_and_equipment);
-            //        result = result + (value_residential * lgd_filtered.residential_property);
-            //        result = result + (value_commercial * lgd_filtered.commercial_property);
-            //        result = result + (value_shares * lgd_filtered.shares);
-            //        result = result + (value_vehicle * lgd_filtered.vehicle);
-
-            //    }
-
-            //    main_value = (sum == 0) ? 0 : result / sum;
-            //    double CoR;
-            //    ////Calculate COR
-            //    if (inputs.project_finance_ind == 1)
-            //    {
-            //        //AP4  - main_value
-            //        CoR = main_value;
-            //    }
-            //    else
-            //    {
-            //        CoR = (inputs.total != 0) ? sum / inputs.total : 0;
-            //    }
-
-            //    CoR_DT.Add(new Models.CoR { contract_no = inputs.new_contract_no, cor = CoR });
-            //}
-            //return CoR_DT;
         }
 
         public List<LGDAccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<LGDCollateralData> collateralTable, List<CoR> coR)
         {
             var accountData = new List<LGDAccountData>();
 
-            //var dt = DataAccess.i.GetData("Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, costOfRecovery from LGD_Assumptions");
-            var dt = DataAccess.i.GetData(Queries.LGD_Assumption_2);
 
-            var lgd_Assumptions_2 = new List<LGD_Assumptions_2>();
+            var lgd_Assumptions_2= _scenarioLifetimeLGD.GetECLLgdAssumptions();
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                lgd_Assumptions_2.Add(DataAccess.i.ParseDataToObject(new LGD_Assumptions_2(), dr));
-            }
+            lgd_Assumptions_2 = lgd_Assumptions_2.Where(o => o.LgdGroup == 8).ToList();
+            var selection = new double[9];
 
+            selection[0]= double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value);
+            selection[1] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash.ToLower())).Value);
+            selection[2] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory.ToLower())).Value);
+            selection[3] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment.ToLower())).Value);
+            selection[4] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty.ToLower())).Value);
+            selection[5] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty.ToLower())).Value);
+            selection[6] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables.ToLower())).Value);
+            selection[7] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares.ToLower())).Value);
+            selection[8] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle.ToLower())).Value);
 
-            var selection = lgd_Assumptions_2.Select(o => o.ttr_years).ToArray();
 
             for (var i = 0; i < collateralTable.Count; i++)
             {
@@ -660,126 +487,6 @@ namespace IFRS9_ECL.Core
                 collateralTable = SumProduct(pd_x_ead_List, collateralTable, Debenture_Omv_array, Cash_Omv_array, Inventory_Omv_array, Plant_Equipment_Omv_array, Residential_Omv_array, Commercial_Omv_array, Receivables_Omv_array, Shares_Omv_array, Vehicle_Omv_array, Debenture_Fsv_array, Cash_Fsv_array, Inventory_Fsv_array, Plant_Equipment_Fsv_array, Residential_Fsv_array, Commercial_Fsv_array, Receivables_Fsv_array, Shares_Fsv_array, Vehicle_Fsv_array, CustomerNo_array, ProjectFinance_array, input);
 
 
-                //var product = SumProduct(pd_x_ead_List, Debenture_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.debenture_omv = 0;
-                //if (product != 0)
-                //    collateralTable.debenture_omv = (input.debenture * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-                
-
-                //product = SumProduct(pd_x_ead_List, Cash_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.cash_omv = 0;
-                //if (product != 0)
-                //    collateralTable.cash_omv = (input.cash * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-                
-                
-                //product = SumProduct(pd_x_ead_List, Inventory_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.inventory_omv = 0;
-                //if (product != 0)
-                //    collateralTable.inventory_omv = (input.inventory * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-                
-
-                //product = SumProduct(pd_x_ead_List, Plant_Equipment_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.plant_and_equipment_omv = 0;
-                //if (product != 0)
-                //    collateralTable.plant_and_equipment_omv = (input.plant_and_equipment * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-                
-              
-
-                //product = SumProduct(pd_x_ead_List, Residential_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.residential_property_omv = 0;
-                //if (product != 0)
-                //    collateralTable.residential_property_omv = (input.residential_property * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Commercial_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.commercial_property_omv = 0;
-                //if (product != 0)
-                //    collateralTable.commercial_property_omv = (input.commercial_property * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-                //product = SumProduct(pd_x_ead_List, Receivables_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.receivables_omv = 0;
-                //if (product != 0)
-                //    collateralTable.receivables_omv = (input.receivables * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-                //product = SumProduct(pd_x_ead_List, Shares_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.shares_omv = 0;
-                //if (product != 0)
-                //    collateralTable.shares_omv = (input.shares * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Vehicle_Omv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.vehicle_omv = 0;
-                //if (product != 0)
-                //    collateralTable.vehicle_omv = (input.vehicle * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-
-                //collateralTable.total_omv = collateralTable.debenture_omv +
-                //                                                 collateralTable.cash_omv+
-                //                                                 collateralTable.inventory_omv+
-                //                                                 collateralTable.plant_and_equipment_omv+
-                //                                                 collateralTable.residential_property_omv+
-                //                                                 collateralTable.commercial_property_omv+
-                //                                                 collateralTable.receivables_omv+
-                //                                                 collateralTable.shares_omv+
-                //                                                 collateralTable.vehicle_omv;
-
-
-
-               
-                //product = SumProduct(pd_x_ead_List, Debenture_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.debenture_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.debenture_fsv = (input.debenture * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Cash_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.cash_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.cash_fsv = (input.cash * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Inventory_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.inventory_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.inventory_fsv = (input.inventory * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Plant_Equipment_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.plant_and_equipment_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.plant_and_equipment_fsv = (input.plant_and_equipment * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-
-                //product = SumProduct(pd_x_ead_List, Residential_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.residential_property_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.residential_property_fsv = (input.residential_property * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Commercial_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.commercial_property_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.commercial_property_fsv = (input.commercial_property * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-                //product = SumProduct(pd_x_ead_List, Receivables_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.receivables_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.receivables_fsv = (input.receivables * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Shares_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.shares_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.shares_fsv = (input.shares * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
-
-                //product = SumProduct(pd_x_ead_List, Vehicle_Fsv_array, CustomerNo_array, ProjectFinance_array);
-                //collateralTable.vehicle_fsv = 0;
-                //if (product != 0)
-                //    collateralTable.vehicle_fsv = (input.vehicle * input.pd_x_ead * (1 - input.project_finance_ind)) / product;
-
                 collaterals.Add(collateralTable);
             }
             return collaterals;
@@ -971,52 +678,6 @@ namespace IFRS9_ECL.Core
             return dic;
         }
 
-        //private Dictionary<string, List<int>> GetArrayRawData_Fsv(List<Loanbook_Data> lstRaw, LGD_Inputs input)
-        //{
-        //    var Debenture_Fsv_array = new List<int>();
-        //    var Cash_Fsv_array = new List<int>();
-        //    var Inventory_Fsv_array = new List<int>();
-        //    var Plant_Equipment_array = new List<int>();
-        //    var Residential_array = new List<int>();
-        //    var Commercial_array = new List<int>();
-        //    var Receivables_array = new List<int>();
-        //    var Shares_array = new List<int>();
-        //    var Vehicle_array = new List<int>();
-        //    var CustomerNo_array = new List<int>();
-
-        //    ////var ProjectFinance_array = new List<string>();
-        //    ////var projectFinance_raw_lst = lstRaw.Select(x => x.project_finance_ind).ToList();
-
-
-        //    foreach (var item in lstRaw)
-        //    {
-        //        Debenture_Fsv_array.Add(item.DebentureFSV == input.debenture_omv ? 1 : 0);
-        //        Cash_Fsv_array.Add(item.CashFSV == input.cash_omv ? 1 : 0);
-        //        Inventory_Fsv_array.Add(item.InventoryFSV == input.inventory_omv ? 1 : 0);
-        //        Plant_Equipment_array.Add(item.PlantEquipmentFSV == input.plant_and_equipment_omv ? 1 : 0);
-        //        Residential_array.Add(item.ResidentialPropertyFSV == input.residential_property_omv ? 1 : 0);
-        //        Commercial_array.Add(item.CommercialProperty == input.commercial_property_omv ? 1 : 0);
-        //        Receivables_array.Add(item.ReceivablesFSV == input.receivables_omv ? 1 : 0);
-        //        Shares_array.Add(item.SharesFSV == input.shares_omv ? 1 : 0);
-        //        Vehicle_array.Add(item.VehicleFSV == input.vehicle_omv ? 1 : 0);
-        //        CustomerNo_array.Add(item.CustomerNo == input.customer_no ? 1 : 0);
-        //    }
-
-        //    var dic = new Dictionary<string, List<int>>();
-        //    dic.Add(ECLStringConstants.i.Debenture_array, Debenture_Fsv_array);
-        //    dic.Add(ECLStringConstants.i.Cash_array, Cash_Fsv_array);
-        //    dic.Add(ECLStringConstants.i.Inventory_array, Inventory_Fsv_array);
-        //    dic.Add(ECLStringConstants.i.Plant_Equipment_array, Plant_Equipment_array);
-        //    dic.Add(ECLStringConstants.i.Residential_array, Residential_array);
-        //    dic.Add(ECLStringConstants.i.Commercial_array, Commercial_array);
-        //    dic.Add(ECLStringConstants.i.Receivables_array, Receivables_array);
-        //    dic.Add(ECLStringConstants.i.Shares_array, Shares_array);
-        //    dic.Add(ECLStringConstants.i.Vehicle_array, Vehicle_array);
-        //    dic.Add(ECLStringConstants.i.CustomerNo_array, CustomerNo_array);
-
-        //    return dic;
-        //}
-
 
         internal List<LifeTimeProjections> EAD_LifeTimeProjections(List<Refined_Raw_Retail_Wholesale> refined_lstRaw, List<LifeTimeEADs> lifeTimeEAD_w, List<string> lstContractIds, List<CIRProjections> cirProjections, List<PaymentSchedule> paymentScheduleProjection)
         {
@@ -1042,7 +703,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.ToString());
+                        //Console.WriteLine(ex.ToString());
                     }
                 }
 
@@ -1120,11 +781,11 @@ namespace IFRS9_ECL.Core
                         }
                         else
                         {
-                            var ps_proj = paymentScheduleProjection.FirstOrDefault(o => o.CONTRACT_ID == contract);
+                            var ps_proj = paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract);
                             string component;
                             if (ps_proj!=null)
                             {
-                                component = ps_proj.PAYMENT_TYPE;
+                                component = ps_proj.PaymentType;
                                 //this should be obtained from the payment schedule
 
                                 double d_value;
@@ -1149,7 +810,7 @@ namespace IFRS9_ECL.Core
 
 
                                     //obtain value from payment schedule and multiply by exchange rate
-                                    double f_value = paymentScheduleProjection.FirstOrDefault(o => o.CONTRACT_ID == contract && o.MONTHS == monthIndex.ToString()).VALUE * ECLNonStringConstants.i.NGN_Currency;
+                                    double f_value = paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value * ECLNonStringConstants.i.NGN_Currency;
                                     //NGN_Currency will be obtained from the DB
                                     //(f_value + x)
 
@@ -1305,7 +966,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.ToString());
+                        //Console.WriteLine(ex.ToString());
                     }
                 }
 
@@ -1356,7 +1017,7 @@ namespace IFRS9_ECL.Core
                         noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                     }catch(Exception ex)
                     {
-                        Console.WriteLine(ex.ToString());
+                        //Console.WriteLine(ex.ToString());
                     }
                 }
 
@@ -1702,15 +1363,28 @@ namespace IFRS9_ECL.Core
         {
             var input = new LGD_Inputs();
             ////This will be obtained from the DB
-            var qry=Queries.LGD_PD_AssumptionSelectQry;
+            //var qry=Queries.LGD_PD_AssumptionSelectQry;
 
-            var _pd_assumptions = DataAccess.i.GetData(qry);
+            //var _pd_assumptions = DataAccess.i.GetData(qry);
 
             var pd_assumptions = new List<LGD_PD_Assumptions>();
-            foreach (DataRow dr in _pd_assumptions.Rows)
+            //foreach (DataRow dr in _pd_assumptions.Rows)
+            //{
+            //    pd_assumptions.Add(DataAccess.i.ParseDataToObject(new LGD_PD_Assumptions(), dr));
+            //}
+
+            var pd_internalModelInputs_Credit= new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions().Where(o=>o.PdGroup== Models.PD.PdInputAssumptionGroupEnum.CreditPD).ToList();
+            var pd_non_InternalModelInputs_Credit= new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_NonInternalModelInputs(12);
+
+            foreach(var itm in pd_internalModelInputs_Credit)
             {
-                pd_assumptions.Add(DataAccess.i.ParseDataToObject(new LGD_PD_Assumptions(), dr));
+                pd_assumptions.Add(new LGD_PD_Assumptions { eclId=this._eclId, pd_group=itm.InputName, pd=double.Parse(itm.Value) });
             }
+            foreach (var itm in pd_non_InternalModelInputs_Credit)
+            {
+                pd_assumptions.Add(new LGD_PD_Assumptions { eclId = this._eclId, pd_group = itm.PdGroup, pd = itm.CummulativeSurvival });
+            }
+            pd_assumptions.Add(new LGD_PD_Assumptions { eclId = this._eclId, pd_group = ECLStringConstants.i.ExpiredContractsPrefix, pd = 0.1 });
 
             List<double?> outstanding_Bal_Lcy_array = lstRaw.Where(n => n.OutstandingBalanceLCY != null).Select(o=>o.OutstandingBalanceLCY).Distinct().ToList();
             List<string> ContractID_list = lstRaw.Where(n=>n.ContractNo!=null).Select(o=>o.ContractNo).Distinct().ToList();
@@ -1818,7 +1492,7 @@ namespace IFRS9_ECL.Core
             int wholeIndex = 0;
             foreach(var refNo in ps_contract_ref_no)
             {
-                var contractblock = ps.Where(o => o.CONTRACT_REF_NO == refNo).ToList();
+                var contractblock = ps.Where(o => o.ContractRefNo == refNo).ToList();
                 bool start_month_adjustment = false;
                 int frequency_factor;
                 int no_schedules;
@@ -1831,7 +1505,7 @@ namespace IFRS9_ECL.Core
                 //Determine frequency factor
                 foreach (var item in contractblock)
                 {
-                    string frequency = item.FREQUENCY.Trim();
+                    string frequency = item.Frequency.Trim();
                     if (ECLScheduleConstants.Bullet == frequency)
                     {
                         frequency_factor = 0;
@@ -1858,14 +1532,14 @@ namespace IFRS9_ECL.Core
                     }
 
                     //Run through each schedule
-                    no_schedules = item.NO_OF_SCHEDULES;
+                    no_schedules = item.NoOfSchedules;
 
                     //set amount
-                    amount = item.AMOUNT;
+                    amount = item.Amount;
 
                     //Determine the rounded months from the report date at which the entry starts.
                     //Allowed for this to be negative. This will be used later.
-                    start_date = item.START_DATE;
+                    start_date = item.StartDate;
 
                     if (start_date > ECLNonStringConstants.i.reportingDate)
                     {
@@ -1922,7 +1596,7 @@ namespace IFRS9_ECL.Core
                     //'Check whether the last schedule in this entry is more months from the reporting date than the max_ttm derived from the loan book snapshot.
                     for (double schedule = start_schedule; schedule <= no_schedules - 1; schedule++)
                     {// Assume advance from start date.
-                        _ps.Add(new PaymentSchedule { CONTRACT_ID=item.CONTRACT_ID, PAYMENT_TYPE=item.PAYMENT_TYPE, MONTHS=monthIndex.ToString(), VALUE=amount });
+                        _ps.Add(new PaymentSchedule { ContractId=item.ContractRefNo, PaymentType=item.Component, Months=monthIndex.ToString(), Value=amount });
 
                         wholeIndex++;
                         monthIndex++;

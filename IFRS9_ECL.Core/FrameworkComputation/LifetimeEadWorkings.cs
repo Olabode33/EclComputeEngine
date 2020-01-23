@@ -19,12 +19,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         Guid _eclId;
         protected IrFactorWorkings _irFactorWorkings;
         protected SicrInputWorkings _sicrInputs;
-
-        public LifetimeEadWorkings(Guid eclId)
+        protected EclType _eclType;
+        ProcessECL_LGD _processECL_LGD;
+        public LifetimeEadWorkings(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
-            _irFactorWorkings = new IrFactorWorkings(_eclId);
-            _sicrInputs = new SicrInputWorkings(this._eclId);
+            this._eclType = eclType;
+            _irFactorWorkings = new IrFactorWorkings(_eclId, _eclType);
+            _sicrInputs = new SicrInputWorkings(this._eclId, _eclType);
+            _processECL_LGD = new ProcessECL_LGD(eclId, eclType);
         }
 
 
@@ -40,7 +43,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var eadInputs = GetTempEadInputData();
             var sircInputs = GetSircInputResult();
-            var contractData = ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
+            var contractData = _processECL_LGD.GetLgdContractData();
             var marginalAccumulationFactor = GetMarginalAccumulationFactorResult();
 
             var refined_Raw_Data = GetRefinedLoanBookData();
@@ -149,7 +152,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<CIRProjections> GetCirProjectionData()
         {
-            var qry = Queries.WholesaleEadCirProjections(this._eclId);
+            var qry = Queries.WholesaleEadCirProjections(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var cirProjectionData = new List<CIRProjections>();
 
@@ -169,7 +172,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<LifeTimeProjections> GetTempEadInputData()
         {
-            var qry = Queries.EAD_GetLifeTimeProjections(this._eclId);
+            var qry = Queries.EAD_GetLifeTimeProjections(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var lifeTimeProjections = new List<LifeTimeProjections>();
 
@@ -183,7 +186,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<Refined_Raw_Retail_Wholesale> GetRefinedLoanBookData()
         {
-            var qry = Queries.Raw_Data;
+            var qry = Queries.Raw_Data(this._eclId, this._eclType);
             Console.WriteLine("Started");
             var _lstRaw = DataAccess.i.GetData(qry);
             Console.WriteLine("Selected Raw Data from table");
@@ -194,14 +197,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             }
             Console.WriteLine("Completed pass raw data to object");
 
-            var refined_lstRaw = ECLTasks.i.GenerateContractIdandRefinedData(lstRaw);
+            var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);
 
             return refined_lstRaw;
         }
 
         public List<Loanbook_Data> GetLoanBookData()
         {
-            var qry = Queries.Raw_Data;
+            var qry = Queries.Raw_Data(this._eclId, this._eclType);
             Console.WriteLine("Started");
             var _lstRaw = DataAccess.i.GetData(qry);
             Console.WriteLine("Selected Raw Data from table");

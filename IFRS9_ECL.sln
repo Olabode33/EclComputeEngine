@@ -15,6 +15,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS9_ECL.Models", "IFRS9_E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS_Test1", "IFRS_Test1\IFRS_Test1.csproj", "{BF7A7324-055C-4FCA-B365-3E5E2B6AEA25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service1", "Ecobank.IFRS9.ECL.Service1\Ecobank.IFRS9.ECL.Service1.csproj", "{289295A0-623F-4603-B846-E2044A7C330D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service2", "Ecobank.IFRS9.ECL.Service2\Ecobank.IFRS9.ECL.Service2.csproj", "{DDA73D89-031D-4D84-8F7A-2FB868AB7A8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service3", "Ecobank.IFRS9.ECL.Service3\Ecobank.IFRS9.ECL.Service3.csproj", "{B39EC6D0-F997-442F-963A-640F366E0607}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service4", "Ecobank.IFRS9.ECL.Service4\Ecobank.IFRS9.ECL.Service4.csproj", "{2839689A-C523-4A92-9635-E1D58531324D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service5", "Ecobank.IFRS9.ECL.Service5\Ecobank.IFRS9.ECL.Service5.csproj", "{8E55AD15-30E6-40A3-855C-7F18AB84D8D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +55,26 @@ Global
 		{BF7A7324-055C-4FCA-B365-3E5E2B6AEA25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF7A7324-055C-4FCA-B365-3E5E2B6AEA25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF7A7324-055C-4FCA-B365-3E5E2B6AEA25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{289295A0-623F-4603-B846-E2044A7C330D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{289295A0-623F-4603-B846-E2044A7C330D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{289295A0-623F-4603-B846-E2044A7C330D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{289295A0-623F-4603-B846-E2044A7C330D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDA73D89-031D-4D84-8F7A-2FB868AB7A8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDA73D89-031D-4D84-8F7A-2FB868AB7A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDA73D89-031D-4D84-8F7A-2FB868AB7A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDA73D89-031D-4D84-8F7A-2FB868AB7A8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B39EC6D0-F997-442F-963A-640F366E0607}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B39EC6D0-F997-442F-963A-640F366E0607}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B39EC6D0-F997-442F-963A-640F366E0607}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B39EC6D0-F997-442F-963A-640F366E0607}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2839689A-C523-4A92-9635-E1D58531324D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2839689A-C523-4A92-9635-E1D58531324D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2839689A-C523-4A92-9635-E1D58531324D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2839689A-C523-4A92-9635-E1D58531324D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E55AD15-30E6-40A3-855C-7F18AB84D8D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E55AD15-30E6-40A3-855C-7F18AB84D8D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E55AD15-30E6-40A3-855C-7F18AB84D8D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E55AD15-30E6-40A3-855C-7F18AB84D8D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

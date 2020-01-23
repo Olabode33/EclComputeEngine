@@ -13,10 +13,12 @@ namespace IFRS9_ECL.Core.PDComputation
         private ECL_Scenario _scenario;
 
         Guid _eclId;
+        EclType _eclType;
 
-        public VasicekWorkings(ECL_Scenario screnario, Guid eclId)
+        public VasicekWorkings(ECL_Scenario screnario, Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
+            this._eclType = eclType;
             _scenario = screnario;
         }
 
@@ -53,7 +55,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<IndexForecast> GetScenarioIndexForecastResult()
         {
-            var indexForecastWorkings = new IndexForecastWorkings(_scenario, this._eclId);
+            var indexForecastWorkings = new IndexForecastWorkings(_scenario, this._eclId, this._eclType);
             return indexForecastWorkings.ComputeIndexForecast();
         }
         protected double ComputeVasicekAverageFitted()
@@ -64,8 +66,8 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()
         {
-            var etiNpl = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_ETI_NPL();
-            var historicIndex = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_HistoricIndex();
+            var etiNpl = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_ETI_NPL();
+            var historicIndex = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex();
             double pdTtc = ComputePdTtc();
 
             var vasicekEtiNplIndex = new List<VasicekEtiNplIndex>();
@@ -98,7 +100,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double ComputePdTtc()
         {
-            return new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_ETI_NPL().Average(o=>o.Series);
+            return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_ETI_NPL().Average(o=>o.Series);
         }
 
         

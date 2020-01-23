@@ -13,10 +13,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
     public class UpdatedFSVsWorkings
     {
         private Guid eclId;
-
-        public UpdatedFSVsWorkings(Guid eclId)
+        EclType _eclType;
+        ProcessECL_LGD _processECL_LGD;
+        public UpdatedFSVsWorkings(Guid eclId, EclType eclType)
         {
             this.eclId = eclId;
+            this._eclType = eclType;
+            _processECL_LGD = new ProcessECL_LGD(eclId, eclType);
         }
 
         internal List<updatedFSV> ComputeUpdatedFSV()
@@ -83,7 +86,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         protected List<LGDCollateralData> GetCollateralTypeResult()
         {
-            return ProcessECL_Wholesale_LGD.i.GetLGDCollateralData(this.eclId);
+            return _processECL_LGD.GetLGDCollateralData();
         }
         
     }

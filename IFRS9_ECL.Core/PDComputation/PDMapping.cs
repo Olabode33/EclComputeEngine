@@ -20,11 +20,13 @@ namespace IFRS9_ECL.Core.PDComputation
         //protected PDMapping _pdMapping;
 
         Guid _eclId;
-        public PDMapping(Guid eclId)
+        EclType _eclType;
+        public PDMapping(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
-            _scenarioLifetimePd = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId);
-            _scenarioRedefaultLifetimePd = new ScenarioRedefaultLifetimePds(ECL_Scenario.Best, this._eclId);
+            this._eclType = eclType;
+            _scenarioLifetimePd = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
+            _scenarioRedefaultLifetimePd = new ScenarioRedefaultLifetimePds(ECL_Scenario.Best, this._eclId, this._eclType);
             //_pdMapping = new PDMapping(this._eclId);
         }
 
@@ -62,21 +64,21 @@ namespace IFRS9_ECL.Core.PDComputation
             }
 
           
-            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesalePdMappings_Table);
+            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PdMappings_Table(this._eclType));
 
-            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesalePdMappings_Table}]";
+            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PdMappings_Table(this._eclType)}]";
         }
 
         public List<WholesalePdMappings> ComputePdMappingTable()
         {
-            var temp = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
+            var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
 
             int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== PdAssumptionsRowKey.Expired).Value);
             int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value);
 
             //Get Data Excel/Database
-            var qry = Queries.Raw_Data;
+            var qry = Queries.Raw_Data(this._eclId,this._eclType);
             var _lstRaw = DataAccess.i.GetData(qry);
 
             var lstRaw = new List<Loanbook_Data>();
@@ -107,7 +109,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
                 mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
 
-                var sicrInputWorking = new SicrInputWorkings(this._eclId);
+                var sicrInputWorking = new SicrInputWorkings(this._eclId, this._eclType);
                 var sicrinput=sicrInputWorking.ComputeSICRInput(loanbookRecord, mappingRow, lifetimePds, redefaultLifetimePds);
 
                 mappingRow.DaysPastDue = sicrinput.DaysPastDue;
@@ -244,7 +246,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         internal List<WholesalePdMappings> GetPdMapping()
         {
-            var qry = Queries.PdMapping(this._eclId);
+            var qry = Queries.PdMapping(this._eclId, this._eclType);
             var _PdMapping = DataAccess.i.GetData(qry);
 
             var pdMapping = new List<WholesalePdMappings>();

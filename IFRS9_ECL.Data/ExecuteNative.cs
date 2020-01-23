@@ -10,45 +10,42 @@ namespace IFRS9_ECL.Data
 {
     public static class ExecuteNative
     {
-        public static string SaveEIRProjections(List<EIRProjections> d, Guid master_G)
+
+        public static string SaveEIRProjections(List<EIRProjections> d, Guid master_G, EclType eclType)
         {
             //truncate table
-            var qry = $"truncate table {ECLStringConstants.i.WholesaleEadEirProjections_Table}";
-            var tR=DataAccess.i.ExecuteQuery(qry);
+            //var qry = $"truncate table {ECLStringConstants.i.EadEirProjections_Table(eclType)}";
+            //var tR = DataAccess.i.ExecuteQuery(qry);
 
-            if(tR>=0)
+            var dt = new DataTable();
+            dt.Columns.Add("Id", typeof(Guid));
+            dt.Columns.Add("EIR_Group");
+            dt.Columns.Add("Month", typeof(int));
+            dt.Columns.Add("Value", typeof(float));
+            dt.Columns.Add("WholesaleEclId", typeof(Guid));
+
+            foreach (var _d in d)
             {
-                var dt = new DataTable();
-                dt.Columns.Add("Id", typeof(Guid));
-                dt.Columns.Add("EIR_Group");
-                dt.Columns.Add("Month", typeof(int));
-                dt.Columns.Add("Value", typeof(float));
-                dt.Columns.Add("WholesaleEclId", typeof(Guid));
-
-                foreach (var _d in d)
-                {
-                    var g = Guid.NewGuid();
-                    dt.Rows.Add(new object[]
-                        {
+                var g = Guid.NewGuid();
+                dt.Rows.Add(new object[]
+                    {
                             g,_d.eir_group, _d.months, _d.value, master_G.ToString()
-                        });
-                }
-                var r=DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleEadEirProjections_Table);
-
-                return r>0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesaleEadEirProjections_Table}]";
+                    });
             }
+            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EadEirProjections_Table(eclType));
 
-            return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleEadEirProjections_Table}]";
+            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.EadEirProjections_Table(eclType)}]";
+
         }
 
-        public static string SaveLGDAccountdata(List<LGDAccountData> d, Guid masterGuid)
+        public static string SaveLGDAccountdata(List<LGDAccountData> d, Guid masterGuid, EclType eclType)
         {
             //truncate table
-            var qry = $"truncate table {ECLStringConstants.i.WholesaleLGDAccountData_Table}";
-            var tR = DataAccess.i.ExecuteQuery(qry);
+            //var qry = $"truncate table {ECLStringConstants.i.LGDAccountData_Table(eclType)}";
+            //var tR = DataAccess.i.ExecuteQuery(qry);
 
-            if (tR >= 0)
-            {
+            //if (tR >= 0)
+            //{
                 var c = new LGDAccountData();
 
                 Type myObjOriginalType = c.GetType();
@@ -70,22 +67,22 @@ namespace IFRS9_ECL.Data
                             _d.Id, _d.CONTRACT_NO, _d.TTR_YEARS, _d.COST_OF_RECOVERY, _d.GUARANTOR_PD, _d.GUARANTOR_LGD, _d.GUARANTEE_VALUE, _d.GUARANTEE_LEVEL, masterGuid
                         });
                 }
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleLGDAccountData_Table);
+                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.LGDAccountData_Table(eclType));
 
-                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesaleLGDAccountData_Table}]";
-            }
+                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.LGDAccountData_Table(eclType)}]";
+            //}
 
-            return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleLGDAccountData_Table}]";
+            //return $"Could not Truncate Table [{ECLStringConstants.i.LGDAccountData_Table(eclType)}]";
         }
 
-        public static string SaveLGDCollaterals(List<LGDCollateralData> d, Guid masterGuid)
+        public static string SaveLGDCollaterals(List<LGDCollateralData> d, Guid masterGuid, EclType eclType)
         {
             //truncate table
-            var qry = $"truncate table {ECLStringConstants.i.WholesaleLGDCollateral_Table}";
-            var tR = DataAccess.i.ExecuteQuery(qry);
+            //var qry = $"truncate table {ECLStringConstants.i.LGDCollateral_Table(eclType)}";
+            //var tR = DataAccess.i.ExecuteQuery(qry);
 
-            if (tR >= 0)
-            {
+            //if (tR >= 0)
+            //{
                 var c = new LGDCollateralData();
 
                 Type myObjOriginalType = c.GetType();
@@ -110,22 +107,22 @@ namespace IFRS9_ECL.Data
                             ,_d.cash_fsv, _d.inventory_fsv, _d.plant_and_equipment_fsv, _d.residential_property_fsv, _d.commercial_property_fsv, _d.receivables_fsv, _d.shares_fsv, _d.vehicle_fsv, masterGuid
                         });
                 }
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleLGDCollateral_Table);
+                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.LGDCollateral_Table(eclType));
 
-                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesaleLGDCollateral_Table}]";
-            }
+                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.LGDCollateral_Table(eclType)}]";
+            //}
 
-            return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleLGDCollateral_Table}]";
+            //return $"Could not Truncate Table [{ECLStringConstants.i.LGDCollateral_Table(eclType)}]";
         }
 
-        public static string SaveCIRProjections(List<CIRProjections> d, Guid master_G)
+        public static string SaveCIRProjections(List<CIRProjections> d, Guid master_G, EclType eclType)
         {
             //truncate table
-            var qry = $"truncate table {ECLStringConstants.i.WholesaleEadCirProjections_Table}";
-            var tR = DataAccess.i.ExecuteQuery(qry);
+            //var qry = $"truncate table {ECLStringConstants.i.EadCirProjections_Table(eclType)}";
+            //var tR = DataAccess.i.ExecuteQuery(qry);
 
-            if (tR >= 0)
-            {
+            //if (tR >= 0)
+            //{
 
                 var dt = new DataTable();
                 dt.Columns.Add("Id", typeof(Guid));
@@ -143,22 +140,22 @@ namespace IFRS9_ECL.Data
                             g, _d.cir_group, _d.months, _d.value, _d.cir_effective, master_G.ToString()
                         });
                 }
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleEadCirProjections_Table);
+                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EadCirProjections_Table(eclType));
 
-                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesaleEadCirProjections_Table}]";
-            }
+                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.EadCirProjections_Table(eclType)}]";
+        //}
 
-            return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleEadCirProjections_Table}]";
+        //    return $"Could not Truncate Table [{ECLStringConstants.i.EadCirProjections_Table(eclType)}]";
         }
 
-        public static string SaveLifeTimeProjections(List<LifeTimeProjections> d, Guid master_G)
+        public static string SaveLifeTimeProjections(List<LifeTimeProjections> d, Guid master_G, EclType eclType)
         {
             //truncate table
-            var qry = $"truncate table {ECLStringConstants.i.WholesaleEadLifetimeProjections_Table}";
-            var tR = DataAccess.i.ExecuteQuery(qry);
+            //var qry = $"truncate table {ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}";
+            //var tR = DataAccess.i.ExecuteQuery(qry);
 
-            if (tR >= 0)
-            {
+            //if (tR >= 0)
+            //{
                 var dt = new DataTable();
                 dt.Columns.Add("Id", typeof(Guid));
                 dt.Columns.Add("Contract_no");
@@ -176,12 +173,12 @@ namespace IFRS9_ECL.Data
                             g, _d.Contract_no,_d.Eir_Group,_d.Cir_Group, _d.Month, _d.Value, master_G.ToString()
                         });
                 }
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.WholesaleEadLifetimeProjections_Table);
+                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EadLifetimeProjections_Table(eclType));
 
-                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.WholesaleEadLifetimeProjections_Table}]";
-            }
+                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}]";
+            //}
 
-            return $"Could not Truncate Table [{ECLStringConstants.i.WholesaleEadLifetimeProjections_Table}]";
+            //return $"Could not Truncate Table [{ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}]";
         }
     }
 }

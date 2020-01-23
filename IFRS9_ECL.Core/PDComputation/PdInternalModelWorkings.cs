@@ -17,9 +17,11 @@ namespace IFRS9_ECL.Core.PDComputation
         protected const int _maxRatingRank = 10;
 
         Guid _eclId;
+        EclType _eclType;
 
-        public PdInternalModelWorkings(Guid eclId)
+        public PdInternalModelWorkings(Guid eclId, EclType eclType)
         {
+            this._eclType = eclType;
             this._eclId = eclId;
         }
 
@@ -154,7 +156,7 @@ namespace IFRS9_ECL.Core.PDComputation
         protected List<LogOddRatio> ComputeLogsOddsRatio()
         {
             //var pd12MonthAssumption = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions(); //.Get_PDI_12MonthPds();
-            var pdInputAssumptions = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions();
+            var pdInputAssumptions = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             var logRates = ComputeLogRates();
 
             var logOddsRatioResult = new List<LogOddRatio>();
@@ -209,7 +211,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<LogOddRatio> ComputeLogRates()
         {
-            var snpCummulativeRate = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_SnPCummlativeDefaultRate();
+            var snpCummulativeRate = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_SnPCummlativeDefaultRate();
 
             var logRateResult = new List<LogOddRatio>();
 

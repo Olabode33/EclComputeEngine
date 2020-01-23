@@ -16,13 +16,15 @@ namespace IFRS9_ECL.Core.PDComputation
         protected VasicekWorkings _vasicekWorkings;
 
         Guid _eclId;
+        EclType _eclType;
 
-        public ScenarioMarginalPd(ECL_Scenario scenario, Guid eclId)
+        public ScenarioMarginalPd(ECL_Scenario scenario, Guid eclId, EclType eclType)
         {
             _scenario = scenario;
             this._eclId = eclId;
-            _pdInternalModelWorkings = new PdInternalModelWorkings(this._eclId);
-            _vasicekWorkings = new VasicekWorkings(_scenario, this._eclId);
+            this._eclType = eclType;
+            _pdInternalModelWorkings = new PdInternalModelWorkings(this._eclId, this._eclType);
+            _vasicekWorkings = new VasicekWorkings(_scenario, this._eclId, this._eclType);
         }
 
         public void Run()
@@ -136,7 +138,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<PdInputAssumptionNonInternalModels> GetNonInternalModelInputsData()
         {
-            return new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_NonInternalModelInputs();
+            return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_NonInternalModelInputs();
         }
     }
 }

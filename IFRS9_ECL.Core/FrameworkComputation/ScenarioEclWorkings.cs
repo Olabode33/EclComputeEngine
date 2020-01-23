@@ -21,14 +21,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private ECL_Scenario _scenario;
         Guid _eclId;
-        public ScenarioEclWorkings(Guid eclId, ECL_Scenario scenario)
+        EclType _eclType;
+        public ScenarioEclWorkings(Guid eclId, ECL_Scenario scenario, EclType eclType)
         {
             this._eclId = eclId;
             _scenario = scenario;
-            _lifetimeEad = new LifetimeEadWorkings(eclId);
-            _lifetimeLgd = new ScenarioLifetimeLGD(eclId, _scenario);
-            _irFactorWorkings = new IrFactorWorkings(eclId);
-            _sicrWorkings = new SicrWorkings(eclId);
+            this._eclType = eclType;
+
+            _lifetimeEad = new LifetimeEadWorkings(eclId, this._eclType);
+            _lifetimeLgd = new ScenarioLifetimeLGD(eclId, _scenario, this._eclType);
+            _irFactorWorkings = new IrFactorWorkings(eclId, this._eclType);
+            _sicrWorkings = new SicrWorkings(eclId, this._eclType);
         }
 
 
@@ -173,13 +176,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeBests_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeBests_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeOptimistics_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.WholesalePdLifetimeDownturns_Table, this._eclId);
+                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeDownturns_Table(this._eclType), this._eclId, this._eclType);
                     break;
                 default:
                     return null;

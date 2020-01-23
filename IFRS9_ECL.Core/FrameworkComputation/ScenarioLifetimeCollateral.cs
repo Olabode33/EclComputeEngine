@@ -20,14 +20,16 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         ECL_Scenario _scenario;
         Guid _eclId;
-        public ScenarioLifetimeCollateral(ECL_Scenario scenario, Guid eclId)
+        EclType _eclType;
+        public ScenarioLifetimeCollateral(ECL_Scenario scenario, Guid eclId, EclType eclType)
         {
             _scenario = scenario;
             this._eclId = eclId;
-            _lifetimeEad = new LifetimeEadWorkings(eclId);
-            _irFactorWorkings = new IrFactorWorkings(eclId);
-            _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId);
-            _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId);
+            this._eclType = eclType;
+            _lifetimeEad = new LifetimeEadWorkings(eclId, this._eclType);
+            _irFactorWorkings = new IrFactorWorkings(eclId, this._eclType);
+            _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId, this._eclType);
+            _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
         public void Run()
         {
@@ -120,7 +122,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private List<LGDAccountData> GetContractData()
         {
-            return ProcessECL_Wholesale_LGD.i.GetLgdContractData(this._eclId);
+            return new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData();
         }
         protected List<IrFactor> GetMarginalDiscountFactor()
         {
@@ -136,13 +138,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LgdCollateralProjection(this._eclId, 0);
+                    qry = Queries.LgdCollateralProjection(this._eclId, 0, this._eclType);
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LgdCollateralProjection(this._eclId,1);
+                    qry = Queries.LgdCollateralProjection(this._eclId,1, this._eclType);
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LgdCollateralProjection(this._eclId,2);
+                    qry = Queries.LgdCollateralProjection(this._eclId,2, this._eclType);
                     break;
                 default:
                     return null;

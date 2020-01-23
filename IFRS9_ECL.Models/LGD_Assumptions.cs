@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Models
 {
-    public class LGD_Assumptions
+    public class LGD_Assumptions_CollateralType_TTR_Years
     {
         public double collateral_value { get; set; }
         public double debenture { get; set; }
@@ -15,9 +15,9 @@ namespace IFRS9_ECL.Models
         public double plant_and_equipment { get; set; }
         public double residential_property { get; set; }
         public double commercial_property { get; set; }
+        public double Receivables { get; set; }
         public double shares { get; set; }
         public double vehicle { get; set; }
-        public string costOfRecovery { get; set; }
     }
 
     public class LGD_Assumptions_2

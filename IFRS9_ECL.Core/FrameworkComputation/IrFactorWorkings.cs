@@ -17,9 +17,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         private const string CIR_TYPE = FrameworkConstants.CIR;
 
         Guid _eclId;
-        public IrFactorWorkings(Guid eclId)
+        EclType _eclType;
+        public IrFactorWorkings(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
+            this._eclType = eclType;
         }
 
         public List<IrFactor> Run()
@@ -121,7 +123,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private List<EIRProjections> GetEirProjectionData()
         {
-            var qry=Queries.EAD_GetEIRProjections(this._eclId);
+            var qry=Queries.EAD_GetEIRProjections(this._eclId, this._eclType);
             var dt=DataAccess.i.GetData(qry);
             var eIRProjections = new List<EIRProjections>();
 

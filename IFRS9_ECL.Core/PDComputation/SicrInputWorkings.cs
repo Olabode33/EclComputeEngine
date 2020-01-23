@@ -18,9 +18,11 @@ namespace IFRS9_ECL.Core.PDComputation
         //protected PDMapping _pdMapping;
 
         Guid _eclId;
-        public SicrInputWorkings(Guid eclId)
+        EclType _eclType;
+        public SicrInputWorkings(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
+            this._eclType = eclType;
             //_scenarioLifetimePd = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId);
             //_scenarioRedefaultLifetimePd = new ScenarioRedefaultLifetimePds(ECL_Scenario.Best, this._eclId);
             //_pdMapping = new PDMapping(this._eclId);
@@ -118,7 +120,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         public List<SicrInputs> GetSircInputResult()
         {
-            var qry = Queries.PD_GetSIRCInputResult(this._eclId);
+            var qry = Queries.PD_GetSIRCInputResult(this._eclId, _eclType);
             var dt = DataAccess.i.GetData(qry);
             var lifeTimeProjections = new List<SicrInputs>();
 
@@ -170,7 +172,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<Loanbook_Data> GetLoanbookData()
         {
-            var qry = Queries.Raw_Data;
+            var qry = Queries.Raw_Data(this._eclId, this._eclType);
             var _lstRaw = DataAccess.i.GetData(qry);
 
             var lstRaw = new List<Loanbook_Data>();

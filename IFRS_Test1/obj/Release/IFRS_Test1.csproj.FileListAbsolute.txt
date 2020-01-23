@@ -21,3 +21,5 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\obj\Release\IFRS_Tes
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\obj\Release\IFRS_Test1.pdb
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\FSharp.Core.dll
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\FSharp.Core.xml
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\log4net.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\log4net.xml
