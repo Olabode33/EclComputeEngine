@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Core
 {
@@ -39,6 +40,43 @@ namespace IFRS9_ECL.Core
             }
             Console.WriteLine($"Finished Extracting Raw Data - {DateTime.Now}");
 
+
+
+            var threads = lstRaw.Count / 1000;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_LoanBook = lstRaw.Skip(i * 1000).Take(1000).ToList();
+
+                var task = Task.Run(() => {
+                    RunLGDJob(sub_LoanBook, _eclId, _eclType);
+                });
+                taskLst.Add(task);
+            }
+            Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
+            Console.WriteLine($"Task Completed: {completedTask}");
+
+            while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+            {
+                var newCount = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
+                if (completedTask != newCount)
+                {
+                    Console.WriteLine($"Task Completed: {completedTask}");
+                }
+                //Do Nothing
+            }
+
+            return true;
+        }
+
+        private bool RunLGDJob(List<Loanbook_Data> lstRaw, Guid _eclId, EclType _eclType)
+        {
+
             //Next Line to be removed
             //lstRaw = lstRaw.Where(o => o.ContractStartDate == null && o.ContractEndDate == null).Take(5).ToList();
 
@@ -68,6 +106,7 @@ namespace IFRS9_ECL.Core
 
             return true;
         }
+
         public List<LGDAccountData> GetLgdContractData()
         {
             var qry = Queries.LGD_LgdAccountDatas(_eclId, _eclType);
