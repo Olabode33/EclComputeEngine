@@ -19,7 +19,7 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
-            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";
+            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
@@ -81,7 +81,7 @@ namespace IFRS9_ECL.Data
 
         public static string eclAssumptions(Guid eclId, EclType eclType)
         {
-            return $"select Key, Value, LgdGroup from {eclType.ToString()}EclAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"select [Key], Value, LgdGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
     }
 }

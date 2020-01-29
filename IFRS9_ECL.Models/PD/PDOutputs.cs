@@ -16,7 +16,7 @@ namespace IFRS9_ECL.Models.PD
         public Guid WholesaleEclId { get; set; }
     }
 
-    public class WholesalePdMappings
+    public class PdMappings
     {
         public Guid Id { get; set; }
         public string ContractId { get; set; }

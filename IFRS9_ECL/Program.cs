@@ -14,7 +14,7 @@ namespace IFRS9_ECL
         {
             var lst = new List<int>();
 
-
+            
             Console.WriteLine($"Start Time {DateTime.Now}");
             //Process Wholesale
             var masterGuid = Guid.NewGuid();
@@ -22,18 +22,21 @@ namespace IFRS9_ECL
 
             //ProcessECL_EAD.i.ProcessTask(masterGuid, EclType.Wholesale);
 
-            Console.WriteLine("Done Done Done");
-            Console.ReadKey();
+            //Console.WriteLine("Done Done Done");
+            //Console.ReadKey();
            // return;
-            new ProcessECL_LGD(masterGuid, EclType.Retail).ProcessTask();
+            //new ProcessECL_LGD(masterGuid, EclType.Wholesale).ProcessTask();
 
 
-            Console.WriteLine("Done Done Done");
-            Console.ReadKey();
-             return;
+            //Console.WriteLine("Done Done Done");
+            //Console.ReadKey();
+            // return;
 
-            new ProcessECL_PD(masterGuid, EclType.Retail).ProcessTask();
+            new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
             Console.WriteLine($"End Time {DateTime.Now}");
+            //Console.WriteLine("Done Done Done");
+            //Console.ReadKey();
+            // return;
         }
     }
 }

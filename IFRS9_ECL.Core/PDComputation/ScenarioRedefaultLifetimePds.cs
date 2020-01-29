@@ -79,14 +79,15 @@ namespace IFRS9_ECL.Core.PDComputation
             var marginalPd = GetScenarioMarginalPd();
             double readjustmentFactor = GetRedefaultAdjustmentFactor();
 
-            double test = GetMonthMarginalPdForPdGroup(marginalPd, "1", 10, readjustmentFactor);
-            double test2 = marginalPd.FirstOrDefault(row => row.PdGroup == "1" && row.Month == 10).Value;
+            //double test = GetMonthMarginalPdForPdGroup(marginalPd, "2", 10, readjustmentFactor);
+            //double test2 = marginalPd.FirstOrDefault(row => row.PdGroup == "2" && row.Month == 10).Value;
 
-            double test3 = test2 * readjustmentFactor;
-            double test4 = test3 * test;
+            //double test3 = test2 * readjustmentFactor;
+            //double test4 = test3 * test;
 
             foreach (var row in marginalPd)
             {
+
                 double prevValue = GetMonthMarginalPdForPdGroup(marginalPd, row.PdGroup,
                                                                             row.Month,
                                                                             readjustmentFactor);

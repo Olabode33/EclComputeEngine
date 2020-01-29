@@ -261,7 +261,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             return _lifetimeEadWorkings.GetLoanBookData();
         }
-        protected List<WholesalePdMappings> GetPdIndexMappingResult()
+        protected List<PdMappings> GetPdIndexMappingResult()
         {
             return _pdMapping.GetPdMapping();
         }

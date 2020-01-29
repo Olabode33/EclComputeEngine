@@ -242,7 +242,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             return assumptions.FirstOrDefault(x => x.Key == assumptionKey).Value;
         }
-        protected List<WholesalePdMappings> GetPdMappingResult()
+        protected List<PdMappings> GetPdMappingResult()
         {
             return _pdMapping.GetPdMapping();
         }

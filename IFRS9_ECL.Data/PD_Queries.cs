@@ -51,7 +51,7 @@ namespace IFRS9_ECL.Data
         }
         public static string Get_pdInputAssumptionsQuery(Guid eclId, EclType eclType)
         {
-            return $"SELECT PdGroup, Key,Value, InputName, WholesaleEclId FROM {eclType.ToString()}EclPdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"SELECT PdGroup, [Key],Value, InputName, {eclType.ToString()}EclId FROM {eclType.ToString()}EclPdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
 

@@ -34,7 +34,7 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var pdMappings = ComputePdMappingTable();
 
-            var c = new WholesalePdMappings();
+            var c = new PdMappings();
 
             Type myObjOriginalType = c.GetType();
             PropertyInfo[] myProps = myObjOriginalType.GetProperties();
@@ -69,7 +69,7 @@ namespace IFRS9_ECL.Core.PDComputation
             return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PdMappings_Table(this._eclType)}]";
         }
 
-        public List<WholesalePdMappings> ComputePdMappingTable()
+        public List<PdMappings> ComputePdMappingTable()
         {
             var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
@@ -90,14 +90,14 @@ namespace IFRS9_ECL.Core.PDComputation
             var _NonExpLoanbook_data = lstRaw.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
 
 
-            var pdMappingTable = new List<WholesalePdMappings>();
+            var pdMappingTable = new List<PdMappings>();
 
             var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
             var redefaultLifetimePds = _scenarioRedefaultLifetimePd.ComputeRedefaultLifetimePd();
 
             foreach (var loanbookRecord in _NonExpLoanbook_data)
             {
-                var mappingRow = new WholesalePdMappings();
+                var mappingRow = new PdMappings();
                 mappingRow.ContractId = loanbookRecord.ContractId;
                 mappingRow.AccountNo = loanbookRecord.AccountNo;
                 mappingRow.ProductType = loanbookRecord.ProductType;
@@ -109,31 +109,33 @@ namespace IFRS9_ECL.Core.PDComputation
                 mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
                 mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
 
-                var sicrInputWorking = new SicrInputWorkings(this._eclId, this._eclType);
-                var sicrinput=sicrInputWorking.ComputeSICRInput(loanbookRecord, mappingRow, lifetimePds, redefaultLifetimePds);
-
-                mappingRow.DaysPastDue = sicrinput.DaysPastDue;
-                mappingRow.LifetimePd = sicrinput.LifetimePd;
-                mappingRow.Pd12Month = sicrinput.Pd12Month;
-                mappingRow.RedefaultLifetimePD = sicrinput.RedefaultLifetimePd;
-                mappingRow.Stage1Transition = sicrinput.Stage1Transition;
-                mappingRow.Stage2Transition = sicrinput.Stage2Transition;
-
+                
+               
                 pdMappingTable.Add(mappingRow);
             }
-
-
             pdMappingTable = pdMappingTable.Select(row =>
-                                {
-                                    row.MaxClassificationScore = ComputeMaxClassificationScorePerRecord(row, pdMappingTable);
-                                    return row;
-                                }).ToList();
+            {
+                row.MaxClassificationScore = ComputeMaxClassificationScorePerRecord(row, pdMappingTable);
+                return row;
+            }).ToList();
+            var sicrInputWorking = new SicrInputWorkings(this._eclId, this._eclType);
+            for (int i = 0; i < pdMappingTable.Count; i++)
+            {
+                var sicrinput = sicrInputWorking.ComputeSICRInput(_NonExpLoanbook_data[i], pdMappingTable[i], lifetimePds, redefaultLifetimePds);
+
+                pdMappingTable[i].DaysPastDue = sicrinput.DaysPastDue;
+                pdMappingTable[i].LifetimePd = sicrinput.LifetimePd;
+                pdMappingTable[i].Pd12Month = sicrinput.Pd12Month;
+                pdMappingTable[i].RedefaultLifetimePD = sicrinput.RedefaultLifetimePd;
+                pdMappingTable[i].Stage1Transition = sicrinput.Stage1Transition;
+                pdMappingTable[i].Stage2Transition = sicrinput.Stage2Transition;
+            }
 
             return pdMappingTable;
         }
 
         
-        protected string ComputePdGroupingPerRecord(WholesalePdMappings pdMappingWorkingRecord)
+        protected string ComputePdGroupingPerRecord(PdMappings pdMappingWorkingRecord)
         {
             string pdGrouping = "";
             string[] productTypes = { ECLStringConstants.i._productType_od.ToLower(), ECLStringConstants.i._productType_card.ToLower(), ECLStringConstants.i._productType_cards.ToLower() };
@@ -207,7 +209,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 return restructureEndDate;
             }
         }
-        protected int ComputeMaxClassificationScorePerRecord(WholesalePdMappings pdMappingWorkingRecord, List<WholesalePdMappings> pdMappingWorkings)
+        protected int ComputeMaxClassificationScorePerRecord(PdMappings pdMappingWorkingRecord, List<PdMappings> pdMappingWorkings)
         {
             var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
             return r;
@@ -244,15 +246,15 @@ namespace IFRS9_ECL.Core.PDComputation
             return current_rating > 10 ? current_rating / 10 : current_rating;
         }
 
-        internal List<WholesalePdMappings> GetPdMapping()
+        internal List<PdMappings> GetPdMapping()
         {
             var qry = Queries.PdMapping(this._eclId, this._eclType);
             var _PdMapping = DataAccess.i.GetData(qry);
 
-            var pdMapping = new List<WholesalePdMappings>();
+            var pdMapping = new List<PdMappings>();
             foreach (DataRow dr in _PdMapping.Rows)
             {
-                pdMapping.Add(DataAccess.i.ParseDataToObject(new WholesalePdMappings(), dr));
+                pdMapping.Add(DataAccess.i.ParseDataToObject(new PdMappings(), dr));
             }
             return pdMapping;
         }

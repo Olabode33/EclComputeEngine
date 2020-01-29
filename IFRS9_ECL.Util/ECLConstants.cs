@@ -32,7 +32,7 @@ namespace IFRS9_ECL.Util
         }
 
         public string PdRedefaultLifetimeBests_Table(EclType eclType) { return $"{eclType.ToString()}PdRedefaultLifetimeBests";  }
-        public string PdRedefaultLifetimeDownturns_Table(EclType eclType) { return $"{eclType.ToString()}WholesalePdRedefaultLifetimeDownturns";  }
+        public string PdRedefaultLifetimeDownturns_Table(EclType eclType) { return $"{eclType.ToString()}PdRedefaultLifetimeDownturns";  }
         public string PdRedefaultLifetimeOptimistics_Table(EclType eclType) { return $"{eclType.ToString()}PdRedefaultLifetimeOptimistics";  }
 
 

@@ -50,7 +50,7 @@ namespace IFRS9_ECL.Core
             for (int i = 0; i < arg1.Length; i++)
             {
                 var _arg2 = 0.0;
-                if (arg2.Length-1 > i)
+                if (arg2.Length-1 >= i)
                     _arg2 = arg2[i];
 
                 result += arg1[i] * _arg2;

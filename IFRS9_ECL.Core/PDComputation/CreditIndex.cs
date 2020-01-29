@@ -83,12 +83,14 @@ namespace IFRS9_ECL.Core.PDComputation
             var indexForecastOptimistic = GetScenarioIndexForecasting(_indexForecastOptimistics);
             var indexForecastDownturn = GetScenarioIndexForecasting(_indexForecastDownturn);
 
+
+            double vasicekIndexUsed = GetScenarioVasicekIndex();
+
             for (int month = 0; month <= _maxCreditIndexMonth; month++)
             {
                 int monthOffset = Convert.ToInt32((month - 1) / 3) * 3 + 3;
                 DateTime eoMonth = ExcelFormulaUtil.EOMonth(ECLNonStringConstants.i.reportingDate, monthOffset);
-                double vasicekIndexUsed = GetScenarioVasicekIndex();
-
+               
                 var dr = new CreditIndex_Output();
                 dr.ProjectionMonth = month;
                 dr.BestEstimate = month < 1 ? vasicekIndexUsed : indexForecastBest.FirstOrDefault(o => o.Date == eoMonth).Standardised;

@@ -58,12 +58,12 @@ namespace IFRS9_ECL.Core
             }
             Console.WriteLine($"Total Task : {taskLst.Count()}");
 
-            var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
             Console.WriteLine($"Task Completed: {completedTask}");
 
-            while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+            while (!taskLst.Any(o => o.IsCompleted))
             {
-                var newCount = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
+                var newCount = taskLst.Where(o => o.IsCompleted).Count();
                 if (completedTask != newCount)
                 {
                     Console.WriteLine($"Task Completed: {completedTask}");

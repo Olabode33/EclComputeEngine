@@ -39,13 +39,26 @@ namespace IFRS9_ECL.Core.PDComputation
 
             var logOddsRatio = GetMonthlyLogOddsRatio();
             var varsicekIndex = GetVasicekScenario();
+
+            var lstVarsicekIndex = new List<VasicekEtiNplIndex>();
+            int i = 0;
+            int j = 1;
+            while(lstVarsicekIndex.Count<24)
+            {
+                varsicekIndex[i].Month = j;
+                lstVarsicekIndex.Add(varsicekIndex[i]);
+                i = i + 3;
+                j = j + 1;
+            }
+            
+
             var nonInternalModelInput = GetNonInternalModelInputsData();
 
             for (int month = 1; month <= ECLNonStringConstants.i.MaxMarginalLifetimeRedefaultPdMonth; month++)
             {
 
                 int vasicekSearchMonth = Convert.ToInt32((month - 1) / 3) + 1;
-                double vasicekIndexMonthValue = varsicekIndex.FirstOrDefault(row => row.Month == (vasicekSearchMonth < 24 ? vasicekSearchMonth : 24)).ScenarioFactor;
+                double vasicekIndexMonthValue = lstVarsicekIndex.FirstOrDefault(row => row.Month == (vasicekSearchMonth < 24 ? vasicekSearchMonth : 24)).ScenarioFactor;
 
                 //Pd group 1 to 9
                 for (int pdGroup = 1; pdGroup < 10; pdGroup++)

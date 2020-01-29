@@ -86,7 +86,7 @@ namespace IFRS9_ECL.Core.PDComputation
         //    return sicrInput;
         //}
 
-        public SicrInputs ComputeSICRInput(Loanbook_Data loanbookRow, WholesalePdMappings contractPdMapping, List<LifeTimeObject> lifetimePds, List<LifeTimeObject> redefaultLifetimePds)
+        public SicrInputs ComputeSICRInput(Loanbook_Data loanbookRow, PdMappings contractPdMapping, List<LifeTimeObject> lifetimePds, List<LifeTimeObject> redefaultLifetimePds)
         {
             string contractPdGroup = contractPdMapping.PdGroup;
             int contractTtmMonths = contractPdMapping.TtmMonths;
@@ -140,7 +140,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 return maxDpd < 30 ? 0 : 30;
             }
-            else if (maxClassification == 3)
+            if (maxClassification == 3)
             {
                 return 90;
             }

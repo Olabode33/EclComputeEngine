@@ -14,7 +14,7 @@ namespace IFRS9_ECL.Core.PDComputation
     {
         protected const int _maxLogRateYear = 15;
         protected const int _maxRatingYear = 20;
-        protected const int _maxRatingRank = 10;
+        protected const int _maxRatingRank = 9;
 
         Guid _eclId;
         EclType _eclType;
@@ -109,36 +109,30 @@ namespace IFRS9_ECL.Core.PDComputation
 
             ///Get cummulative values for year 1
             var marginalDefaultRateResult = new List<LogOddRatio>();
-            marginalDefaultRateResult = cummulativeDefaultRate;
-            var tempDt = cummulativeDefaultRate.Where(row => row.Year == 1).ToList();
-            foreach (var dr in tempDt)
-            {
-                var dataRow = new LogOddRatio();
-                dataRow.Rank = dr.Rank;
-                dataRow.Rating = dr.Rating;
-                dataRow.Year = dr.Year;
-                dataRow.LogOddsRatio = dr.LogOddsRatio;
-                marginalDefaultRateResult.Add(dataRow);
-            }
+            //marginalDefaultRateResult = cummulativeDefaultRate;
 
-            for (int year = 2; year <= _maxRatingYear; year++)
+
+            for(int i=0; i<cummulativeDefaultRate.Count; i++)
             {
-                for (int rank = 1; rank <= _maxRatingRank; rank++)
+                var itm = new LogOddRatio();
+
+                itm.Rank = cummulativeDefaultRate[i].Rank;
+                itm.LogOddsRatio = cummulativeDefaultRate[i].LogOddsRatio;
+                itm.Rating = cummulativeDefaultRate[i].Rating;
+                itm.Year = cummulativeDefaultRate[i].Year;
+
+                if (cummulativeDefaultRate[i].Year!=1)
                 {
-                    double prevYearRate = cummulativeDefaultRate.FirstOrDefault(row =>row.Rank == rank && row.Year == year - 1).LogOddsRatio;
-
-                    var currYearRate = cummulativeDefaultRate.FirstOrDefault(row =>row.Rank == rank && row.Year == year);
-
-                    double rate = (currYearRate.LogOddsRatio - prevYearRate) / (1 - prevYearRate);
-
-                    var dataRow = new LogOddRatio();
-                    dataRow.Rank = currYearRate.Rank;
-                    dataRow.Rating = currYearRate.Rating;
-                    dataRow.Year = currYearRate.Year;
-                    dataRow.LogOddsRatio = rate;
-                    marginalDefaultRateResult.Add(dataRow);
+                    try
+                    {
+                        var prev = cummulativeDefaultRate.FirstOrDefault(o => o.Year == cummulativeDefaultRate[i].Year - 1 && o.Rank == cummulativeDefaultRate[i].Rank && o.Rating == cummulativeDefaultRate[i].Rating);
+                        itm.LogOddsRatio = (cummulativeDefaultRate[i].LogOddsRatio - prev.LogOddsRatio) / (1 - prev.LogOddsRatio);
+                    }
+                    catch { itm.LogOddsRatio = 1; }
                 }
+                marginalDefaultRateResult.Add(itm);
             }
+           
 
             return marginalDefaultRateResult;
         }

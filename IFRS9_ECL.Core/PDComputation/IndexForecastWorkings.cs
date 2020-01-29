@@ -27,13 +27,14 @@ namespace IFRS9_ECL.Core.PDComputation
 
             var principalData = ComputeScenarioPrincipalComponents();
 
+            double indexStandardDeviation = ComputeHistoricIndexStandardDeviation();
+            double indexMean = ComputeHistoricIndexMean();
+
+
             foreach (var itm in principalData)
             {
                 double actual = itm.Principal1 * ECLNonStringConstants.i.IndexWeight1 + itm.Principal2 * ECLNonStringConstants.i.IndexWeight2;
-                    
-                double indexStandardDeviation = ComputeHistoricIndexStandardDeviation();
-                double indexMean = ComputeHistoricIndexMean();
-
+              
                 var dr = new IndexForecast();
                 dr.Date = itm.Date;
                 dr.Actual = actual;
@@ -63,7 +64,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 var date_standardisedData = standardisedData.Where(o => o.Date == dt.Date).ToList();
 
-                double[] standardised = new double[standardisedData.Count];
+                double[] standardised = new double[date_standardisedData.Count];
                 double[] principal1 = new double[macroeconomicPrincipal1.Count];
                 double[] principal2 = new double[macroeconomicPrincipal2.Count];
 
@@ -71,25 +72,27 @@ namespace IFRS9_ECL.Core.PDComputation
                 {
                     standardised[i] = date_standardisedData[i].MacroEconomicValue;
 
-                    if(principal1.Length-1>i)
+                    if(principal1.Length-1>=i)
                     {
                         var p1 = macroeconomicPrincipal1.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal1[i] = p1 != null ? p1.MacroEconomicValue : 0;
                     }
 
-                    if (principal2.Length - 1 > i)
+                    if (principal2.Length - 1 >= i)
                     {
                         var p2 = macroeconomicPrincipal2.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal2[i] = p2 != null ? p2.MacroEconomicValue : 0;
                     }
-
-                    var dr = new IndexForecast();
-                    dr.Date = dt.Date;
-                    dr.Principal1 = ExcelFormulaUtil.SumProduct(standardised, principal1);
-                    dr.Principal2 = ExcelFormulaUtil.SumProduct(standardised, principal2);
-
-                    principalData.Add(dr);
                 }
+
+                foreach(var itm in standardisedData.Where(o=>o.Date== dt.Date).ToList())
+                {
+                    itm.Principal1 = ExcelFormulaUtil.SumProduct(standardised, principal1);
+                    itm.Principal2 = ExcelFormulaUtil.SumProduct(standardised, principal2);
+
+                    principalData.Add(itm);
+                }
+
             }
 
             return principalData;
@@ -101,16 +104,19 @@ namespace IFRS9_ECL.Core.PDComputation
 
             //var statisticalInputs = GetStatisticalInputData();
             var originalData = GetScenarioProjectionOriginalData();
-            var macroeconomicMean = statisticalInputs.FirstOrDefault(o => o.Mode == StatisticalInputsRowKeys.Mean);
-            var macroeconomicStandardDeviation = statisticalInputs.FirstOrDefault(o => o.Mode == StatisticalInputsRowKeys.StandardDeviation);
 
+            //double macroeconomicStandardDeviation = ComputeHistoricIndexStandardDeviation();
+            //double macroeconomicMean = ComputeHistoricIndexMean();
 
             foreach (var row in originalData)
             {
+                var macroeconomicMean = statisticalInputs.FirstOrDefault(o => o.MacroEconomicVariableId==row.MacroEconomicVariableId && o.Mode == StatisticalInputsRowKeys.Mean);
+                var macroeconomicStandardDeviation = statisticalInputs.FirstOrDefault(o => o.MacroEconomicVariableId == row.MacroEconomicVariableId && o.Mode == StatisticalInputsRowKeys.StandardDeviation);
+
                 var dr = new IndexForecast();
                 dr.Date = row.Date;
                 dr.MacroEconomicVariableId = row.MacroEconomicVariableId;
-                dr.MacroEconomicValue = row.MacroEconomicValue - macroeconomicMean.MacroEconomicValue / macroeconomicStandardDeviation.MacroEconomicValue;
+                dr.MacroEconomicValue = (row.MacroEconomicValue - macroeconomicMean.MacroEconomicValue) / macroeconomicStandardDeviation.MacroEconomicValue;
 
                 standardisedData.Add(dr);
             }
@@ -128,19 +134,36 @@ namespace IFRS9_ECL.Core.PDComputation
             //                    .Where(row => row.Field<DateTime>(MacroeconomicProjectionColumns.Date) > TempEclData.ReportDate)
             //                    .CopyToDataTable();
 
+            var MEVBackDate = new AffiliateMicroEconomicsVariable().AffiliateMEVBackDateValues(_eclId, _eclType);
+
             for (int i = 0; i < projections.Count; i++)
             {
                 if (projections[i].Date > ECLNonStringConstants.i.reportingDate) // && i > 3
                 {
+
+                    var itm = projections[i];
+                    var bdate = MEVBackDate.FirstOrDefault(o => o.MicroEconomicId == itm.MacroEconomicVariableId);
+                    var _bdate = 0;
+                    if (bdate != null)
+                    {
+                        if(bdate.BackDateQuarters==1)
+                        {
+                            bdate.BackDateQuarters = bdate.BackDateQuarters;
+                        }
+                        _bdate = bdate.BackDateQuarters * 3;
+                    }
+                    var _dt = itm.Date.AddMonths(-_bdate);
+                    var _itm = projections.OrderBy(p => p.Date).FirstOrDefault(o => o.MacroEconomicVariableId==itm.MacroEconomicVariableId && o.Date.Month== _dt.Month && o.Date.Year== _dt.Year); // == GetLastDayOfMonth(itm.Date.AddMonths(-_bdate))
+
                     var dr = new IndexForecast();
-                    dr.Date = projections[i].Date;
-                    dr.MacroEconomicVariableId = projections[i].MacroEconomicVariableId;
-                    if(this._Scenario== ECL_Scenario.Best)
-                        dr.MacroEconomicValue = projections[i].BestEstimateMacroEconomicValue;
+                    dr.Date = itm.Date;
+                    dr.MacroEconomicVariableId = itm.MacroEconomicVariableId;
+                    if (this._Scenario == ECL_Scenario.Best)
+                        dr.MacroEconomicValue = _itm.BestEstimateMacroEconomicValue;
                     if (this._Scenario == ECL_Scenario.Downturn)
-                        dr.MacroEconomicValue = projections[i].DownturnMacroEconomicValue;
+                        dr.MacroEconomicValue = _itm.DownturnMacroEconomicValue;
                     if (this._Scenario == ECL_Scenario.Optimistic)
-                        dr.MacroEconomicValue = projections[i].OptimisticMacroEconomicValue;
+                        dr.MacroEconomicValue = _itm.OptimisticMacroEconomicValue;
 
                     originalData.Add(dr);
                 }
@@ -148,6 +171,11 @@ namespace IFRS9_ECL.Core.PDComputation
 
 
             return originalData;
+        }
+
+        private DateTime GetLastDayOfMonth(DateTime dateTime)
+        {
+            return dateTime.AddMonths(1).AddDays(-1);
         }
 
         protected double ComputeHistoricIndexStandardDeviation()

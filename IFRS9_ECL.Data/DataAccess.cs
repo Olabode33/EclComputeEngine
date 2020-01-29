@@ -100,20 +100,22 @@ namespace IFRS9_ECL.Data
             public DataTable GetData(string qry)
             {
                 var dt = new DataTable();
-                try
-                {
+            try
+            {
 
-                    var con = new SqlConnection(sqlConnection);
-                    var da = new SqlDataAdapter(qry, con);
+                var con = new SqlConnection(sqlConnection);
+                var da = new SqlDataAdapter(qry, con);
 
-                    con.Open();
-                    da.Fill(dt);
-                    con.Close();
-                }
-                catch (Exception ex)
-                {
-
-                }
+                con.Open();
+                da.Fill(dt);
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine(qry);
+                Console.ReadKey();
+            }
                 return dt;
             }
         public T ParseDataToObject<T>(T t, DataRow dr)
