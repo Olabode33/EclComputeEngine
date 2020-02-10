@@ -25,53 +25,59 @@ namespace IFRS9_ECL.Core
         }
         public bool ProcessTask()
         {
-            //try
-            //{
-            //Get Data Excel/Database
-            var qry = Queries.Raw_Data(_eclId, _eclType);
-            var _lstRaw = DataAccess.i.GetData(qry);
-
-            var lstRaw = new List<Loanbook_Data>();
-            foreach (DataRow dr in _lstRaw.Rows)
+            try
             {
-                var itm = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
-                itm.ContractId = _eclTask.GenerateContractId(itm);
-                lstRaw.Add(itm);
-            }
-            Console.WriteLine($"Finished Extracting Raw Data - {DateTime.Now}");
+                //Get Data Excel/Database
+                var qry = Queries.Raw_Data(_eclId, _eclType);
+                var _lstRaw = DataAccess.i.GetData(qry);
 
-
-
-            var threads = lstRaw.Count / 1000;
-            threads = threads + 1;
-
-            var taskLst = new List<Task>();
-
-            for (int i = 0; i < threads; i++)
-            {
-                var sub_LoanBook = lstRaw.Skip(i * 1000).Take(1000).ToList();
-
-                var task = Task.Run(() => {
-                    RunLGDJob(sub_LoanBook, _eclId, _eclType);
-                });
-                taskLst.Add(task);
-            }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
-
-            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
-
-            while (!taskLst.Any(o => o.IsCompleted))
-            {
-                var newCount = taskLst.Where(o => o.IsCompleted).Count();
-                if (completedTask != newCount)
+                var lstRaw = new List<Loanbook_Data>();
+                foreach (DataRow dr in _lstRaw.Rows)
                 {
-                    Console.WriteLine($"Task Completed: {completedTask}");
+                    var itm = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
+                    itm.ContractId = _eclTask.GenerateContractId(itm);
+                    lstRaw.Add(itm);
                 }
-                //Do Nothing
-            }
+                Console.WriteLine($"Finished Extracting Raw Data - {DateTime.Now}");
 
-            return true;
+
+                var threads = lstRaw.Count / 1000;
+                threads = threads + 1;
+
+                var taskLst = new List<Task>();
+
+                //threads = 1;
+                for (int i = 0; i < threads; i++)
+                {
+                    var sub_LoanBook = lstRaw.Skip(i * 1000).Take(1000).ToList();
+
+                    var task = Task.Run(() =>
+                    {
+                        RunLGDJob(sub_LoanBook, _eclId, _eclType);
+                    });
+                    taskLst.Add(task);
+                }
+                Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+                Console.WriteLine($"Task Completed: {completedTask}");
+
+                while (!taskLst.Any(o => o.Status== TaskStatus.RanToCompletion))
+                {
+                    var newCount = taskLst.Where(o => o.IsCompleted).Count();
+                    if (completedTask != newCount)
+                    {
+                        Console.WriteLine($"Task Completed: {completedTask}");
+                    }
+                    //Do Nothing
+                }
+
+                return true;
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+                return true;
+            }
         }
 
         private bool RunLGDJob(List<Loanbook_Data> lstRaw, Guid _eclId, EclType _eclType)
@@ -123,7 +129,7 @@ namespace IFRS9_ECL.Core
 
         public List<LGDCollateralData> GetLGDCollateralData()
         {
-            var qry = Queries.LGD_WholesaleLgdCollateralDatas(_eclId, _eclType);
+            var qry = Queries.LGD_LgdCollateralDatas(_eclId, _eclType);
             var dt = DataAccess.i.GetData(qry);
             var lgdCollateralData = new List<LGDCollateralData>();
 

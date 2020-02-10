@@ -8,6 +8,7 @@ namespace IFRS9_ECL.Models.Framework
 {
     public class FinalEcl
     {
+        public Guid Id { get; set; }
         public string ContractId { get; set; }
         public int EclMonth { get; set; }
         public double MonthlyEclValue { get; set; }

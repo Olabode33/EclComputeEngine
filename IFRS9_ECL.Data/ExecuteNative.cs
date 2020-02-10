@@ -22,7 +22,7 @@ namespace IFRS9_ECL.Data
             dt.Columns.Add("EIR_Group");
             dt.Columns.Add("Month", typeof(int));
             dt.Columns.Add("Value", typeof(float));
-            dt.Columns.Add("WholesaleEclId", typeof(Guid));
+            dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
             foreach (var _d in d)
             {
@@ -56,7 +56,7 @@ namespace IFRS9_ECL.Data
                 {
                     dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
                 }
-                dt.Columns.Add("WholesaleEclId", typeof(Guid));
+                dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
 
                 foreach (var _d in d)
@@ -95,7 +95,7 @@ namespace IFRS9_ECL.Data
                     dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
                 }
 
-                dt.Columns.Add("WholesaleEclId", typeof(Guid));
+                dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
 
                 foreach (var _d in d)
@@ -130,7 +130,7 @@ namespace IFRS9_ECL.Data
                 dt.Columns.Add("Month", typeof(int));
                 dt.Columns.Add("Value", typeof(float));
                 dt.Columns.Add("CIR_EFFECTIVE", typeof(float));
-                dt.Columns.Add("WholesaleEclId", typeof(Guid));
+                dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
                 foreach (var _d in d)
                 {
@@ -163,7 +163,7 @@ namespace IFRS9_ECL.Data
                 dt.Columns.Add("Cir_Group");
                 dt.Columns.Add("Month", typeof(int));
                 dt.Columns.Add("Value", typeof(float));
-                dt.Columns.Add("WholesaleEclId", typeof(Guid));
+                dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
                 foreach (var _d in d)
                 {

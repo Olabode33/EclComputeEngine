@@ -40,6 +40,7 @@ namespace IFRS9_ECL.Data
 
         public int ExecuteBulkCopy(DataTable dt, string tablename)
         {
+            
             using (SqlConnection connection = new SqlConnection(sqlConnection))
             {
                 // make sure to enable triggers

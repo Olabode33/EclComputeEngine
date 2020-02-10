@@ -24,15 +24,20 @@ namespace IFRS9_ECL
 
             //Console.WriteLine("Done Done Done");
             //Console.ReadKey();
-           // return;
-            //new ProcessECL_LGD(masterGuid, EclType.Wholesale).ProcessTask();
-
+            // return;
+           // new ProcessECL_LGD(masterGuid, EclType.Wholesale).ProcessTask();
 
             //Console.WriteLine("Done Done Done");
             //Console.ReadKey();
             // return;
 
-            new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
+            //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
+
+            //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
+
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask();
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask();
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask();
             Console.WriteLine($"End Time {DateTime.Now}");
             //Console.WriteLine("Done Done Done");
             //Console.ReadKey();

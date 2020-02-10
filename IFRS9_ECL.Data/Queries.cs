@@ -9,7 +9,7 @@ namespace IFRS9_ECL.Data
     {
         public static string LifetimePD_Query(string tableName, Guid eclId, EclType eclType)
         {
-            return $"select PdGroup, Month, Value from {tableName} where {eclType.ToString()}EclId ='{eclId}'";
+            return $"select Id, PdGroup, Month, Value, {eclType.ToString()}EclId from {tableName} where {eclType.ToString()}EclId ='{eclId}'";
         }
         
         public static string EclsRegister(string eclType)
@@ -19,7 +19,7 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
-            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";
+            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where ContractNo not like '%EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
@@ -54,7 +54,7 @@ namespace IFRS9_ECL.Data
             return $"select ProjectionMonth,BestEstimate, Optimistic, Downturn from {ECLStringConstants.i.PDCreditIndex_Table(eclType)} where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
-        public static string LGD_WholesaleLgdCollateralDatas(Guid eclId, EclType eclType)
+        public static string LGD_LgdCollateralDatas(Guid eclId, EclType eclType)
         {
             return $"select Id, contract_no, customer_no, debenture_omv, cash_omv, inventory_omv, plant_and_equipment_omv, residential_property_omv, commercial_property_omv, receivables_omv, shares_omv, vehicle_omv, total_omv, debenture_fsv, cash_fsv, inventory_fsv, plant_and_equipment_fsv, residential_property_fsv, commercial_property_fsv, receivables_fsv, shares_fsv, vehicle_fsv from {eclType.ToString()}LGDAccountData where {eclType.ToString()}EclId ='{eclId}'";
         }

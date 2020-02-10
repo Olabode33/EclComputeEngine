@@ -185,9 +185,9 @@ namespace IFRS9_ECL.Core
                     double cor_debenture = CalculateCoR(lstCollateral[i].debenture_omv, lgd_first.collateral_value, lgd_first.debenture, lgd_last.debenture);
                     double cor_cash = CalculateCoR(lstCollateral[i].cash_omv, lgd_first.collateral_value, lgd_first.cash, lgd_last.cash);
                     double cor_inventory = CalculateCoR(lstCollateral[i].inventory_omv, lgd_first.collateral_value, lgd_first.inventory, lgd_last.inventory);
-                    double cor_plant_and_equipment = CalculateCoR(lstCollateral[i].plant_and_equipment_omv, lgd_first.collateral_value, lgd_last.plant_and_equipment, lgd_first.plant_and_equipment);
-                    double cor_residential = CalculateCoR(lstCollateral[i].residential_property_omv, lgd_first.collateral_value, lgd_last.residential_property, lgd_first.residential_property);
-                    double cor_commercial = CalculateCoR(lstCollateral[i].commercial_property_omv, lgd_first.collateral_value, lgd_last.commercial_property, lgd_first.commercial_property);
+                    double cor_plant_and_equipment = CalculateCoR(lstCollateral[i].plant_and_equipment_omv, lgd_first.collateral_value, lgd_first.plant_and_equipment, lgd_last.plant_and_equipment);
+                    double cor_residential = CalculateCoR(lstCollateral[i].residential_property_omv, lgd_first.collateral_value, lgd_first.residential_property, lgd_last.residential_property);
+                    double cor_commercial = CalculateCoR(lstCollateral[i].commercial_property_omv, lgd_first.collateral_value, lgd_first.commercial_property, lgd_last.commercial_property);
                     double cor_receivables = CalculateCoR(lstCollateral[i].receivables_omv, lgd_first.collateral_value, lgd_first.Receivables, lgd_last.Receivables);
                     double cor_shares = CalculateCoR(lstCollateral[i].shares_omv, lgd_first.collateral_value, lgd_first.shares, lgd_last.shares);
                     double cor_vehicle = CalculateCoR(lstCollateral[i].vehicle_omv, lgd_first.collateral_value, lgd_first.vehicle, lgd_last.vehicle);
@@ -381,23 +381,23 @@ namespace IFRS9_ECL.Core
         }
         internal List<LGDCollateralData> Collateral_OMV_FSV(List<Loanbook_Data> lstRaw, List<LGDPrecalculationOutput> lGDPreCalc)
         {
-            var collaterals= new List<LGDCollateralData>();
+            var collaterals = new List<LGDCollateralData>();
             LGD_Inputs input = new LGD_Inputs();
 
             var pd_x_ead_List = lGDPreCalc.Select(O => O.pd_x_ead).ToList();
 
             //calculate the value for Debenture_OMV
             //foreach (var itm in lstRaw)
-                for(int i=0; i< lstRaw.Count; i++)
+            for (int i = 0; i < lstRaw.Count; i++)
             {
                 var collateralTable = new LGDCollateralData();
 
-                input.debenture_omv = lstRaw[i].DebentureOMV??0;
+                input.debenture_omv = lstRaw[i].DebentureOMV ?? 0;
                 input.cash_omv = lstRaw[i].CashOMV ?? 0;
-                input.inventory_omv = lstRaw[i].InventoryOMV??0;
+                input.inventory_omv = lstRaw[i].InventoryOMV ?? 0;
                 input.plant_and_equipment_omv = lstRaw[i].PlantEquipmentOMV ?? 0;
                 input.residential_property_omv = lstRaw[i].ResidentialPropertyOMV ?? 0;
-                input.commercial_property_omv = lstRaw[i].CommercialPropertyOMV??0;
+                input.commercial_property_omv = lstRaw[i].CommercialPropertyOMV ?? 0;
                 input.receivables_omv = lstRaw[i].ReceivablesOMV ?? 0;
                 input.shares_omv = lstRaw[i].SharesOMV ?? 0;
                 input.vehicle_omv = lstRaw[i].VehicleOMV ?? 0;
@@ -424,29 +424,29 @@ namespace IFRS9_ECL.Core
 
                 collateralTable.contract_no = input.contractid;
                 collateralTable.customer_no = input.customer_no;
-                        collateralTable.debenture_omv=0;
-        collateralTable.cash_omv=0;
-        collateralTable.inventory_omv=0;
-        collateralTable.plant_and_equipment_omv=0;
-        collateralTable.residential_property_omv=0;
-        collateralTable.commercial_property_omv=0;
-        collateralTable.receivables_omv=0;
-        collateralTable.shares_omv=0;
-        collateralTable.vehicle_omv=0;
-        collateralTable.total_omv=0;
-        collateralTable.debenture_fsv=0;
-        collateralTable.cash_fsv=0;
-        collateralTable.inventory_fsv=0;
-        collateralTable.plant_and_equipment_fsv=0;
-        collateralTable.residential_property_fsv=0;
-        collateralTable.commercial_property_fsv=0;
-        collateralTable.receivables_fsv=0;
-        collateralTable.shares_fsv=0;
-        collateralTable.vehicle_fsv=0;
+                collateralTable.debenture_omv = 0;
+                collateralTable.cash_omv = 0;
+                collateralTable.inventory_omv = 0;
+                collateralTable.plant_and_equipment_omv = 0;
+                collateralTable.residential_property_omv = 0;
+                collateralTable.commercial_property_omv = 0;
+                collateralTable.receivables_omv = 0;
+                collateralTable.shares_omv = 0;
+                collateralTable.vehicle_omv = 0;
+                collateralTable.total_omv = 0;
+                collateralTable.debenture_fsv = 0;
+                collateralTable.cash_fsv = 0;
+                collateralTable.inventory_fsv = 0;
+                collateralTable.plant_and_equipment_fsv = 0;
+                collateralTable.residential_property_fsv = 0;
+                collateralTable.commercial_property_fsv = 0;
+                collateralTable.receivables_fsv = 0;
+                collateralTable.shares_fsv = 0;
+                collateralTable.vehicle_fsv = 0;
 
 
 
-        var dictionaryData = GetArrayRawData(lstRaw, input);
+                var dictionaryData = GetArrayRawData(lstRaw, input);
 
                 var Debenture_Omv_array = dictionaryData[ECLStringConstants.i.Debenture_Omv_array];
                 var Cash_Omv_array = dictionaryData[ECLStringConstants.i.Cash_Omv_array];
@@ -472,9 +472,9 @@ namespace IFRS9_ECL.Core
                 var ProjectFinance_array = new List<int>();
                 var lstProject_Finance_Ind = lGDPreCalc.Select(o => o.project_finance_ind).ToList();
 
-                foreach(var fin_itm in lstProject_Finance_Ind)
+                foreach (var fin_itm in lstProject_Finance_Ind)
                 {
-                    ProjectFinance_array.Add(fin_itm == 0 ? 1:0);
+                    ProjectFinance_array.Add(fin_itm == 0 ? 1 : 0);
                 }
 
                 //var dictionaryData_fsv = GetArrayRawData_Fsv(lstRaw, input);
@@ -490,7 +490,7 @@ namespace IFRS9_ECL.Core
                 collaterals.Add(collateralTable);
             }
             return collaterals;
-            
+
         }
 
         private LGDCollateralData SumProduct(List<double> pd_x_ead_List, LGDCollateralData collateralTable, List<int> debenture_Omv_array, List<int> cash_Omv_array, List<int> inventory_Omv_array, List<int> plant_Equipment_Omv_array, List<int> residential_Omv_array, List<int> commercial_Omv_array, List<int> receivables_Omv_array, List<int> shares_Omv_array, List<int> vehicle_Omv_array, List<int> debenture_Fsv_array, List<int> cash_Fsv_array, List<int> inventory_Fsv_array, List<int> plant_Equipment_Fsv_array, List<int> residential_Fsv_array, List<int> commercial_Fsv_array, List<int> receivables_Fsv_array, List<int> shares_Fsv_array, List<int> vehicle_Fsv_array, List<int> customerNo_array, List<int> projectFinance_array, LGD_Inputs inputs)

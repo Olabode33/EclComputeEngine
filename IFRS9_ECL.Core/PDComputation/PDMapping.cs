@@ -33,6 +33,107 @@ namespace IFRS9_ECL.Core.PDComputation
         public string Run()
         {
             var pdMappings = ComputePdMappingTable();
+            return "";
+        }
+
+        public bool ComputePdMappingTable()
+        {
+            var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
+            //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
+
+            int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== PdAssumptionsRowKey.Expired).Value);
+            int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value);
+
+            //Get Data Excel/Database
+            var qry = Queries.Raw_Data(this._eclId,this._eclType);
+            var _lstRaw = DataAccess.i.GetData(qry);
+
+            var loanbook_Data = new List<Loanbook_Data>();
+            foreach (DataRow dr in _lstRaw.Rows)
+            {
+                loanbook_Data.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
+            }
+
+            var _NonExpLoanbook_data = loanbook_Data.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
+
+
+            var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
+            var redefaultLifetimePds = _scenarioRedefaultLifetimePd.ComputeRedefaultLifetimePd();
+
+            var threads = _NonExpLoanbook_data.Count / 1000;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_LoanBook = _NonExpLoanbook_data.Skip(i * 1000).Take(1000).ToList();
+
+                var task = Task.Run(() => {
+                    RunPDMappingJob(sub_LoanBook, _eclId, _eclType, lifetimePds, redefaultLifetimePds, expOdPerformacePastRepoting, odPerformancePastExpiry);
+                });
+                taskLst.Add(task);
+            }
+            Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+            Console.WriteLine($"Task Completed: {completedTask}");
+
+            while (!taskLst.Any(o => o.IsCompleted))
+            {
+                var newCount = taskLst.Where(o => o.IsCompleted).Count();
+                if (completedTask != newCount)
+                {
+                    Console.WriteLine($"Task Completed: {completedTask}");
+                }
+                //Do Nothing
+            }
+
+            return true;
+
+
+        }
+
+        private string RunPDMappingJob(List<Loanbook_Data> sub_LoanBook, Guid eclId, EclType eclType, List<LifeTimeObject> lifetimePds, List<LifeTimeObject> redefaultLifetimePds, int expOdPerformacePastRepoting, int odPerformancePastExpiry)
+        {
+
+            var pdMappingTable = new List<PdMappings>();
+
+            foreach (var loanbookRecord in sub_LoanBook)
+            {
+                var mappingRow = new PdMappings();
+                mappingRow.ContractId = loanbookRecord.ContractId;
+                mappingRow.AccountNo = loanbookRecord.AccountNo;
+                mappingRow.ProductType = loanbookRecord.ProductType;
+                mappingRow.RatingModel = loanbookRecord.RatingModel;
+                mappingRow.Segment = loanbookRecord.Segment;
+                mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
+                mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord) ?? 0;
+                mappingRow.MaxDpd = ComputeMaxDpdPerRecord(loanbookRecord, sub_LoanBook);
+                mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
+                mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
+
+
+
+                pdMappingTable.Add(mappingRow);
+            }
+            pdMappingTable = pdMappingTable.Select(row =>
+            {
+                row.MaxClassificationScore = ComputeMaxClassificationScorePerRecord(row, pdMappingTable);
+                return row;
+            }).ToList();
+            var sicrInputWorking = new SicrInputWorkings(this._eclId, this._eclType);
+            for (int i = 0; i < pdMappingTable.Count; i++)
+            {
+                var sicrinput = sicrInputWorking.ComputeSICRInput(sub_LoanBook[i], pdMappingTable[i], lifetimePds, redefaultLifetimePds);
+
+                pdMappingTable[i].DaysPastDue = sicrinput.DaysPastDue;
+                pdMappingTable[i].LifetimePd = sicrinput.LifetimePd;
+                pdMappingTable[i].Pd12Month = sicrinput.Pd12Month;
+                pdMappingTable[i].RedefaultLifetimePD = sicrinput.RedefaultLifetimePd;
+                pdMappingTable[i].Stage1Transition = sicrinput.Stage1Transition;
+                pdMappingTable[i].Stage2Transition = sicrinput.Stage2Transition;
+            }
 
             var c = new PdMappings();
 
@@ -52,7 +153,7 @@ namespace IFRS9_ECL.Core.PDComputation
             dt.Columns.Remove("ClassificationScore");
             dt.Columns.Remove("Segment");
 
-            foreach (var _d in pdMappings)
+            foreach (var _d in pdMappingTable)
             {
                 _d.Id = Guid.NewGuid();
                 _d.WholesaleEclId = _eclId;
@@ -63,78 +164,13 @@ namespace IFRS9_ECL.Core.PDComputation
                     });
             }
 
-          
+
             var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PdMappings_Table(this._eclType));
 
             return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PdMappings_Table(this._eclType)}]";
+
         }
 
-        public List<PdMappings> ComputePdMappingTable()
-        {
-            var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
-            //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
-
-            int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== PdAssumptionsRowKey.Expired).Value);
-            int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value);
-
-            //Get Data Excel/Database
-            var qry = Queries.Raw_Data(this._eclId,this._eclType);
-            var _lstRaw = DataAccess.i.GetData(qry);
-
-            var lstRaw = new List<Loanbook_Data>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-            }
-
-            var _NonExpLoanbook_data = lstRaw.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
-
-
-            var pdMappingTable = new List<PdMappings>();
-
-            var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
-            var redefaultLifetimePds = _scenarioRedefaultLifetimePd.ComputeRedefaultLifetimePd();
-
-            foreach (var loanbookRecord in _NonExpLoanbook_data)
-            {
-                var mappingRow = new PdMappings();
-                mappingRow.ContractId = loanbookRecord.ContractId;
-                mappingRow.AccountNo = loanbookRecord.AccountNo;
-                mappingRow.ProductType = loanbookRecord.ProductType;
-                mappingRow.RatingModel = loanbookRecord.RatingModel;
-                mappingRow.Segment = loanbookRecord.Segment;
-                mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
-                mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord)??0;
-                mappingRow.MaxDpd = ComputeMaxDpdPerRecord(loanbookRecord, _NonExpLoanbook_data);
-                mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
-                mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
-
-                
-               
-                pdMappingTable.Add(mappingRow);
-            }
-            pdMappingTable = pdMappingTable.Select(row =>
-            {
-                row.MaxClassificationScore = ComputeMaxClassificationScorePerRecord(row, pdMappingTable);
-                return row;
-            }).ToList();
-            var sicrInputWorking = new SicrInputWorkings(this._eclId, this._eclType);
-            for (int i = 0; i < pdMappingTable.Count; i++)
-            {
-                var sicrinput = sicrInputWorking.ComputeSICRInput(_NonExpLoanbook_data[i], pdMappingTable[i], lifetimePds, redefaultLifetimePds);
-
-                pdMappingTable[i].DaysPastDue = sicrinput.DaysPastDue;
-                pdMappingTable[i].LifetimePd = sicrinput.LifetimePd;
-                pdMappingTable[i].Pd12Month = sicrinput.Pd12Month;
-                pdMappingTable[i].RedefaultLifetimePD = sicrinput.RedefaultLifetimePd;
-                pdMappingTable[i].Stage1Transition = sicrinput.Stage1Transition;
-                pdMappingTable[i].Stage2Transition = sicrinput.Stage2Transition;
-            }
-
-            return pdMappingTable;
-        }
-
-        
         protected string ComputePdGroupingPerRecord(PdMappings pdMappingWorkingRecord)
         {
             string pdGrouping = "";

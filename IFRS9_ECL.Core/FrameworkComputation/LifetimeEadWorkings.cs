@@ -48,14 +48,20 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var refined_Raw_Data = GetRefinedLoanBookData();
 
-            var contract_nos = eadInputs.Select(o => o.Contract_no).Distinct();
+            var loanbook_contractNo = refined_Raw_Data.Select(o => o.contract_no).ToList();
+
+            var contract_nos = eadInputs.Where(n=>loanbook_contractNo.Contains(n.Contract_no)).Select(o => o.Contract_no).Distinct().ToList();
+
+            
 
             foreach (var contract_no in contract_nos)
             {
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).ToList();
 
                 string contractId = contract_no;
-                int cirIndex = marginalAccumulationFactor.FirstOrDefault(o => o.CirGroup == c_eadInputs[0].Cir_Group).Rank;
+
+                int cirIndex = 1;
+                try { cirIndex = marginalAccumulationFactor.FirstOrDefault(o => o.CirGroup == c_eadInputs[0].Cir_Group).Rank; } catch { };
                 string productType = refined_Raw_Data.FirstOrDefault(x => x.contract_no == contractId).product_type;
                 var sirc = sircInputs.FirstOrDefault(x => x.ContractId == contractId);
                 long? daysPastDue = sirc == null ? 0 : sirc.DaysPastDue;
@@ -72,7 +78,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 for (int month = 1; month < FrameworkConstants.TempExcelVariable_LIM_MONTH; month++)
                 {
                     var itm = new LifeTimeProjections();
-                    if (c_eadInputs.Count <= month)
+                    if (c_eadInputs.Count > month)
                     {
                         itm = c_eadInputs[month - 1];
                     }
@@ -122,7 +128,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 for (int month = 1; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
                 {
                     var row = new CIRProjections();
-                    if (_cirProjection.Count <= month)
+                    if (_cirProjection.Count > month)
                     {
                         row = _cirProjection[month - 1];
                     }
@@ -133,7 +139,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
                     prevMonthValue = marginalAccumulativeFactor.FirstOrDefault(x => x.EirGroup == row.cir_group
-                                                                                           && x.ProjectionMonth == row.months - 1).ProjectionValue;
+                                                                                           && x.ProjectionMonth == month - 1).ProjectionValue;
 
 
                     month0Record = new IrFactor();
@@ -199,7 +205,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);
 
-            return refined_lstRaw;
+            return refined_lstRaw.Where(o=>!o.contract_no.Contains("EXP")).ToList();
         }
 
         public List<Loanbook_Data> GetLoanBookData()
@@ -240,7 +246,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
             var r= eadInputRecords.FirstOrDefault(o=>o.Month==offestMonth);
-            return r.Value;
+            return r==null?0:r.Value;
         }
         protected double ComputeMultiplierValue(List<IrFactor> accumlationFactor, long monthsPastDue, int cirIndex, int month)
         {

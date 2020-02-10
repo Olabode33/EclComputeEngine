@@ -24,26 +24,20 @@ namespace IFRS9_ECL.Core
         public void ProcessTask()
         {
             // Compute Credit Index
-            //var crdIndx = new CreditIndex(this._eclId, this._eclType);********
-            //crdIndx.Run();************
+            var crdIndx = new CreditIndex(this._eclId, this._eclType);
+            crdIndx.Run();
 
-            //return;
             // Compute PD mapping
-            //var pDMapping = new PDMapping(this._eclId, this._eclType);*********
-            //pDMapping.Run();**************
+            var pDMapping = new PDMapping(this._eclId, this._eclType);
+            pDMapping.Run();
 
             // Compute Scenario Life time Pd -- best
-            //var slt_Pd_b = new ScenarioLifetimePd(Util.ECL_Scenario.Best, this._eclId, this._eclType);*******
-            //slt_Pd_b.Run();*********
+            var slt_Pd_b = new ScenarioLifetimePd(Util.ECL_Scenario.Best, this._eclId, this._eclType);
+            slt_Pd_b.Run();
 
-            //return;
             // Compute Scenario Redefault Lifetime Pds  -- best
-            //var sRedefault_lt_pd_b = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Best, this._eclId, this._eclType);*******
-            //sRedefault_lt_pd_b.Run();********
-            //return;
-            // Compute Scenario Marginal Pd -- best
-            //var sMarginal_Pd_o = new ScenarioMarginalPd(Util.ECL_Scenario.Optimistic, this._eclId);
-            //sMarginal_Pd_o.Run();
+            var sRedefault_lt_pd_b = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Best, this._eclId, this._eclType);
+            sRedefault_lt_pd_b.Run();
 
             // Compute Scenario Life time Pd -- Optimistic
             var slt_Pd_o = new ScenarioLifetimePd(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
@@ -54,9 +48,6 @@ namespace IFRS9_ECL.Core
             sRedefault_lt_pd_o.Run();
 
 
-            // Compute Scenario Marginal Pd -- Optimistic
-            //var sMarginal_Pd_de = new ScenarioMarginalPd(Util.ECL_Scenario.Downturn, this._eclId);
-            //sMarginal_Pd_de.Run();
 
             // Compute Scenario Life time Pd -- Downturn
             var slt_Pd_de = new ScenarioLifetimePd(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
@@ -67,6 +58,14 @@ namespace IFRS9_ECL.Core
             sRedefault_lt_pd_de.Run();
 
 
+            //return;
+            // Compute Scenario Marginal Pd -- best
+            //var sMarginal_Pd_o = new ScenarioMarginalPd(Util.ECL_Scenario.Optimistic, this._eclId);
+            //sMarginal_Pd_o.Run();
+
+            // Compute Scenario Marginal Pd -- Optimistic
+            //var sMarginal_Pd_de = new ScenarioMarginalPd(Util.ECL_Scenario.Downturn, this._eclId);
+            //sMarginal_Pd_de.Run();
 
             // Compute Sicr Input Workings
             //var vasicekWorkings = new VasicekWorkings(this._eclId);
