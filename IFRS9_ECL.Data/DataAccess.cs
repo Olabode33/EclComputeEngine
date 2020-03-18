@@ -139,11 +139,11 @@ namespace IFRS9_ECL.Data
                 }
                 else if (myProps[i].PropertyType.FullName == "System.Decimal")
                 {
-                    myProps[i].SetValue(t, dr[i] != DBNull.Value ? (decimal)dr[i] : 0, null);
+                    myProps[i].SetValue(t, dr[i] != DBNull.Value ? (decimal)dr[i] : 0M, null);
                 }
                 else if (myProps[i].PropertyType.FullName == "System.Double")
                 {
-                    myProps[i].SetValue(t, dr[i] != DBNull.Value ? (double)dr[i] : 0, null);
+                    myProps[i].SetValue(t, dr[i] != DBNull.Value ? double.Parse(dr[i].ToString()) : 0, null);
                 }
                 else if (myProps[i].PropertyType.FullName == "System.Boolean")
                 {

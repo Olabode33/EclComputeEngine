@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Framework;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -33,18 +34,21 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
         public void Run()
         {
-            var dataTable = ComputeLifetimeCollateral();
+            //var dataTable = ComputeLifetimeCollateral();
             string stop = "Ma te";
         }
-        public List<LifetimeCollateral> ComputeLifetimeCollateral()
+        public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook)
         {
             var lifetimeCollateral = new List<LifetimeCollateral>();
 
-            var contractData = GetContractData();
+            var contractData = GetContractData(loanbook);
             var marginalDiscountFactor = GetMarginalDiscountFactor();
-            var eadInputs = GetTempEadInputData();
+            var eadInputs = GetTempEadInputData(loanbook);
             var collateralProjections = GetScenarioCollateralProjection();
             var updatedFsv = GetUpdatedFsvResult();
+
+            var eadInputContractData = eadInputs.Select(o => o.Contract_no).ToList();
+            contractData = contractData.Where(o => eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
 
             foreach (var row in contractData)
             {
@@ -120,17 +124,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
 
-        private List<LGDAccountData> GetContractData()
+        private List<LGDAccountData> GetContractData(List<Loanbook_Data> loanbook)
         {
-            return new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData();
+            return new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
         }
         protected List<IrFactor> GetMarginalDiscountFactor()
         {
             return _irFactorWorkings.ComputeMarginalDiscountFactor();
         }
-        protected List<LifeTimeProjections> GetTempEadInputData()
+        protected List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
         {
-            return this._lifetimeEad.GetTempEadInputData();
+            return this._lifetimeEad.GetTempEadInputData(loanbook);
         }
         protected List<LgdCollateralProjection> GetScenarioCollateralProjection()
         {
@@ -165,15 +169,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 var assumptions=_scenarioLifetimeLGD.GetECLLgdAssumptions();
                 if(_scenario== ECL_Scenario.Best)
                 {
-                    assumptions=assumptions.Where(o => o.LgdGroup == 5).ToList();
+                    assumptions=assumptions.Where(o => o.AssumptionGroup == 5).ToList();
                 }
                 if (_scenario == ECL_Scenario.Optimistic)
                 {
-                    assumptions = assumptions.Where(o => o.LgdGroup == 6).ToList();
+                    assumptions = assumptions.Where(o => o.AssumptionGroup == 6).ToList();
                 }
                 if (_scenario == ECL_Scenario.Downturn)
                 {
-                    assumptions = assumptions.Where(o => o.LgdGroup == 7).ToList();
+                    assumptions = assumptions.Where(o => o.AssumptionGroup == 7).ToList();
                 }
 
                 var debenture=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);

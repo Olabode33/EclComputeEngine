@@ -31,15 +31,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
         
-        internal List<StageClassification> ComputeStageClassification()
+        internal List<StageClassification> ComputeStageClassification(List<Loanbook_Data> loanbook)
         {
             var stageClassification = new List<StageClassification>();
 
-            var loanbook = GetLoanBookData();
             var sicrInput = GetSicrInputResult();
             var assumption = GetImpairmentAssumptionsData();
             var pdMapping = GetPdMappingResult();
 
+            var lbContractIds = loanbook.Select(o => o.ContractId).ToList();
+            sicrInput = sicrInput.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
+            pdMapping= pdMapping.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
             foreach (var row in sicrInput)
             {
                 var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
@@ -240,7 +242,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         protected string GetImpairmentAssumptionValue(List<EclAssumptions> assumptions, string assumptionKey)
         {
-            return assumptions.FirstOrDefault(x => x.Key == assumptionKey).Value;
+            var itm= assumptions.FirstOrDefault(x => x.Key == assumptionKey);
+            return itm != null ? itm.Value : "0";
         }
         protected List<PdMappings> GetPdMappingResult()
         {
@@ -252,7 +255,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
         protected List<EclAssumptions> GetImpairmentAssumptionsData()
         {
-            return scenarioLifetimeLGD.GetECLLgdAssumptions(); 
+            return scenarioLifetimeLGD.GetECLFrameworkAssumptions(); 
             //JsonUtil.DeserializeToDatatable(DbUtil.GetImpairmentAssumptionsData());
         }
         protected List<Loanbook_Data> GetLoanBookData()

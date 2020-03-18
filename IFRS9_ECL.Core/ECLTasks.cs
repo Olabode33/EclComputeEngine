@@ -106,8 +106,8 @@ namespace IFRS9_ECL.Core
 
             var lgd_Assumptions_2 = _scenarioLifetimeLGD.GetECLLgdAssumptions();
 
-            var lgd_Assumptions_2_first = lgd_Assumptions_2.Where(o => o.LgdGroup == 3).ToList();
-            var lgd_Assumptions_2_last = lgd_Assumptions_2.Where(o => o.LgdGroup == 4).ToList();
+            var lgd_Assumptions_2_first = lgd_Assumptions_2.Where(o => o.AssumptionGroup == 3).ToList();
+            var lgd_Assumptions_2_last = lgd_Assumptions_2.Where(o => o.AssumptionGroup == 4).ToList();
 
             var lgd_first = new LGD_Assumptions_CollateralType_TTR_Years();
 
@@ -218,7 +218,7 @@ namespace IFRS9_ECL.Core
 
             var lgd_Assumptions_2= _scenarioLifetimeLGD.GetECLLgdAssumptions();
 
-            lgd_Assumptions_2 = lgd_Assumptions_2.Where(o => o.LgdGroup == 8).ToList();
+            lgd_Assumptions_2 = lgd_Assumptions_2.Where(o => o.AssumptionGroup == 8).ToList();
             var selection = new double[9];
 
             selection[0]= double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value);

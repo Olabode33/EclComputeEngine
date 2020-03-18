@@ -250,7 +250,7 @@ namespace IFRS9_ECL.Core.PDComputation
             var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
             return r;
         }
-        protected long ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
+        protected int ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
         {
 
             var temp = loanbook.Where(o => o.AccountNo == loanbookRecord.AccountNo).Max(p => p.DaysPastDue);
@@ -275,7 +275,7 @@ namespace IFRS9_ECL.Core.PDComputation
                     return null;
             }
         }
-        protected long ComputeRatingUsedPerRecord(Loanbook_Data loanbookRecord)
+        protected int ComputeRatingUsedPerRecord(Loanbook_Data loanbookRecord)
         {
             loanbookRecord.CurrentRating=loanbookRecord.CurrentRating ?? 0;
             var current_rating = loanbookRecord.CurrentRating.Value; ;
@@ -290,7 +290,8 @@ namespace IFRS9_ECL.Core.PDComputation
             var pdMapping = new List<PdMappings>();
             foreach (DataRow dr in _PdMapping.Rows)
             {
-                pdMapping.Add(DataAccess.i.ParseDataToObject(new PdMappings(), dr));
+                var itm = DataAccess.i.ParseDataToObject(new PdMappings(), dr);
+                pdMapping.Add(itm);
             }
             return pdMapping;
         }

@@ -78,7 +78,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 for (int month = 1; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
                 {
                     var row = new EIRProjections();
-                    if (_eirProjection.Count<=month)
+                    if (_eirProjection.Count>=month)
                     {
                         row = _eirProjection[month - 1];
                     }
@@ -89,7 +89,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     
 
                     prevMonthValue = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == row.eir_group
-                                                                                           && x.ProjectionMonth == row.months - 1).ProjectionValue;
+                                                                                           && x.ProjectionMonth == row.months).ProjectionValue;
 
 
                     month0Record = new IrFactor();

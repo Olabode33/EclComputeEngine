@@ -113,7 +113,7 @@ namespace IFRS9_ECL.Core
             return true;
         }
 
-        public List<LGDAccountData> GetLgdContractData()
+        public List<LGDAccountData> GetLgdContractData(List<Loanbook_Data> loanbook)
         {
             var qry = Queries.LGD_LgdAccountDatas(_eclId, _eclType);
             var dt = DataAccess.i.GetData(qry);
@@ -123,8 +123,8 @@ namespace IFRS9_ECL.Core
             {
                 lgdAccountData.Add(DataAccess.i.ParseDataToObject(new LGDAccountData(), dr));
             }
-
-            return lgdAccountData;
+            var contract_Ids = loanbook.Select(o => o.ContractId).ToList();
+            return lgdAccountData.Where(o=> contract_Ids.Contains(o.CONTRACT_NO)).ToList();
         }
 
         public List<LGDCollateralData> GetLGDCollateralData()

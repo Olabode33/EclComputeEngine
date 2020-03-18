@@ -33,20 +33,20 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public void Run()
         {
-            var dataTable = ComputeLifetimeEad();
+            //var dataTable = ComputeLifetimeEad();
             string stop = "Ma te";
         }
 
-        public List<LifetimeEad> ComputeLifetimeEad()
+        public List<LifetimeEad> ComputeLifetimeEad(List<Loanbook_Data> loanbook)
         {
             var lifetimeEad = new List<LifetimeEad>();
 
-            var eadInputs = GetTempEadInputData();
+            var eadInputs = GetTempEadInputData(loanbook);
             var sircInputs = GetSircInputResult();
-            var contractData = _processECL_LGD.GetLgdContractData();
+            var contractData = _processECL_LGD.GetLgdContractData(loanbook);
             var marginalAccumulationFactor = GetMarginalAccumulationFactorResult();
 
-            var refined_Raw_Data = GetRefinedLoanBookData();
+            var refined_Raw_Data = GetRefinedLoanBookData(loanbook);
 
             var loanbook_contractNo = refined_Raw_Data.Select(o => o.contract_no).ToList();
 
@@ -98,7 +98,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
             }
-            return lifetimeEad;
+            //var contractIds = refined_Raw_Data.Select(o => o.contract_no).ToList();
+            return lifetimeEad;//.Where(o=> contractIds.Contains(o.ContractId)).ToList();
         }
 
         private List<IrFactor> GetMarginalAccumulationFactorResult()
@@ -176,7 +177,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return _sicrInputs.GetSircInputResult();
         }
 
-        public List<LifeTimeProjections> GetTempEadInputData()
+        public List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
         {
             var qry = Queries.EAD_GetLifeTimeProjections(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
@@ -186,21 +187,33 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new LifeTimeProjections(), dr));
             }
-
-            return lifeTimeProjections;
+            var lstContractId = loanbook.Select(o => o.ContractId).ToList();
+            return lifeTimeProjections.Where(o => lstContractId.Contains(o.Contract_no)).ToList();
         }
 
-        public List<Refined_Raw_Retail_Wholesale> GetRefinedLoanBookData()
+        public List<Refined_Raw_Retail_Wholesale> GetRefinedLoanBookData(List<Loanbook_Data> loanbook)
         {
+            
             var qry = Queries.Raw_Data(this._eclId, this._eclType);
-            Console.WriteLine("Started");
-            var _lstRaw = DataAccess.i.GetData(qry);
-            Console.WriteLine("Selected Raw Data from table");
-            var lstRaw = new List<Loanbook_Data>();
-            foreach (DataRow dr in _lstRaw.Rows)
+            
+            var lstRaw = loanbook;
+
+            if(lstRaw==null)
             {
-                lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
+                lstRaw = new List<Loanbook_Data>();
             }
+            if(lstRaw.Count==0)
+            {
+                Console.WriteLine("Started");
+                var _lstRaw = DataAccess.i.GetData(qry);
+                Console.WriteLine("Selected Raw Data from table");
+
+                foreach (DataRow dr in _lstRaw.Rows)
+                {
+                    lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
+                }
+            }
+            
             Console.WriteLine("Completed pass raw data to object");
 
             var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);

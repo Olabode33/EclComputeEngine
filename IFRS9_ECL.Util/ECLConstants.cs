@@ -13,6 +13,7 @@ namespace IFRS9_ECL.Util
         public string LGDCollateral_Table(EclType eclType) { return $"{eclType.ToString()}LGDCollateral";  }
         public string LGDAccountData_Table(EclType eclType) { return $"{eclType.ToString()}LGDAccountData";  }
 
+        public string FrameworkResult(EclType eclType) { return $"{eclType.ToString()}ECLFrameworkFinal";  }
 
         //Wholesale PD tables
         public string PDCreditIndex_Table(EclType eclType) { return $"{eclType.ToString()}PDCreditIndex";  }

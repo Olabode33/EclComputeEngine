@@ -36,8 +36,11 @@ namespace IFRS9_ECL
             //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
 
             new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask();
+            Console.WriteLine($"Best Time {DateTime.Now}");
             new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask();
+            Console.WriteLine($"Optimistic Time {DateTime.Now}");
             new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask();
+            Console.WriteLine($"Downturn Time {DateTime.Now}");
             Console.WriteLine($"End Time {DateTime.Now}");
             //Console.WriteLine("Done Done Done");
             //Console.ReadKey();

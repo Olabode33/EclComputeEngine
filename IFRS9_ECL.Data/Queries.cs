@@ -19,7 +19,8 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
-            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where ContractNo not like '%EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
+            //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
+            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
@@ -31,7 +32,7 @@ namespace IFRS9_ECL.Data
 
         public static string EAD_GetEIRProjections(Guid eclId, EclType eclType)
         {
-            return $"select eir_group,month months,value from {eclType.ToString()}EadCirProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"select eir_group,month months,value from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
         public static string EAD_GetLifeTimeProjections(Guid eclId, EclType eclType)
@@ -46,17 +47,18 @@ namespace IFRS9_ECL.Data
 
         public static string LGD_LgdAccountDatas(Guid eclId, EclType eclType)
         {
+            //xxxxxxxxxxxxxxxxxxxxxx
             return $"select Id, CONTRACT_NO, TTR_YEARS, COST_OF_RECOVERY, GUARANTOR_PD, GUARANTOR_LGD, GUARANTEE_VALUE, GUARANTEE_LEVEL from {eclType.ToString()}LGDAccountData where {eclType.ToString()}EclId ='{eclId.ToString()}'";
         }
 
         public static string Credit_Index(Guid eclId, EclType eclType)
         {
-            return $"select ProjectionMonth,BestEstimate, Optimistic, Downturn from {ECLStringConstants.i.PDCreditIndex_Table(eclType)} where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"select Id, ProjectionMonth,BestEstimate, Optimistic, Downturn, {eclType.ToString()}EclId from {ECLStringConstants.i.PDCreditIndex_Table(eclType)} where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
         public static string LGD_LgdCollateralDatas(Guid eclId, EclType eclType)
         {
-            return $"select Id, contract_no, customer_no, debenture_omv, cash_omv, inventory_omv, plant_and_equipment_omv, residential_property_omv, commercial_property_omv, receivables_omv, shares_omv, vehicle_omv, total_omv, debenture_fsv, cash_fsv, inventory_fsv, plant_and_equipment_fsv, residential_property_fsv, commercial_property_fsv, receivables_fsv, shares_fsv, vehicle_fsv from {eclType.ToString()}LGDAccountData where {eclType.ToString()}EclId ='{eclId}'";
+            return $"select Id, contract_no, customer_no, debenture_omv, cash_omv, inventory_omv, plant_and_equipment_omv, residential_property_omv, commercial_property_omv, receivables_omv, shares_omv, vehicle_omv, total_omv, debenture_fsv, cash_fsv, inventory_fsv, plant_and_equipment_fsv, residential_property_fsv, commercial_property_fsv, receivables_fsv, shares_fsv, vehicle_fsv from {eclType.ToString()}LGDCollateral where {eclType.ToString()}EclId ='{eclId}'";
         }
 
         public static string WholesaleEadCirProjections(Guid eclId, EclType eclType)
@@ -71,17 +73,21 @@ namespace IFRS9_ECL.Data
 
         public static string PdMapping(Guid eclId, EclType eclType)
         {
-            return $"select ContractId, AccountNo, ProductType, PdGroup, TtmMonths, MaxDpd, MaxClassificationScore, Pd12Month, LifetimePd, RedefaultLifetimePD, Stage1Transition, Stage2Transition, DaysPastDue, RatingModel, Segment, RatingUsed, ClassificationScore from {eclType.ToString()}PdMappings where {eclType.ToString()}EclId ='{eclId}' ";
+            return $"select p.Id, p.ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePD, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (p.ContractId=l.contractno) where p.{eclType.ToString()}EclId ='{eclId}' and l.{eclType.ToString()}EclUploadId ='{eclId}' and l.ContractNo not like '%EXP%'";
         }
 
         public static string LGD_InputAssumptions_UnsecuredRecovery(Guid eclId, EclType eclType)
         {
-            return $"select Segment_Product_Type, Cure_Rate, Days_0, Days_90=0, Days_180=0, Days_270=0, Days_360=0, Downturn_Days_0=0, Downturn_Days_90=0, Downturn_Days_180=0, Downturn_Days_270=0, Downturn_Days_360=0 from {eclType.ToString()}LgdInputAssumptions_UnsecuredRecovery where {eclType.ToString()}EclId='{eclId}'";
+            return $"select Segment_Product_Type, Cure_Rate, Days_0, Days_90=0.0, Days_180=0.0, Days_270=0.0, Days_360=0.0, Downturn_Days_0=0.0, Downturn_Days_90=0.0, Downturn_Days_180=0.0, Downturn_Days_270=0.0, Downturn_Days_360=0.0 from {eclType.ToString()}LgdInputAssumptions_UnsecuredRecovery where {eclType.ToString()}EclId='{eclId}'";
         }
 
-        public static string eclAssumptions(Guid eclId, EclType eclType)
+        public static string eclFrameworkAssumptions(Guid eclId, EclType eclType)
         {
-            return $"select [Key], Value, LgdGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"select [Key], Value, AssumptionGroup from {eclType.ToString()}EclAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+        }
+        public static string eclLGDAssumptions(Guid eclId, EclType eclType)
+        {
+            return $"select [Key], Value, LgdGroup AssumptionGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
     }
 }

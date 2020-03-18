@@ -24,7 +24,7 @@ namespace IFRS9_ECL.Models.PD
         public string ProductType { get; set; }
         public string PdGroup { get; set; }
         public int TtmMonths { get; set; }
-        public long MaxDpd { get; set; }
+        public int MaxDpd { get; set; }
         public int MaxClassificationScore { get; set; }
         public double Pd12Month { get; set; }
         public double LifetimePd { get; set; }
@@ -34,7 +34,7 @@ namespace IFRS9_ECL.Models.PD
         public int DaysPastDue { get; set; }
         public string RatingModel { get; set; }
         public string Segment { get; set; }
-        public long RatingUsed { get; set; }
+        public int RatingUsed { get; set; }
         public int ClassificationScore { get; set; }
         public Guid WholesaleEclId { get; set; }
     }

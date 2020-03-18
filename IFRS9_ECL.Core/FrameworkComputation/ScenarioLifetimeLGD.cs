@@ -49,28 +49,30 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public void Run()
         {
-            var dataTable = ComputeLifetimeLGD();
+            //var dataTable = ComputeLifetimeLGD();
             string stop = "Ma te";
         }
 
-        public List<LifetimeLgd> ComputeLifetimeLGD()
+        public List<LifetimeLgd> ComputeLifetimeLGD(List<Loanbook_Data> loanbook)
         {
             var lifetimeLGD = new List<LifetimeLgd>();
 
-            var contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData();
+            var contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
             var pdMapping = GetPdIndexMappingResult();
             var lgdAssumptions = GetLgdAssumptionsData();
             var sicrInput = GetSicrResult();
-            var stageClassification = GetStagingClassificationResult();
-            var impairmentAssumptions = GetECLLgdAssumptions();
+            var stageClassification = GetStagingClassificationResult(loanbook);
+            var impairmentAssumptions = GetECLFrameworkAssumptions();
             var lifetimePd = GetScenarioLifetimePdResult();
             var redefaultPd = GetScenarioRedfaultLifetimePdResult();
-            var lifetimeEAD = GetLifetimeEadResult();
+            var lifetimeEAD = GetLifetimeEadResult(loanbook);
             var creditIndex = GetCreditRiskResult();
-            var lifetimeCollateral = GetScenarioLifetimeCollateralResult();
+            var lifetimeCollateral = GetScenarioLifetimeCollateralResult(loanbook);
 
-
-            int stage2to3Forward = Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value);
+            //xxxxxxxxxxxxx
+            //try { Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value); } catch { }
+            int stage2to3Forward = 0;
+            stage2to3Forward=Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value);
             //double creditIndexHurdle = Convert.ToDouble(GetImpairmentAssumptionValue(impairmentAssumptions, ImpairmentRowKeys.CreditIndexThreshold));
 
             foreach (var row in contractData)
@@ -82,19 +84,38 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 double guaranteeValue = row.GUARANTEE_VALUE;
                 double guaranteeLevel = row.GUARANTEE_LEVEL;
 
-                int loanStage = stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
+                //xxxxxxxxxxxxxxxxxxxxxxxxxxx
+                //try { loanStage= stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage; } catch { };
+                int loanStage = 0;
+                loanStage = stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
 
+                
                 var pdMappingRow = pdMapping.FirstOrDefault(x => x.ContractId == contractId);
+
+                //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                //if (pdMappingRow==null)
+                //{
+                //    pdMappingRow = pdMapping.FirstOrDefault();
+                //}
                 string pdGroup = pdMappingRow.PdGroup;
                 string segment = pdMappingRow.Segment;
                 string productType = pdMappingRow.ProductType;
 
+                //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 var sicrInputRow = sicrInput.FirstOrDefault(x => x.ContractId == contractId);
+                //if (sicrInputRow == null)
+                //{
+                //    sicrInputRow = sicrInput.FirstOrDefault();
+                //}
                 double redefaultLifetimePd = sicrInputRow.RedefaultLifetimePd;
                 long daysPastDue = sicrInputRow.DaysPastDue;
 
+                //XXXXXXXXXXXXXXXX
                 var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type == $"{segment}_{productType}");
-
+                //if (best_downTurn_Assumption == null)
+                //{
+                //    best_downTurn_Assumption = lgdAssumptions.FirstOrDefault();
+                //}
                 double cureRates = best_downTurn_Assumption.Cure_Rate;
 
                 long lgdAssumptionColumn = Math.Max(daysPastDue - stage2to3Forward, 0);
@@ -157,7 +178,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     double multiplerMinColl = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCor;
                     ///
 
-                    double creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value);
+                    //xxxxxxxxxxxxxxxxxxxxxxxx
+                    double  creditIndexHurdle= 0;
+                    creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value);
+                    //try { creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value); } catch { };
 
                     double ifCreditIndexHurdle;
                     if (monthCreditIndex > creditIndexHurdle)
@@ -190,6 +214,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRow.Month = month;
                     newRow.Value = lifetimeLgdValue;
                     lifetimeLGD.Add(newRow);
+                    //xxxxxxxxxxxaaaaaaaaaa
                 }
             }
 
@@ -201,9 +226,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private double ComputeLifetimeCollateralValuePerMonth(List<LifetimeCollateral> lifetimeCollateral, string contractId, int month)
         {
-            double lifetimeCollateralValue = lifetimeCollateral.FirstOrDefault(x => x.ContractId == contractId
-                                                                                                        && x.ProjectionMonth == month).ProjectionValue;
-            return lifetimeCollateralValue;
+
+            var lifetimeCollateralValue = lifetimeCollateral.FirstOrDefault(x => x.ContractId == contractId);
+
+            //xxxxxxxxxxxxxxx && x.ProjectionMonth == month);
+            if (lifetimeCollateralValue == null)
+            {
+                return lifetimeCollateral[0].ProjectionValue;
+            }
+            return lifetimeCollateralValue.ProjectionValue;
         }
 
         private double ComputeLifetimeRedefaultPdValuePerMonth(List<LifeTimeObject> redefaultPd, string pdGroup, int month)
@@ -237,16 +268,31 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private double GetLifetimeEADPerMonth(List<LifetimeEad> lifetimeEAD, string contractId, int month)
         {
-            return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
+            //return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
+            //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+            try { return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue; }
+            catch { return lifetimeEAD.FirstOrDefault().ProjectionValue; }
+
         }
-
-      
-
 
 
         public List<EclAssumptions> GetECLLgdAssumptions()
         {
-            var qry = Queries.eclAssumptions(this._eclId, this._eclType);
+            var qry = Queries.eclLGDAssumptions(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+            var eclAssumptions = new List<EclAssumptions>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                eclAssumptions.Add(DataAccess.i.ParseDataToObject(new EclAssumptions(), dr));
+            }
+
+            return eclAssumptions;
+        }
+        
+        public List<EclAssumptions> GetECLFrameworkAssumptions()
+        {
+            var qry = Queries.eclFrameworkAssumptions(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var eclAssumptions = new List<EclAssumptions>();
 
@@ -296,13 +342,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return _sicrInputs.GetSircInputResult();
         }
 
-        protected List<StageClassification> GetStagingClassificationResult()
+        protected List<StageClassification> GetStagingClassificationResult(List<Loanbook_Data> loanbook)
         {
-            return _sicrWorkings.ComputeStageClassification();
+            return _sicrWorkings.ComputeStageClassification(loanbook);
         }
-        protected List<LifetimeEad> GetLifetimeEadResult()
+        protected List<LifetimeEad> GetLifetimeEadResult(List<Loanbook_Data> loanbook)
         {
-            return _lifetimeEadWorkings.ComputeLifetimeEad();
+            return _lifetimeEadWorkings.ComputeLifetimeEad(loanbook);
         }
         protected List<LifeTimeObject> GetScenarioLifetimePdResult()
         {
@@ -367,9 +413,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             return _creditIndex.GetCreditIndexResult();
         }
-        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult()
+        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook)
         {
-            return _scenarioLifetimeCollateral.ComputeLifetimeCollateral();
+            return _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook);
         }
     }
 }
