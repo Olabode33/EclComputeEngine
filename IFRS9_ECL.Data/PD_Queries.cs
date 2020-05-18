@@ -33,7 +33,7 @@ namespace IFRS9_ECL.Data
                 subQry=$" and Month ={month} ";
             }
             
-            return $"SELECT Month, PdGroup, MarginalDefaultRate, CummulativeSurvival FROM {eclType.ToString()}EclPdAssumptionNonInteralModels where {eclType.ToString()}EclId='{eclId.ToString()}' {subQry}";
+            return $"SELECT Month, PdGroup, MarginalDefaultRate, CummulativeSurvival FROM {eclType.ToString()}EclPdAssumptionNonInternalModels where {eclType.ToString()}EclId='{eclId.ToString()}' {subQry}";
         }
         public static string Get_snpCummulativeDefaultRateQuery(Guid eclId, EclType eclType)
         {

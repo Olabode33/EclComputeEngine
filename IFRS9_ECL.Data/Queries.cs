@@ -20,7 +20,7 @@ namespace IFRS9_ECL.Data
         public static string Raw_Data(Guid guid, EclType eclType)
         {
             //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            return $"select top 1000 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
+            return $"select top 10 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
@@ -78,7 +78,7 @@ namespace IFRS9_ECL.Data
 
         public static string LGD_InputAssumptions_UnsecuredRecovery(Guid eclId, EclType eclType)
         {
-            return $"select Segment_Product_Type, Cure_Rate, Days_0, Days_90=0.0, Days_180=0.0, Days_270=0.0, Days_360=0.0, Downturn_Days_0=0.0, Downturn_Days_90=0.0, Downturn_Days_180=0.0, Downturn_Days_270=0.0, Downturn_Days_360=0.0 from {eclType.ToString()}LgdInputAssumptions_UnsecuredRecovery where {eclType.ToString()}EclId='{eclId}'";
+            return $"select [Key] Segment_Product_Type, Value Cure_Rate, Value Days_0, Days_90=0, Days_180=0, Days_270=0, Days_360=0, Downturn_Days_0=0, Downturn_Days_90=0, Downturn_Days_180=0, Downturn_Days_270=0, Downturn_Days_360=0 from LgdInputAssumptions where LgdGroup in (1,2) order by 1";// where {eclType.ToString()}EclId='{eclId}'";
         }
 
         public static string eclFrameworkAssumptions(Guid eclId, EclType eclType)
@@ -88,6 +88,11 @@ namespace IFRS9_ECL.Data
         public static string eclLGDAssumptions(Guid eclId, EclType eclType)
         {
             return $"select [Key], Value, LgdGroup AssumptionGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+        }
+
+        public static string Get_AffiliateMEVBackDateValues(Guid eclId, EclType eclType)
+        {
+            return $"select BackwardOffset, MacroeconomicVariableId from AffiliateMacroEconomicVariableOffsets where AffiliateId=(select OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}' )";
         }
     }
 }

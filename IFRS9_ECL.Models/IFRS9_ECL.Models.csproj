@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="AccountData.cs" />
     <Compile Include="EclRegister.cs" />
+    <Compile Include="ECL_Result\ResultDetail.cs" />
+    <Compile Include="ECL_Result\ResultSummary.cs" />
     <Compile Include="Framework\updatedFSV.cs" />
     <Compile Include="LGDCollateralData.cs" />
     <Compile Include="CoR.cs" />

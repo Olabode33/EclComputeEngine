@@ -1,8 +1,10 @@
 ﻿using IFRS9_ECL.Core.PDComputation.cmPD;
+using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -134,7 +136,17 @@ namespace IFRS9_ECL.Core.PDComputation
             //                    .Where(row => row.Field<DateTime>(MacroeconomicProjectionColumns.Date) > TempEclData.ReportDate)
             //                    .CopyToDataTable();
 
-            var MEVBackDate = new AffiliateMicroEconomicsVariable().AffiliateMEVBackDateValues(_eclId, _eclType);
+
+            
+            
+                var qry = Queries.Get_AffiliateMEVBackDateValues(this._eclId, this._eclType);
+                var dt = DataAccess.i.GetData(qry);
+            var MEVBackDate = new List<AffiliateMEVBackDateValues>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                MEVBackDate.Add(DataAccess.i.ParseDataToObject(new AffiliateMEVBackDateValues(), dr));
+            }
 
             for (int i = 0; i < projections.Count; i++)
             {

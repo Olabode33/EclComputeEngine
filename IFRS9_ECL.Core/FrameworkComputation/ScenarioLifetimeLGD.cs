@@ -111,7 +111,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 long daysPastDue = sicrInputRow.DaysPastDue;
 
                 //XXXXXXXXXXXXXXXX
-                var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type == $"{segment}_{productType}");
+                var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}{productType.ToLower()}".Replace(" ","")));
                 //if (best_downTurn_Assumption == null)
                 //{
                 //    best_downTurn_Assumption = lgdAssumptions.FirstOrDefault();
@@ -332,6 +332,21 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 _lgdAssumption.Downturn_Days_360 = 1 - ((1 - _lgdAssumption.Days_360) * 0.92 + 0.08);
 
                 ldg_inputassumption.Add(_lgdAssumption);
+            }
+
+            var _ldg_inputassumption = new List<LgdInputAssumptions_UnsecuredRecovery>();
+            foreach (var itm in ldg_inputassumption)
+            {
+                if (itm.Segment_Product_Type.ToLower().EndsWith("curerate"))
+                {
+                    itm.Days_0 = 0;
+                    var sub_itm=ldg_inputassumption.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains(itm.Segment_Product_Type.ToLower().Replace("curerate", "timeIndefault")));
+                    if(sub_itm!=null)
+                    {
+                        itm.Days_0 = sub_itm.Days_0;
+                    }
+                    _ldg_inputassumption.Add(itm);
+                }
             }
 
             return ldg_inputassumption;
