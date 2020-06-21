@@ -39,18 +39,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
 
 
-        public void Run()
-        {
-            var dataTable = ComputeFinalEcl();
-            string stop = "Ma te";
-        }
 
-        public List<FinalEcl> ComputeFinalEcl()
+        public List<FinalEcl> ComputeFinalEcl(List<Loanbook_Data> loanbook)
         {
             var finalEcl = new List<FinalEcl>();
-
-            var loanbook = _lifetimeEadWorkings.GetLoanBookData();
-
+            
             var monthlyEcl = ComputeMonthlyEcl(loanbook);
             var cummulativeDiscountFactor = GetCummulativeDiscountFactor();
             var eadInput = GetTempEadInputData(loanbook);
@@ -59,6 +52,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             
             var stageClassifcation = GetStageClassification(loanbook);
+
+            
 
             foreach (var row in stageClassifcation)
             {
@@ -239,6 +234,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             return _sicrWorkings.ComputeStageClassification(loanbook);
         }
+
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Data;
+﻿using IFRS9_ECL.Core.FrameworkComputation;
+using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
@@ -23,25 +24,19 @@ namespace IFRS9_ECL.Core
             this._eclType = eclType;
             _eclTask = new ECLTasks(eclId, eclType);
         }
-        public bool ProcessTask()
+        public bool ProcessTask(List<Loanbook_Data> loanbooks)
         {
             try
             {
-                //Get Data Excel/Database
-                var qry = Queries.Raw_Data(_eclId, _eclType);
-                var _lstRaw = DataAccess.i.GetData(qry);
 
-                var lstRaw = new List<Loanbook_Data>();
-                foreach (DataRow dr in _lstRaw.Rows)
+                foreach (var itm in loanbooks)
                 {
-                    var itm = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
                     itm.ContractId = _eclTask.GenerateContractId(itm);
-                    lstRaw.Add(itm);
                 }
                 Console.WriteLine($"Finished Extracting Raw Data - {DateTime.Now}");
 
 
-                var threads = lstRaw.Count / 1000;
+                var threads = loanbooks.Count / 1000;
                 threads = threads + 1;
 
                 var taskLst = new List<Task>();
@@ -49,7 +44,7 @@ namespace IFRS9_ECL.Core
                 //threads = 1;
                 for (int i = 0; i < threads; i++)
                 {
-                    var sub_LoanBook = lstRaw.Skip(i * 1000).Take(1000).ToList();
+                    var sub_LoanBook = loanbooks.Skip(i * 1000).Take(1000).ToList();
 
                     var task = Task.Run(() =>
                     {
@@ -139,6 +134,39 @@ namespace IFRS9_ECL.Core
             }
 
             return lgdCollateralData;
+        }
+        /// <summary>
+        /// 1 = Fsv
+        /// 2 = Stage
+        /// 3 = TTr
+        /// </summary>
+        /// <param name="dataRequest"></param>
+        /// <returns></returns>
+        public List<EclOverrides> GetOverrideData(int dataRequest)
+        {
+            var qry = "";
+            if(dataRequest==1)
+            {
+                qry = Queries.EclOverridesFsv(_eclId, _eclType);
+            }
+            if (dataRequest == 2)
+            {
+                qry = Queries.EclOverridesStage(_eclId, _eclType);
+            }
+            if (dataRequest == 3)
+            {
+                qry = Queries.EclOverridesTTr(_eclId, _eclType);
+            }
+
+            var dt = DataAccess.i.GetData(qry);
+            var eclOverrides = new List<EclOverrides>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                eclOverrides.Add(DataAccess.i.ParseDataToObject(new EclOverrides(), dr));
+            }
+
+            return eclOverrides;
         }
     }
 }

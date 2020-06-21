@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ namespace IFRS9_ECL.Models
         public DateTime ReportingDate { get; set; }
         public int Status { get; set; }
         public int EclType { get; set; }
+        public EclType eclType { get; set; }
 
     }
 }

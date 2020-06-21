@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Core.PDComputation.cmPD;
+﻿using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Core.PDComputation.cmPD;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
@@ -32,10 +33,11 @@ namespace IFRS9_ECL.Core.PDComputation
             double indexStandardDeviation = ComputeHistoricIndexStandardDeviation();
             double indexMean = ComputeHistoricIndexMean();
 
+            var cp = new Macro_Processor().GetMacroResult_Statistics(this._eclId, this._eclType);
 
             foreach (var itm in principalData)
             {
-                double actual = itm.Principal1 * ECLNonStringConstants.i.IndexWeight1 + itm.Principal2 * ECLNonStringConstants.i.IndexWeight2;
+                double actual = (itm.Principal1 * cp.IndexWeight1.Value) + (itm.Principal2 * cp.IndexWeight2.Value) + (itm.Principal3 * cp.IndexWeight3.Value) + (itm.Principal4 * cp.IndexWeight4.Value);
               
                 var dr = new IndexForecast();
                 dr.Date = itm.Date;
@@ -57,6 +59,8 @@ namespace IFRS9_ECL.Core.PDComputation
             standardisedData=standardisedData.OrderBy(o => o.Date).ToList();
             var macroeconomicPrincipal1 = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.PrincipalScore1).ToList();
             var macroeconomicPrincipal2 = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.PrincipalScore2).ToList();
+            var macroeconomicPrincipal3 = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.PrincipalScore3).ToList();
+            var macroeconomicPrincipal4 = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.PrincipalScore4).ToList();
 
 
             var groupedDate = standardisedData.GroupBy(x => x.Date).Select(x => new { Date = x.Key, Cnt = x.Count() }).ToList();
@@ -69,6 +73,8 @@ namespace IFRS9_ECL.Core.PDComputation
                 double[] standardised = new double[date_standardisedData.Count];
                 double[] principal1 = new double[macroeconomicPrincipal1.Count];
                 double[] principal2 = new double[macroeconomicPrincipal2.Count];
+                double[] principal3 = new double[macroeconomicPrincipal3.Count];
+                double[] principal4 = new double[macroeconomicPrincipal4.Count];
 
                 for (int i = 0; i < date_standardisedData.Count; i++)
                 {
@@ -85,12 +91,24 @@ namespace IFRS9_ECL.Core.PDComputation
                         var p2 = macroeconomicPrincipal2.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal2[i] = p2 != null ? p2.MacroEconomicValue : 0;
                     }
+                    if (principal3.Length - 1 >= i)
+                    {
+                        var p3 = macroeconomicPrincipal3.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
+                        principal3[i] = p3 != null ? p3.MacroEconomicValue : 0;
+                    }
+                    if (principal2.Length - 1 >= i)
+                    {
+                        var p4 = macroeconomicPrincipal4.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
+                        principal4[i] = p4 != null ? p4.MacroEconomicValue : 0;
+                    }
                 }
 
                 foreach(var itm in standardisedData.Where(o=>o.Date== dt.Date).ToList())
                 {
                     itm.Principal1 = ExcelFormulaUtil.SumProduct(standardised, principal1);
                     itm.Principal2 = ExcelFormulaUtil.SumProduct(standardised, principal2);
+                    itm.Principal3 = ExcelFormulaUtil.SumProduct(standardised, principal3);
+                    itm.Principal4 = ExcelFormulaUtil.SumProduct(standardised, principal4);
 
                     principalData.Add(itm);
                 }
@@ -207,8 +225,65 @@ namespace IFRS9_ECL.Core.PDComputation
 
         protected List<PDI_StatisticalInputs> GetStatisticalInputData()
         {
-            var obj = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_StatisticalInputs();
-            return obj;
+            var actualMacEcoVar = new Macro_Processor().Get_MacroResult_SelectedMacroEconomicVariables(this._eclId, this._eclType.ToString());
+
+            var statInput = new Macro_Processor().GetMacroResult_PCSummary(this._eclId, this._eclType);
+
+            var itms = new List<PDI_StatisticalInputs>();
+
+            var varBle = statInput.Max(o => o.PrincipalComponentIdB) - 3;
+            foreach (var itm in statInput)
+            {
+                var o = new PDI_StatisticalInputs();
+
+                if (itm.PrincipalComponentIdA == 1)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 2)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 3)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 4)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 5)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 6)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                if (itm.PrincipalComponentIdA == 7)
+                {
+                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+                    o.MacroEconomicValue = itm.Value.Value;
+                    o.Mode = itm.PricipalComponentLabelA;
+                }
+                itms.Add(o);
+            }
+            return itms;
+
+            //var obj = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_StatisticalInputs();
+            //return obj;
         }
 
         

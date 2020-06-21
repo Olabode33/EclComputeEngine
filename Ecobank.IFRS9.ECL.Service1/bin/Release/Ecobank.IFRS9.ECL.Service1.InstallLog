@@ -1,0 +1,13 @@
+﻿Installing assembly 'C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Installing service IFRS9_ECL1...
+Service IFRS9_ECL1 has been successfully installed.
+Creating EventLog source IFRS9_ECL1 in log Application...
+Committing assembly 'C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog

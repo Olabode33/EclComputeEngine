@@ -1,0 +1,4 @@
+2020-06-21 12:35:00,013 [4] INFO  IFRS9_ECL.Util.Log4Net Started Service
+2020-06-21 12:35:00,045 [4] INFO  IFRS9_ECL.Util.Log4Net Service will run in the next 0
+2020-06-21 12:35:10,408 [5] INFO  IFRS9_ECL.Util.Log4Net Timer Disabled
+2020-06-21 12:35:10,408 [5] INFO  IFRS9_ECL.Util.Log4Net Entering Core

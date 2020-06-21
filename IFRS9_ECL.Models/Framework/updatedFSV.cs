@@ -18,6 +18,7 @@ namespace IFRS9_ECL.Models.Framework
         public double ResidentialProperty { get; set; }
         public double Shares { get; set; }
         public double Vehicle { get; set; }
+        public int? Override_TTR_Year { get; set; }
 
     }
 }

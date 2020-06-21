@@ -13,6 +13,8 @@ namespace IFRS9_ECL.Core.PDComputation.cmPD
         public double MacroEconomicValue { get; set; }
         public double Principal1 { get; set; }
         public double Principal2 { get; set; }
+        public double Principal3 { get; set; }
+        public double Principal4 { get; set; }
         public double Actual { get; set; }
         public double Standardised { get; set; }
     }

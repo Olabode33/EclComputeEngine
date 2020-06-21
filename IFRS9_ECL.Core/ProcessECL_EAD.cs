@@ -12,38 +12,35 @@ namespace IFRS9_ECL.Core
 {
     public class ProcessECL_EAD
     {
-        public static readonly ProcessECL_EAD i = new ProcessECL_EAD();
 
         EclType _eclType;
         Guid _eclId;
-        public bool ProcessTask(Guid eclId, EclType eclType)
+
+        
+
+        public ProcessECL_EAD(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
             this._eclType = eclType;
+            
+        }
+        public bool ProcessTask(List<Loanbook_Data> loanbooks)
+        {
+
             try
             {
-                //Get Data Excel/Database
-                var qry = Queries.Raw_Data(eclId, eclType);
-                Console.WriteLine("Started");
-                var _lstRaw = DataAccess.i.GetData(qry);
-                Console.WriteLine("Selected Raw Data from table");
-                var lstRaw = new List<Loanbook_Data>();
-                foreach (DataRow dr in _lstRaw.Rows)
-                {
-                    lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-                }
 
-                var threads=lstRaw.Count / 1000;
+                var threads= loanbooks.Count / 1000;
                 threads = threads + 1;
 
                 var taskLst = new List<Task>();
 
                 for(int i=0; i< threads; i++)
                 {
-                    var sub_LoanBook = lstRaw.Skip(i * 1000).Take(1000).ToList();
+                    var sub_LoanBook =  loanbooks.Skip(i * 1000).Take(1000).ToList();
 
                     var task=Task.Run(() => {
-                        RunEADJob(sub_LoanBook, eclId, eclType);
+                        RunEADJob(sub_LoanBook, this._eclId, this._eclType);
                     });
                     taskLst.Add(task);
                 }

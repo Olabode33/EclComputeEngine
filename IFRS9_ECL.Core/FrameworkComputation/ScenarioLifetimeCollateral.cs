@@ -77,7 +77,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     var newRow = new LifetimeCollateral();
                     newRow.ContractId = contractId;
                     newRow.EirIndex = eirIndex;
-                    newRow.TtrMonths = ttrMonth;
+                    newRow.TtrMonths = tempFsv.Override_TTR_Year!=null? tempFsv.Override_TTR_Year.Value: ttrMonth;
                     newRow.ProjectionMonth = month;
                     newRow.ProjectionValue = value;
 

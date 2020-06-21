@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppSettings.cs" />
+    <Compile Include="Computation.cs" />
     <Compile Include="ECLConstants.cs" />
     <Compile Include="Log4Net.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

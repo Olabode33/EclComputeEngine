@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Core.PDComputation.cmPD;
+﻿using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Core.PDComputation.cmPD;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
@@ -149,7 +150,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected List<LogOddRatio> ComputeLogsOddsRatio()
         {
-            //var pd12MonthAssumption = new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions(); //.Get_PDI_12MonthPds();
+            var pd12MonthAssumption = new CalibrationInput_PD_CR_RD_Processor().GetPD12MonthsPD(this._eclId, this._eclType);// new ProcessECL_Wholesale_PD(this._eclId).Get_PDI_Assumptions(); //.Get_PDI_12MonthPds();
             var pdInputAssumptions = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             var logRates = ComputeLogRates();
 
@@ -172,7 +173,8 @@ namespace IFRS9_ECL.Core.PDComputation
                 string rating = _12MonthAssumption.Value;// snpMappingInput == _12MonthAssumption.Policy ? _12MonthAssumption.Policy : _12MonthAssumption.Fit;
 
                 //Year 1 computation
-                double pdValue =double.Parse(pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.CreditPD && o.InputName == rank.ToString()).Value);
+                double pdValue = 0;
+                try { pdValue=pd12MonthAssumption.FirstOrDefault(o => o.Rating == rank).Months_PDs_12; } catch { pdValue = 0; }// double.Parse(pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.CreditPD && o.InputName == rank.ToString()).Value);
                 
                 double year1LogOddRatio = Math.Log((1 - pdValue) / pdValue);
 

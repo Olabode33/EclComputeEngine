@@ -1,4 +1,5 @@
 ﻿using Excel.FinancialFunctions;
+using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
@@ -683,6 +684,8 @@ namespace IFRS9_ECL.Core
         {
             var lifetimeEadInputs = new List<LifeTimeProjections>();
 
+            var ccfData = new CalibrationInput_EAD_CCF_Summary_Processor().GetCCFData(this._eclId, this._eclType);
+
             foreach (var contract in lstContractIds)
             {
 
@@ -746,25 +749,25 @@ namespace IFRS9_ECL.Core
                         double previousMonth = lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value;
 
 
-                        if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_lease & obj.product_type != ECLStringConstants.i._productType_mortgage)
+                        if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i.CARDS && obj.product_type != ECLStringConstants.i._productType_lease & obj.product_type != ECLStringConstants.i._productType_mortgage)
                         {
                             if (monthIndex <= obj.months_to_expiry)
                             {
                                 if (obj.segment == ECLStringConstants.i._corporate)
                                 {
-                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ECLNonStringConstants.i.Corporate, 0);
+                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
                                 }
                                 else if (obj.segment == ECLStringConstants.i._consumer)
                                 {
-                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * Convert.ToDouble(ECLNonStringConstants.i.Consumer), 0);
+                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
                                 }
                                 else if (obj.segment == ECLStringConstants.i._commercial)
                                 {
-                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * Convert.ToDouble(ECLNonStringConstants.i.Commercial), 0);
+                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
                                 }
                                 else //OBE
                                 {
-                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * Convert.ToDouble(ECLNonStringConstants.i.Corporate), 0);
+                                    value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
                                 }
 
                                 if (obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i._productType_card)
@@ -1052,7 +1055,7 @@ namespace IFRS9_ECL.Core
         internal List<LifeTimeEADs> GenerateLifeTimeEAD(List<Refined_Raw_Retail_Wholesale> r_lst)
         {
             var rs = new List<LifeTimeEADs>();
-
+            var behavioral = new CalibrationInput_EAD_Behavioural_Terms_Processor().GetBehaviouralData(this._eclId, this._eclType);
             foreach (var i in r_lst)
             {
 
@@ -1099,7 +1102,9 @@ namespace IFRS9_ECL.Core
 
                     r.rem_interest_moritorium = Remaining_IR(i.IPT_O_PERIOD, r.mths_in_force).ToString();
 
-                    r.mths_to_expiry = Months_To_Expiry(ECLNonStringConstants.i.reportingDate, Convert.ToDateTime(r.end_date), i.product_type).ToString();
+                    
+
+                    r.mths_to_expiry = Months_To_Expiry(ECLNonStringConstants.i.reportingDate, Convert.ToDateTime(r.end_date), i.product_type, behavioral.Expired).ToString();
 
                     r.interest_divisor = Interest_Divisor(i.INTEREST_PAYMENT_STRUCTURE);
 
@@ -1290,12 +1295,12 @@ namespace IFRS9_ECL.Core
             return value;
         }
 
-        private double Months_To_Expiry(DateTime reportingDate, DateTime endDate, string productType)
+        private double Months_To_Expiry(DateTime reportingDate, DateTime endDate, string productType, double expired)
         {
             double value = 0;
             if (endDate < reportingDate || productType == "OD" || productType == "CARD")
             {
-                DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(ECLNonStringConstants.i.Expired));
+                DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(expired));
                 if (reportingDate > EOM)
                 {
                     value = 0;
@@ -1308,7 +1313,7 @@ namespace IFRS9_ECL.Core
             }
             else
             {
-                DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(ECLNonStringConstants.i.Expired));
+                DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(expired));
                 if (productType == ECLStringConstants.i.ID || productType == ECLStringConstants.i.CARDS)
                 {
                     value = Math.Max(Math.Round(Financial.YearFrac(reportingDate, EOM, DayCountBasis.ActualActual) * 12), 0);
@@ -1409,6 +1414,7 @@ namespace IFRS9_ECL.Core
             //create temp table
 
             var lstTempDT = new List<LGDPrecalculationOutput>();
+            var behavioral = new CalibrationInput_EAD_Behavioural_Terms_Processor().GetBehaviouralData(this._eclId, this._eclType);
 
             foreach (var itm in lstRaw)
             {
@@ -1445,7 +1451,7 @@ namespace IFRS9_ECL.Core
 
                 input.rating_used = input.current_rating > 10? input.current_rating.ToString().Substring(0, 1) : input.current_rating.ToString();
 
-                var ttm_months = TTM_Inputs(input);
+                var ttm_months = TTM_Inputs(input, behavioral);
                 string pd_mapping = PD_Mapping(input, ttm_months);
 
                 //Get details from the DATABASE....this is where you aren
@@ -1606,7 +1612,7 @@ namespace IFRS9_ECL.Core
             return _ps;
         }
 
-        private double TTM_Inputs(LGD_Inputs input)
+        private double TTM_Inputs(LGD_Inputs input, CalibrationResult_EAD_Behavioural behave)
         {
             double ttm_months=0;
             if (input.new_contract_no.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
@@ -1652,12 +1658,12 @@ namespace IFRS9_ECL.Core
 
                         if (longDate < reportDate)
                         {
-                            temp_value2 = ECLNonStringConstants.i.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
+                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
                             //temp_value2 = Convert.ToDouble(Expired);
                         }
                         else
                         {
-                            temp_value2 = ECLNonStringConstants.i.Non_Expired;
+                            temp_value2 = behave.NonExpired;
                         }
                     }
                     else if (input.contract_end_date != null)
@@ -1667,12 +1673,12 @@ namespace IFRS9_ECL.Core
 
                         if (longDate < reportDate)
                         {
-                            temp_value2 = ECLNonStringConstants.i.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
+                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
                             //temp_value2 = Convert.ToDouble(Expired);
                         }
                         else
                         {
-                            temp_value2 = ECLNonStringConstants.i.Non_Expired;
+                            temp_value2 = behave.NonExpired;
                         }
                     }
                    

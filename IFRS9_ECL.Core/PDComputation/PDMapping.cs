@@ -30,13 +30,13 @@ namespace IFRS9_ECL.Core.PDComputation
             //_pdMapping = new PDMapping(this._eclId);
         }
 
-        public string Run()
+        public string Run(List<Loanbook_Data> loanbook_Data)
         {
-            var pdMappings = ComputePdMappingTable();
+            var pdMappings = ComputePdMappingTable(loanbook_Data);
             return "";
         }
 
-        public bool ComputePdMappingTable()
+        public bool ComputePdMappingTable(List<Loanbook_Data> loanbook_Data)
         {
             var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
@@ -47,12 +47,6 @@ namespace IFRS9_ECL.Core.PDComputation
             //Get Data Excel/Database
             var qry = Queries.Raw_Data(this._eclId,this._eclType);
             var _lstRaw = DataAccess.i.GetData(qry);
-
-            var loanbook_Data = new List<Loanbook_Data>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                loanbook_Data.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-            }
 
             var _NonExpLoanbook_data = loanbook_Data.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
 

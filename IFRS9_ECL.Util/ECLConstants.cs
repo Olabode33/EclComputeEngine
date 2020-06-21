@@ -14,6 +14,8 @@ namespace IFRS9_ECL.Util
         public string LGDAccountData_Table(EclType eclType) { return $"{eclType.ToString()}LGDAccountData";  }
 
         public string FrameworkResult(EclType eclType) { return $"{eclType.ToString()}ECLFrameworkFinal";  }
+        public string FrameworkResultOverride(EclType eclType) { return $"{eclType.ToString()}ECLFrameworkFinalOverride"; }
+        public string EclFramworkReportDetail(EclType eclType) { return $"{eclType.ToString()}EclFramworkReportDetail"; }
 
         //Wholesale PD tables
         public string PDCreditIndex_Table(EclType eclType) { return $"{eclType.ToString()}PDCreditIndex";  }
@@ -113,18 +115,15 @@ namespace IFRS9_ECL.Util
         public static readonly ECLNonStringConstants i = new ECLNonStringConstants();
 
         public double virProjections { get { return 0.14; } } //GOTTEN FROM DB
-        public int Non_Expired { get { return 31; } }  ///this is called OD_PERFORMACE_PAST_EXPIRY on the excel and it is obtained from the EAD calibration. It will be obtained from the DB
-        public int Expired { get { return 22; } }
-        public double Corporate { get { return 1; } } ///It will be obtained from the DB
-        public double Commercial { get { return 1; } } ///It will be obtained from the DB
-        public double Consumer { get { return 1; } } ///It will be obtained from the DB
+
+        //public double Corporate { get { return 1; } } ///It will be obtained from the DB
+        //public double Commercial { get { return 1; } } ///It will be obtained from the DB
+        //public double Consumer { get { return 1; } } ///It will be obtained from the DB
         public double NGN_Currency { get { return 1; } }
         public double Conversion_Factor_OBE { get { return 1; } } ///It will be obtained from the DB this is in percentage
         public DateTime reportingDate { get { return new DateTime(2016, 12, 31); } }
 
-        public double IndexWeight1 = 0.575691023137874;
-        public double IndexWeight2 = 0.424308976862126;
-        public double Rho = 0.217333590280369;
+        public double Rho = 0.217333590280369; //******************************
 
         public int prepaymentFactor { get { return 0; } }
 
@@ -133,13 +132,6 @@ namespace IFRS9_ECL.Util
     }
 
 
-    public class ECLPDConstants
-    {
-        private const double _indexWeightW1 = 0.58;
-        private const double _indexWeightW2 = 0.42;
-        private const double _statisticsStandardDeviation = 0.84;
-        private const double _statisticsAverage = 0.00;
-    }
 
     public class nonInternalModelInput_Types
     {
@@ -186,15 +178,15 @@ namespace IFRS9_ECL.Util
         public const string CreditQualityCriteria12MonthPd = "12-month PD";
         public const string CreditQualityCriteriaLifetimePd = "Lifetime PD";
 
-        public const double CollateralHaircutApplied_Cash = 0.0;
-        public const double CollateralHaircutApplied_CommercialProperty = 0.32;
-        public const double CollateralHaircutApplied_Debenture = 0.26;
-        public const double CollateralHaircutApplied_Invertory = 0.50;
-        public const double CollateralHaircutApplied_PlantEquipment = 0.32;
-        public const double CollateralHaircutApplied_Receivables = 0.28;
-        public const double CollateralHaircutApplied_ResidentialProperty = 0.24;
-        public const double CollateralHaircutApplied_Shares = 0.0;
-        public const double CollateralHaircutApplied_Vehicle = 0.47;
+        //public const double CollateralHaircutApplied_Cash = 0.0;
+        //public const double CollateralHaircutApplied_CommercialProperty = 0.32;
+        //public const double CollateralHaircutApplied_Debenture = 0.26;
+        //public const double CollateralHaircutApplied_Invertory = 0.50;
+        //public const double CollateralHaircutApplied_PlantEquipment = 0.32;
+        //public const double CollateralHaircutApplied_Receivables = 0.28;
+        //public const double CollateralHaircutApplied_ResidentialProperty = 0.24;
+        //public const double CollateralHaircutApplied_Shares = 0.0;
+        //public const double CollateralHaircutApplied_Vehicle = 0.47;
     }
 
 

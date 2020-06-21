@@ -1,4 +1,5 @@
 ﻿using IFRS9_ECL.Core;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace IFRS9_ECL
             var masterGuid = Guid.NewGuid();
             masterGuid = Guid.Parse("4140a69e-a729-4269-a078-91a01b5e0cd0");
 
-            ProcessECL_EAD.i.ProcessTask(masterGuid, EclType.Wholesale);
+            new ProcessECL_EAD(masterGuid, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
 
             //Console.WriteLine("Done Done Done");
             //Console.ReadKey();
@@ -35,11 +36,11 @@ namespace IFRS9_ECL
 
             //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
 
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask();
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
             Console.WriteLine($"Best Time {DateTime.Now}");
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask();
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
             Console.WriteLine($"Optimistic Time {DateTime.Now}");
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask();
+            new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
             Console.WriteLine($"Downturn Time {DateTime.Now}");
             Console.WriteLine($"End Time {DateTime.Now}");
             //Console.WriteLine("Done Done Done");

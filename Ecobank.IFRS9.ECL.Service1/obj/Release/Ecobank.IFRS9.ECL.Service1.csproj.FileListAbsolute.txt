@@ -22,3 +22,8 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\obj\
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\obj\Release\Ecobank.IFRS9.ECL.Service1.csproj.CopyComplete
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\obj\Release\Ecobank.IFRS9.ECL.Service1.exe
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\obj\Release\Ecobank.IFRS9.ECL.Service1.pdb
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\EPPlus.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\FSharp.Core.dll
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\EPPlus.xml
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\FSharp.Core.xml
+C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\obj\Release\Ecobank.IFRS9.ECL.Service1.csprojAssemblyReference.cache

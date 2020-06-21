@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Core.PDComputation;
+﻿using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Core.PDComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Framework;
@@ -111,7 +112,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 long daysPastDue = sicrInputRow.DaysPastDue;
 
                 //XXXXXXXXXXXXXXXX
-                var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}{productType.ToLower()}".Replace(" ","")));
+                //var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}{productType.ToLower()}".Replace(" ", "")));
+                var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault();// o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}{productType.ToLower()}".Replace(" ","")));
                 //if (best_downTurn_Assumption == null)
                 //{
                 //    best_downTurn_Assumption = lgdAssumptions.FirstOrDefault();
@@ -313,24 +315,29 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
         protected List<LgdInputAssumptions_UnsecuredRecovery> GetLgdAssumptionsData()
         {
-            var qry = Queries.LGD_InputAssumptions_UnsecuredRecovery(this._eclId, this._eclType);
-            var dt = DataAccess.i.GetData(qry);
+            //var qry = Queries.LGD_InputAssumptions_UnsecuredRecovery(this._eclId, this._eclType);
+            //var dt = DataAccess.i.GetData(qry);
             var ldg_inputassumption = new List<LgdInputAssumptions_UnsecuredRecovery>();
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                var _lgdAssumption = DataAccess.i.ParseDataToObject(new LgdInputAssumptions_UnsecuredRecovery(), dr);
-                _lgdAssumption.Days_90 = _lgdAssumption.Days_0 - (_lgdAssumption.Days_0 / 4);
-                _lgdAssumption.Days_180 = _lgdAssumption.Days_90 - (_lgdAssumption.Days_0 / 4);
-                _lgdAssumption.Days_270 = _lgdAssumption.Days_180 - (_lgdAssumption.Days_0 / 4);
-                _lgdAssumption.Days_360 = _lgdAssumption.Days_270 - (_lgdAssumption.Days_0 / 4);
+            var pdCali = new CalibrationInput_PD_CR_RD_Processor().GetPDRedefaultFactorCureRate(this._eclId, this._eclType);
+            var rcvCaliRate = new CalibrationInput_LGD_RecoveryRate_Processor().GetLGDRecoveryRateData(this._eclId, this._eclType);
 
-                _lgdAssumption.Downturn_Days_0 = 1 - ((1 - _lgdAssumption.Days_0) * 0.92 + 0.08);
+            //foreach (DataRow dr in dt.Rows)
+            for(int i=0; i<1; i++)
+            {
+                var _lgdAssumption = new LgdInputAssumptions_UnsecuredRecovery();// DataAccess.i.ParseDataToObject(new LgdInputAssumptions_UnsecuredRecovery(), dr);
+                _lgdAssumption.Days_90 = rcvCaliRate - (rcvCaliRate / 4);
+                _lgdAssumption.Days_180 = _lgdAssumption.Days_90 - (rcvCaliRate / 4);
+                _lgdAssumption.Days_270 = _lgdAssumption.Days_180 - (rcvCaliRate / 4);
+                _lgdAssumption.Days_360 = _lgdAssumption.Days_270 - (rcvCaliRate / 4);
+
+                _lgdAssumption.Downturn_Days_0 = 1 - ((1 - rcvCaliRate) * 0.92 + 0.08);
                 _lgdAssumption.Downturn_Days_90 = 1 - ((1 - _lgdAssumption.Days_90) * 0.92 + 0.08);
                 _lgdAssumption.Downturn_Days_180 = 1 - ((1 - _lgdAssumption.Days_180) * 0.92 + 0.08);
                 _lgdAssumption.Downturn_Days_270 = 1 - ((1 - _lgdAssumption.Days_270) * 0.92 + 0.08);
                 _lgdAssumption.Downturn_Days_360 = 1 - ((1 - _lgdAssumption.Days_360) * 0.92 + 0.08);
 
+                _lgdAssumption.Cure_Rate = pdCali[1];
                 ldg_inputassumption.Add(_lgdAssumption);
             }
 
@@ -348,7 +355,6 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     _ldg_inputassumption.Add(itm);
                 }
             }
-
             return ldg_inputassumption;
         }
 

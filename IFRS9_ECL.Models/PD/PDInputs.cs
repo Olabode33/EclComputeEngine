@@ -55,10 +55,12 @@ namespace IFRS9_ECL.Models.PD
     public static class StatisticalInputsRowKeys
     {
         public const string Mean = "Mean";
-        public const string StandardDeviation = "Standard Deviation";
-        public const string Eigenvalues = "Eigenvalues";
-        public const string PrincipalScore1 = "Principal Component Score 1";
-        public const string PrincipalScore2 = "Principal Component Score 2";
+        public const string StandardDeviation = "std.Dev";
+        public const string Eigenvalues = "EigenValues";
+        public const string PrincipalScore1 = "PrinComp1";
+        public const string PrincipalScore2 = "PrinComp2";
+        public const string PrincipalScore3 = "PrinComp3";
+        public const string PrincipalScore4 = "PrinComp4";
     }
 
 

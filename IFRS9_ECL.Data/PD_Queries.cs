@@ -12,12 +12,12 @@ namespace IFRS9_ECL.Data
       
         public static string Get_etiNplQuery(Guid eclId, EclType eclType)
         {
-            return $"SELECT [Date],EtiNplSeries Series FROM {eclType.ToString()}EclPdAssumptionNplIndexes where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"SELECT Period,BfNpl FROM MacroResult_IndexData where MacroId=(select top 1 Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select top 1 OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}'))";
         }
 
         public static string Get_historicIndexQuery(Guid eclId, EclType eclType)
         {
-            return $"SELECT [Date], [Actual], Standardised FROM {eclType.ToString()}EclPdAssumptionNplIndexes where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"SELECT Period,Index,StandardIndex FROM MacroResult_IndexData where MacroId=(select top 1 Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select top 1 OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}'))";
         }
 
         public static string Get_macroEconomicsQuery(Guid eclId, EclType eclType)

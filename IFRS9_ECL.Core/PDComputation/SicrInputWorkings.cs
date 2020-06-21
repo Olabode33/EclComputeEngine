@@ -170,17 +170,6 @@ namespace IFRS9_ECL.Core.PDComputation
                                         .Select(row => row.Value).ToArray();
             return monthPds.Aggregate(0.0, (acc, x) => acc + x);
         }
-        protected List<Loanbook_Data> GetLoanbookData()
-        {
-            var qry = Queries.Raw_Data(this._eclId, this._eclType);
-            var _lstRaw = DataAccess.i.GetData(qry);
 
-            var lstRaw = new List<Loanbook_Data>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-            }
-            return lstRaw;
-        }
     }
 }

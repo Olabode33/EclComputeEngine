@@ -1,6 +1,8 @@
-﻿using IFRS9_ECL.Core.PDComputation;
+﻿using IFRS9_ECL.Core.Macro.Entities;
+using IFRS9_ECL.Core.PDComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.PD;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -21,18 +23,68 @@ namespace IFRS9_ECL.Core
             this._eclId = eclId;
             this._eclType = eclType;
         }
-        public void ProcessTask()
+        public bool ProcessTask(List<Loanbook_Data> loanbooks)
         {
+
+            try
+            {
+
+                var threads = loanbooks.Count / 1000;
+                threads = threads + 1;
+
+                var taskLst = new List<Task>();
+
+                //threads = 1;
+                for (int i = 0; i < threads; i++)
+                {
+                    var sub_LoanBook = loanbooks.Skip(i * 1000).Take(1000).ToList();
+
+                    var task = Task.Run(() =>
+                    {
+                        RunPDJob(sub_LoanBook);
+                    });
+                    taskLst.Add(task);
+                }
+                Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+                Console.WriteLine($"Task Completed: {completedTask}");
+
+                while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+                {
+                    var newCount = taskLst.Where(o => o.IsCompleted).Count();
+                    if (completedTask != newCount)
+                    {
+                        Console.WriteLine($"Task Completed: {completedTask}");
+                    }
+                    //Do Nothing
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return true;
+            }
+
+
+
+        }
+
+        private void RunPDJob(List<Loanbook_Data> sub_LoanBook)
+        {
+
             // Compute Credit Index
             var crdIndx = new CreditIndex(this._eclId, this._eclType);
             crdIndx.Run();
 
             // Compute PD mapping
             var pDMapping = new PDMapping(this._eclId, this._eclType);
-            pDMapping.Run();
+            pDMapping.Run(sub_LoanBook);
 
             // Compute Scenario Life time Pd -- best
-            var slt_Pd_b = new ScenarioLifetimePd(Util.ECL_Scenario.Best, this._eclId, this._eclType);
+            var slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
             slt_Pd_b.Run();
 
             // Compute Scenario Redefault Lifetime Pds  -- best
@@ -40,9 +92,9 @@ namespace IFRS9_ECL.Core
             sRedefault_lt_pd_b.Run();
 
             // Compute Scenario Life time Pd -- Optimistic
-            var slt_Pd_o = new ScenarioLifetimePd(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
+            var slt_Pd_o = new ScenarioLifetimePd(ECL_Scenario.Optimistic, this._eclId, this._eclType);
             slt_Pd_o.Run();
-            
+
             // Compute Scenario Redefault Lifetime Pds  -- Optimistic
             var sRedefault_lt_pd_o = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
             sRedefault_lt_pd_o.Run();
@@ -50,30 +102,14 @@ namespace IFRS9_ECL.Core
 
 
             // Compute Scenario Life time Pd -- Downturn
-            var slt_Pd_de = new ScenarioLifetimePd(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
+            var slt_Pd_de = new ScenarioLifetimePd(ECL_Scenario.Downturn, this._eclId, this._eclType);
             slt_Pd_de.Run();
 
             // Compute Scenario Redefault Lifetime Pds  -- Downturn
             var sRedefault_lt_pd_de = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
             sRedefault_lt_pd_de.Run();
 
-
-            //return;
-            // Compute Scenario Marginal Pd -- best
-            //var sMarginal_Pd_o = new ScenarioMarginalPd(Util.ECL_Scenario.Optimistic, this._eclId);
-            //sMarginal_Pd_o.Run();
-
-            // Compute Scenario Marginal Pd -- Optimistic
-            //var sMarginal_Pd_de = new ScenarioMarginalPd(Util.ECL_Scenario.Downturn, this._eclId);
-            //sMarginal_Pd_de.Run();
-
-            // Compute Sicr Input Workings
-            //var vasicekWorkings = new VasicekWorkings(this._eclId);
-            //vasicekWorkings.Run();
         }
-
-
-
 
         public List<PDI_Assumptions> Get_PDI_Assumptions()
         {
@@ -120,7 +156,11 @@ namespace IFRS9_ECL.Core
             var data = new List<PDI_HistoricIndex>();
             foreach (DataRow dr in dt.Rows)
             {
-                var itm = DataAccess.i.ParseDataToObject(new PDI_HistoricIndex(), dr);
+                var o = DataAccess.i.ParseDataToObject(new MacroResult_IndexData(), dr);
+                var itm = new PDI_HistoricIndex();
+                itm.Actual = o.Index;
+                itm.Standardised = o.StandardIndex;
+                itm.Date = GetPeriodDate(o.Period);
                 data.Add(itm);
             }
             return data;
@@ -183,10 +223,21 @@ namespace IFRS9_ECL.Core
             var data = new List<PDI_ETI_NPL>();
             foreach (DataRow dr in dt.Rows)
             {
-                var itm = DataAccess.i.ParseDataToObject(new PDI_ETI_NPL(), dr);
+                var o = DataAccess.i.ParseDataToObject(new MacroResult_IndexData(), dr);
+                var itm =new PDI_ETI_NPL();
+                itm.Series = o.BfNpl;
+                itm.Date = GetPeriodDate(o.Period);
                 data.Add(itm);
             }
             return data;
+        }
+
+        private DateTime GetPeriodDate(string period)
+        {
+            var periodsl = period.Split(' ');
+            var mnth = int.Parse(periodsl[0].Replace("Q", "")) * 3;
+            var d = (mnth == 3 || mnth == 12) ? 31 : 30;
+            return new DateTime(int.Parse(periodsl[1]),mnth,d);
         }
 
         //public List<WholesalePdLifetimeBests> Get_WholesalePdLifetimeBests()

@@ -20,6 +20,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected SicrInputWorkings _sicrInputs;
         protected PDMapping _pdMapping;
         protected ScenarioLifetimeLGD scenarioLifetimeLGD;
+        ProcessECL_LGD _processECL_LGD;
 
         public SicrWorkings(Guid eclId, EclType eclType)
         {
@@ -29,6 +30,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _sicrInputs = new SicrInputWorkings(eclId, this._eclType);
             _pdMapping = new PDMapping(eclId, this._eclType);
             scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
+            _processECL_LGD = new ProcessECL_LGD(eclId, eclType);
         }
         
         internal List<StageClassification> ComputeStageClassification(List<Loanbook_Data> loanbook)
@@ -42,18 +44,28 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var lbContractIds = loanbook.Select(o => o.ContractId).ToList();
             sicrInput = sicrInput.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
             pdMapping= pdMapping.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
+
+            var overrides = GetOverrideDataResult();
+
             foreach (var row in sicrInput)
             {
                 var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
                 var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
-
+                
                 var newRow = new StageClassification();
                 newRow.ContractId = row.ContractId;
                 newRow.Stage= ComputeStage(row, loanbookRecord, assumption, pdMappingRecord.PdGroup);
 
+                var overridestage = overrides.FirstOrDefault(o => o.ContractId == row.ContractId);
+                if(overridestage!=null)
+                {
+                    if(overridestage.Stage!=null)
+                    {
+                        newRow.Stage = overridestage.Stage.Value;
+                    }
+                }
                 stageClassification.Add(newRow);
             }
-
 
             return stageClassification;
         }
@@ -261,6 +273,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected List<Loanbook_Data> GetLoanBookData()
         {
             return _lifetimeEadWorkings.GetLoanBookData();
+        }
+
+        protected List<EclOverrides> GetOverrideDataResult()
+        {
+            return _processECL_LGD.GetOverrideData(2);
         }
     }
 }
