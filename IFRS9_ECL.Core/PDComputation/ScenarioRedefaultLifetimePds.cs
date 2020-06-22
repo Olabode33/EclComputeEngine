@@ -40,7 +40,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
             }
-
+            //dt.Columns.Add($"{_eclType.ToString()}EclId", typeof(Guid));
 
             foreach (var _d in output)
             {
@@ -117,7 +117,8 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double GetRedefaultAdjustmentFactor()
         {
-            return Convert.ToDouble(GetPdInputAssumptions().FirstOrDefault(row => row.PdGroup == PdInputAssumptionGroupEnum.General && row.Key== PdAssumptionsRowKey.ReDefaultAdjustmentFactor).Value);
+            //************************
+            try { return Convert.ToDouble(GetPdInputAssumptions().FirstOrDefault(row => row.PdGroup == PdInputAssumptionGroupEnum.General && row.Key == PdAssumptionsRowKey.ReDefaultAdjustmentFactor).Value); } catch { return 0; }
         }
         protected List<PDI_Assumptions> GetPdInputAssumptions()
         {

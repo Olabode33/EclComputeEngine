@@ -40,9 +40,11 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
-
-            int expOdPerformacePastRepoting = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== PdAssumptionsRowKey.Expired).Value);
-            int odPerformancePastExpiry = Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value);
+            //*****************************************************
+            int expOdPerformacePastRepoting = 0;
+            try { Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.Expired).Value); } catch { }
+            int odPerformancePastExpiry = 0;
+            try { Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value); } catch { }
 
             //Get Data Excel/Database
             var qry = Queries.Raw_Data(this._eclId,this._eclType);
@@ -124,7 +126,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 pdMappingTable[i].DaysPastDue = sicrinput.DaysPastDue;
                 pdMappingTable[i].LifetimePd = sicrinput.LifetimePd;
                 pdMappingTable[i].Pd12Month = sicrinput.Pd12Month;
-                pdMappingTable[i].RedefaultLifetimePD = sicrinput.RedefaultLifetimePd;
+                pdMappingTable[i].RedefaultLifetimePd = sicrinput.RedefaultLifetimePd;
                 pdMappingTable[i].Stage1Transition = sicrinput.Stage1Transition;
                 pdMappingTable[i].Stage2Transition = sicrinput.Stage2Transition;
             }
@@ -140,6 +142,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
             }
+            //dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
             dt.Columns.Remove("AccountNo");
             dt.Columns.Remove("ProductType");
             dt.Columns.Remove("RatingModel");
@@ -154,7 +157,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
                 dt.Rows.Add(new object[]
                     {
-                            _d.Id, _d.ContractId, _d.PdGroup, _d.TtmMonths, _d.MaxDpd, _d.MaxClassificationScore, _d.Pd12Month, _d.LifetimePd, _d.RedefaultLifetimePD, _d.Stage1Transition, _d.Stage2Transition, _d.DaysPastDue, _d.WholesaleEclId
+                            _d.Id, _d.ContractId, _d.PdGroup, _d.TtmMonths, _d.MaxDpd, _d.MaxClassificationScore, _d.Pd12Month, _d.LifetimePd, _d.RedefaultLifetimePd, _d.Stage1Transition, _d.Stage2Transition, _d.DaysPastDue, _d.WholesaleEclId
                     });
             }
 

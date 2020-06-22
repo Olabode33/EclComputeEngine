@@ -28,7 +28,7 @@ namespace IFRS9_ECL.Models.PD
         public int MaxClassificationScore { get; set; }
         public double Pd12Month { get; set; }
         public double LifetimePd { get; set; }
-        public double RedefaultLifetimePD { get; set; }
+        public double RedefaultLifetimePd { get; set; }
         public int Stage1Transition { get; set; }
         public int Stage2Transition { get; set; }
         public int DaysPastDue { get; set; }

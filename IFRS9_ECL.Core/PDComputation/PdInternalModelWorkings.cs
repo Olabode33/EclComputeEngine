@@ -155,12 +155,14 @@ namespace IFRS9_ECL.Core.PDComputation
             var logRates = ComputeLogRates();
 
             var logOddsRatioResult = new List<LogOddRatio>();
-
-            string snpMappingInput = pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key== ECLNonStringConstants.i.SnpMapping).Value;
+            //**********************************************
+            string snpMappingInput = PdAssumptionsRowKey.SnpMappingValueBestFit;
+            try { snpMappingInput = pdInputAssumptions.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == ECLNonStringConstants.i.SnpMapping).Value; } catch { }
 
             for (int rank = 1; rank <= _maxRatingRank; rank++)
             {
-                var _12MonthAssumption = new PDI_Assumptions();
+                //********************************
+                var _12MonthAssumption = new PDI_Assumptions { Value = PdAssumptionsRowKey.SnpMappingValueBestFit };
                 if(snpMappingInput== PdAssumptionsRowKey.SnpMappingValueBestFit)
                 {
                     _12MonthAssumption = pdInputAssumptions.Where(o=>o.PdGroup== PdInputAssumptionGroupEnum.CreditBestFit).FirstOrDefault(o => o.InputName == rank.ToString());
@@ -186,7 +188,8 @@ namespace IFRS9_ECL.Core.PDComputation
                 logOddsRatioResult.Add(dataRow);
 
                 //Year to Max computation
-                double year1RatingLogRate = logRates.FirstOrDefault(row =>row.Rating == rating && row.Year == 1).LogOddsRatio;
+                double year1RatingLogRate = 0;
+                try { year1RatingLogRate=logRates.FirstOrDefault(row => row.Rating == rating && row.Year == 1).LogOddsRatio; } catch { }
 
                 for (int year = 2; year <= _maxRatingYear; year++)
                 {

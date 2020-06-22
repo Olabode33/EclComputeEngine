@@ -681,6 +681,8 @@ namespace IFRS9_ECL.Core.Calibration
             var itm = new MacroResult_Statistics();
             try { itm.IndexWeight1 = double.Parse(dr["IndexWeight1"].ToString().Trim()); } catch { itm.IndexWeight1 = 0; }
             try { itm.IndexWeight2 = double.Parse(dr["IndexWeight2"].ToString().Trim()); } catch { itm.IndexWeight2 = 0; }
+            try { itm.IndexWeight3 = double.Parse(dr["IndexWeight3"].ToString().Trim()); } catch { itm.IndexWeight3 = 0; }
+            try { itm.IndexWeight4 = double.Parse(dr["IndexWeight4"].ToString().Trim()); } catch { itm.IndexWeight4 = 0; }
             try { itm.Average = double.Parse(dr["Average"].ToString().Trim()); } catch { itm.Average = 0; }
             try { itm.StandardDev = double.Parse(dr["StandardDev"].ToString().Trim()); } catch { itm.StandardDev = 0; }
 

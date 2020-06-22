@@ -41,7 +41,7 @@ namespace IFRS9_ECL.Data
         }
         public static string GetPD12MonthsPD(Guid eclId, string eclType)
         {
-            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Month where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Months where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         
         public static string GetPDIndexData(Guid eclId, string eclType)
@@ -50,15 +50,15 @@ namespace IFRS9_ECL.Data
         }
         public static string GetPDStatistics(Guid eclId, string eclType)
         {
-            return $"select top 1 IndexWeight1, IndexWeight2, Average, StandardDev from MacroResult_Statistics where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 IndexWeight1, IndexWeight2,IndexWeight3, IndexWeight4, Average, StandardDev from MacroResult_Statistics where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetSelectMacroVariables(Guid eclId, string eclType)
         {
-            return $"select s.*, m.Description, m.Name from MacroResult_SelectedMacroEconomicVariables s left join MacroeconomicVariables m on (m.Id=s.MacroeconomicVariableId) where s.AffiliateId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') ";
+            return $"select s.*, m.Description, m.Name from MacroResult_SelectedMacroEconomicVariables s left join MacroeconomicVariables m on (m.Id=s.MacroeconomicVariableId) where s.AffiliateId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') ";
         }
         public static string GetPDRedefaultFactor(Guid eclId, string eclType)
         {
-            return $"select top 1 Redefault_Factor, Cure_Rate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 Redefault_Factor, Cure_Rate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
 
         public static string Affiliate_MacroeconomicVariable(long affiliateId)
@@ -227,8 +227,9 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
+            //******************************************************
             //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
+            return $"select top 800 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
         }
 
 

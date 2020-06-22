@@ -89,13 +89,34 @@ namespace IFRS9_ECL.Core.PDComputation
             for (int month = 0; month <= _maxCreditIndexMonth; month++)
             {
                 int monthOffset = Convert.ToInt32((month - 1) / 3) * 3 + 3;
+                
                 DateTime eoMonth = ExcelFormulaUtil.EOMonth(ECLNonStringConstants.i.reportingDate, monthOffset);
                
                 var dr = new CreditIndex_Output();
                 dr.ProjectionMonth = month;
-                dr.BestEstimate = month < 1 ? vasicekIndexUsed : indexForecastBest.FirstOrDefault(o => o.Date == eoMonth).Standardised;
-                dr.Optimistic = month < 1 ? vasicekIndexUsed : indexForecastOptimistic.FirstOrDefault(o => o.Date == eoMonth).Standardised;
-                dr.Downturn = month < 3 ? vasicekIndexUsed : indexForecastDownturn.FirstOrDefault(o => o.Date == eoMonth).Standardised;
+
+                //***************************************************
+                double standard = 0;
+                var _indexForecastBest = indexForecastBest.FirstOrDefault(o => o.Date == eoMonth);
+                if (_indexForecastBest != null)
+                    standard = _indexForecastBest.Standardised;
+
+                dr.BestEstimate = month < 1 ? vasicekIndexUsed : standard;
+
+                standard = 0;
+                var _indexForecastOptimistic = indexForecastOptimistic.FirstOrDefault(o => o.Date == eoMonth);
+                if (_indexForecastOptimistic != null)
+                    standard = _indexForecastOptimistic.Standardised;
+
+                dr.Optimistic = month < 1 ? vasicekIndexUsed : standard;
+
+
+                standard = 0;
+                var _indexForecastDownturn = indexForecastDownturn.FirstOrDefault(o => o.Date == eoMonth);
+                if (_indexForecastDownturn != null)
+                    standard = _indexForecastDownturn.Standardised;
+
+                dr.Downturn = month < 3 ? vasicekIndexUsed : standard;
 
                 creditIndices.Add(dr);
             }

@@ -17,7 +17,7 @@ namespace IFRS9_ECL.Data
 
         public static string Get_historicIndexQuery(Guid eclId, EclType eclType)
         {
-            return $"SELECT Period,Index,StandardIndex FROM MacroResult_IndexData where MacroId=(select top 1 Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select top 1 OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}'))";
+            return $"SELECT [Period],[Index],StandardIndex FROM MacroResult_IndexData where MacroId=(select top 1 Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select top 1 OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}'))";
         }
 
         public static string Get_macroEconomicsQuery(Guid eclId, EclType eclType)

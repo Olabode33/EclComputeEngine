@@ -132,10 +132,20 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 var macroeconomicMean = statisticalInputs.FirstOrDefault(o => o.MacroEconomicVariableId==row.MacroEconomicVariableId && o.Mode == StatisticalInputsRowKeys.Mean);
                 var macroeconomicStandardDeviation = statisticalInputs.FirstOrDefault(o => o.MacroEconomicVariableId == row.MacroEconomicVariableId && o.Mode == StatisticalInputsRowKeys.StandardDeviation);
+                //****************************************
+                if(macroeconomicMean==null)
+                    macroeconomicMean = new PDI_StatisticalInputs { MacroEconomicValue = 0, MacroEconomicVariableId = 0 };
+
+                if(macroeconomicStandardDeviation== null)
+                    macroeconomicStandardDeviation = new PDI_StatisticalInputs { MacroEconomicValue = 0, MacroEconomicVariableId = 0 };
 
                 var dr = new IndexForecast();
                 dr.Date = row.Date;
                 dr.MacroEconomicVariableId = row.MacroEconomicVariableId;
+                if(macroeconomicStandardDeviation.MacroEconomicValue==0)
+                {
+                    macroeconomicStandardDeviation.MacroEconomicValue = 1;
+                }
                 dr.MacroEconomicValue = (row.MacroEconomicValue - macroeconomicMean.MacroEconomicValue) / macroeconomicStandardDeviation.MacroEconomicValue;
 
                 standardisedData.Add(dr);

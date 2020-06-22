@@ -113,8 +113,12 @@ namespace IFRS9_ECL.Core.PDComputation
             }
             else
             {
-                var consStageObj = nonInternalModelInput.FirstOrDefault(row => row.Month == month && row.PdGroup== columnName);
-
+                var consStageObj =  nonInternalModelInput.FirstOrDefault(row => row.Month == month && row.PdGroup== columnName);
+                //************************
+                if (consStageObj == null)
+                {
+                    consStageObj = new PdInputAssumptionNonInternalModels { PdGroup = "CONS_STAGE_1" };
+                }
                 //var consStageVal = 0.0;
                 //if(columnName== "CONS_STAGE_1")
                 //{

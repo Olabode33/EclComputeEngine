@@ -121,7 +121,8 @@ namespace IFRS9_ECL.Util
         //public double Consumer { get { return 1; } } ///It will be obtained from the DB
         public double NGN_Currency { get { return 1; } }
         public double Conversion_Factor_OBE { get { return 1; } } ///It will be obtained from the DB this is in percentage
-        public DateTime reportingDate { get { return new DateTime(2016, 12, 31); } }
+            //*********************************************************
+        public DateTime reportingDate { get { return new DateTime(2018, 06, 30); } }
 
         public double Rho = 0.217333590280369; //******************************
 
