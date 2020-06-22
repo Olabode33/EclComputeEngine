@@ -6,10 +6,12 @@ using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -17,8 +19,39 @@ namespace IFRS_Test1
 {
     class Program
     {
+
+        static void Start()
+        {
+            // This method takes ten seconds to terminate.
+            Thread.Sleep(10000);
+            task.Add(true);
+        }
+
+        static List<bool> task = new List<bool>();
         static void Main(string[] args)
         {
+
+
+
+            //var stopwatch = Stopwatch.StartNew();
+            //// Create an array of Thread references.
+            //Thread[] array = new Thread[4];
+            //for (int i = 0; i < array.Length; i++)
+            //{
+            //    // Start the thread with a ThreadStart.
+            //    array[i] = new Thread(new ThreadStart(Start));
+            //    array[i].Start();
+            //}
+
+            //while(task.Count!= array.Count())
+            //{
+            //    Console.WriteLine("Still running");
+            //}
+          
+            //Console.WriteLine("DONE: {0}", stopwatch.ElapsedMilliseconds);
+
+
+
             Core c = new Core();
             c.ProcessRunTask();
             

@@ -16,7 +16,7 @@ namespace IFRS9_ECL.Core
         EclType _eclType;
         Guid _eclId;
 
-        
+        List<bool> tasks = new List<bool>();
 
         public ProcessECL_EAD(Guid eclId, EclType eclType)
         {
@@ -30,40 +30,36 @@ namespace IFRS9_ECL.Core
             try
             {
 
-                var threads= loanbooks.Count / 1000;
+                var threads = loanbooks.Count / 1000;
                 threads = threads + 1;
 
                 var taskLst = new List<Task>();
-                List<bool> tasks = new List<bool>();
-                for(int i=0; i< threads; i++)
-                {
-                    var sub_LoanBook =  loanbooks.Skip(i * 1000).Take(1000).ToList();
 
-                    var task=Task.Run(() => {
-                        var tR=RunEADJob(sub_LoanBook, this._eclId, this._eclType);
-                        tasks.Add(tR);
+                for (int i = 0; i < threads; i++)
+                {
+                    var sub_LoanBook = loanbooks.Skip(i * 1000).Take(1000).ToList();
+
+                    var task = Task.Run(() =>
+                    {
+                        RunEADJob(sub_LoanBook, this._eclId, this._eclType);
                     });
-                    
+
                     taskLst.Add(task);
                 }
                 Console.WriteLine($"Total Task : {taskLst.Count()}");
 
-                var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
-                Console.WriteLine($"Task Completed: {completedTask}");
+                //var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
+                //Console.WriteLine($"Task Completed: {completedTask}");
 
-                while (taskLst.Count!= tasks.Count)
+                while (taskLst.Count != tasks.Count)
                 {
-                    var newCount=taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
-                    if(completedTask!= newCount)
-                    {
-                        Console.WriteLine($"Task Completed: {completedTask}");
-                    }
                     //Do Nothing
                 }
 
-                Console.WriteLine($"Completed all Tasks: {completedTask}");
+                Console.WriteLine($"Completed all Tasks");
                 return true;
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 Console.ReadKey();
@@ -124,6 +120,8 @@ namespace IFRS9_ECL.Core
             ExecuteNative.SaveLifeTimeProjections(lifetimeProjections, eclId, _eclType);
             Console.WriteLine("All Jobs Completed");
             Console.ReadKey();
+
+            tasks.Add(true);
             return true;
         }
 
