@@ -119,7 +119,7 @@ namespace IFRS9_ECL.Core
 
             ExecuteNative.SaveLifeTimeProjections(lifetimeProjections, eclId, _eclType);
             Console.WriteLine("All Jobs Completed");
-            Console.ReadKey();
+            //Console.ReadKey();
 
             tasks.Add(true);
             return true;
