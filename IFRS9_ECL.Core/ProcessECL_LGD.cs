@@ -17,9 +17,6 @@ namespace IFRS9_ECL.Core
         Guid _eclId;
         EclType _eclType;
 
-        List<bool> tasks = new List<bool>();
-
-
         ECLTasks _eclTask;
         public ProcessECL_LGD(Guid eclId, EclType eclType)
         {
@@ -55,18 +52,25 @@ namespace IFRS9_ECL.Core
                     });
                     taskLst.Add(task);
                 }
-                while (taskLst.Count != tasks.Count)
+                Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+                Console.WriteLine($"Task Completed: {completedTask}");
+
+                while (!taskLst.Any(o => o.Status== TaskStatus.RanToCompletion))
                 {
+                    var newCount = taskLst.Where(o => o.IsCompleted).Count();
+                    if (completedTask != newCount)
+                    {
+                        Console.WriteLine($"Task Completed: {completedTask}");
+                    }
                     //Do Nothing
                 }
-                Console.WriteLine($"Task Completed");
 
                 return true;
-            }
-            catch (Exception ex)
+            }catch(Exception ex)
             {
                 Console.WriteLine(ex);
-                
                 return true;
             }
         }
@@ -100,7 +104,7 @@ namespace IFRS9_ECL.Core
             //Insert to Database
             ExecuteNative.SaveLGDAccountdata(accountData, _eclId, _eclType);
             Console.WriteLine($"Saved LGD Account Data - {DateTime.Now}");
-            tasks.Add(true);
+
             return true;
         }
 
