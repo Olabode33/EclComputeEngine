@@ -16,9 +16,9 @@ namespace IFRS9_ECL.Core
     {
         public bool ProcessRunTask()
         {
+            ProcessCalibrationRunTask();
+            ProcessMacroRunTask();
             ProcessECLRunTask();
-            //ProcessCalibrationRunTask();
-            //ProcessMacroRunTask();
             return true;
         }
         private bool ProcessECLRunTask()
