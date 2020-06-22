@@ -20,7 +20,7 @@ namespace IFRS9_ECL.Core
         Guid _eclId;
         ECL_Scenario _Scenario;
         EclType _eclType;
-        LifetimeEadWorkings _lifetimeEadWorkings;
+        List<bool> tasks = new List<bool>();
         public ProcessECL_Framework(Guid eclId, ECL_Scenario scenario, EclType eclType)
         {
             this._eclId = eclId;
@@ -48,20 +48,12 @@ namespace IFRS9_ECL.Core
                 });
                 taskLst.Add(task);
             }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
-
-            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
-
-            while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+            
+            while (taskLst.Count != tasks.Count)
             {
-                var newCount = taskLst.Where(o => o.IsCompleted).Count();
-                if (completedTask != newCount)
-                {
-                    Console.WriteLine($"Task Completed: {completedTask}");
-                }
                 //Do Nothing
             }
+            Console.WriteLine($"Task Completed");
 
             // Gennerate Result Details
             var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId);
@@ -154,8 +146,8 @@ namespace IFRS9_ECL.Core
                 //save to Framework table
                 var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.FrameworkResult(this._eclType));
             }
-            
 
+            tasks.Add(true);
         }
     }
 }

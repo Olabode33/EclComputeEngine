@@ -62,7 +62,7 @@ namespace IFRS9_ECL.Core
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                Console.ReadKey();
+                
                 return false;
             }
         }

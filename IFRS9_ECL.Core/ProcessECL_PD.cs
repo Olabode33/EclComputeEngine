@@ -18,6 +18,7 @@ namespace IFRS9_ECL.Core
         
         Guid _eclId;
         EclType _eclType;
+        List<bool> tasks = new List<bool>();
         public ProcessECL_PD(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
@@ -45,20 +46,13 @@ namespace IFRS9_ECL.Core
                     });
                     taskLst.Add(task);
                 }
-                Console.WriteLine($"Total Task : {taskLst.Count()}");
 
-                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-                Console.WriteLine($"Task Completed: {completedTask}");
-
-                while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+                while (taskLst.Count != tasks.Count)
                 {
-                    var newCount = taskLst.Where(o => o.IsCompleted).Count();
-                    if (completedTask != newCount)
-                    {
-                        Console.WriteLine($"Task Completed: {completedTask}");
-                    }
                     //Do Nothing
                 }
+                Console.WriteLine($"Task Completed");
+                   
 
                 return true;
             }
@@ -108,6 +102,8 @@ namespace IFRS9_ECL.Core
             // Compute Scenario Redefault Lifetime Pds  -- Downturn
             var sRedefault_lt_pd_de = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
             sRedefault_lt_pd_de.Run();
+
+            tasks.Add(true);
 
         }
 
