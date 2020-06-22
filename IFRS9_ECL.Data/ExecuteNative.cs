@@ -126,7 +126,7 @@ namespace IFRS9_ECL.Data
 
                 var dt = new DataTable();
                 dt.Columns.Add("Id", typeof(Guid));
-                dt.Columns.Add("CIR_Group");
+                dt.Columns.Add("CIR_GROUP");
                 dt.Columns.Add("Month", typeof(int));
                 dt.Columns.Add("Value", typeof(float));
                 dt.Columns.Add("CIR_EFFECTIVE", typeof(float));

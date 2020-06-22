@@ -38,7 +38,7 @@ namespace IFRS9_ECL.Models
         public DateTime? contract_end_date {get; set; }
         public string rating_model {get; set; }
         public string segment {get; set; }
-        public int days_past_due {get; set; }
+        public double days_past_due {get; set; }
         public string rating_used {get; set; }
         public int current_rating {get; set; }
         public double month_pd_12 {get; set; }

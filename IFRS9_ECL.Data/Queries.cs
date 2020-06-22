@@ -24,33 +24,33 @@ namespace IFRS9_ECL.Data
 
         public static string GetEADBehaviouralData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetEADCCFData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationInput_EAD_CCF_Summary where CalibrationID=(select Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationInput_EAD_CCF_Summary where CalibrationID=(select Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetLGDHaircutSummaryData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
 
         public static string GetLGDRecoveryRateData(Guid eclId, string eclType)
         {
-            return $"select top 1 Overall_RecoveryRate from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 Overall_RecoveryRate from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetPD12MonthsPD(Guid eclId, string eclType)
         {
-            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Month where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Month where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         
         public static string GetPDIndexData(Guid eclId, string eclType)
         {
-            return $"select Period, Index, StandardIndex, BfNpl from MacroResult_IndexData where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Period, Index, StandardIndex, BfNpl from MacroResult_IndexData where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetPDStatistics(Guid eclId, string eclType)
         {
-            return $"select top 1 IndexWeight1, IndexWeight2, Average, StandardDev from MacroResult_Statistics where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select AffiliateId from {eclType}Ecl where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 IndexWeight1, IndexWeight2, Average, StandardDev from MacroResult_Statistics where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetSelectMacroVariables(Guid eclId, string eclType)
         {
@@ -290,7 +290,7 @@ namespace IFRS9_ECL.Data
         }
 
 
-        public static string WholesaleEadCirProjections(Guid eclId, EclType eclType)
+        public static string EadCirProjections(Guid eclId, EclType eclType)
         {
             return $"select cir_group, month months, value, cir_effective from {eclType.ToString()}EadCirProjections where {eclType.ToString()}EclId ='{eclId}'";
         }

@@ -103,7 +103,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 mappingRow.Segment = loanbookRecord.Segment;
                 mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
                 mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord) ?? 0;
-                mappingRow.MaxDpd = ComputeMaxDpdPerRecord(loanbookRecord, sub_LoanBook);
+                mappingRow.MaxDpd = Convert.ToInt32(Math.Round(ComputeMaxDpdPerRecord(loanbookRecord, sub_LoanBook)));
                 mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
                 mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
 
@@ -244,7 +244,7 @@ namespace IFRS9_ECL.Core.PDComputation
             var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
             return r;
         }
-        protected int ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
+        protected double ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
         {
 
             var temp = loanbook.Where(o => o.AccountNo == loanbookRecord.AccountNo).Max(p => p.DaysPastDue);

@@ -23,3 +23,39 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\FSharp.C
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\FSharp.Core.xml
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\log4net.dll
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS_Test1\bin\Release\log4net.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS_Test1.exe.config
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS_Test1.exe
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS_Test1.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\BouncyCastle.Crypto.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\EPPlus.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ICSharpCode.SharpZipLib.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Core.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Models.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Util.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\NPOI.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\NPOI.OOXML.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\NPOI.OpenXml4Net.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\NPOI.OpenXmlFormats.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ExcelFinancialFunctions.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Data.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\log4net.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\MathNet.Numerics.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\FSharp.Core.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Core.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Core.dll.config
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Models.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Util.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\BouncyCastle.Crypto.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\EPPlus.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ICSharpCode.SharpZipLib.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ICSharpCode.SharpZipLib.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ExcelFinancialFunctions.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\ExcelFinancialFunctions.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\IFRS9_ECL.Data.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\log4net.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\MathNet.Numerics.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\bin\Release\FSharp.Core.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\obj\Release\IFRS_Test1.csprojAssemblyReference.cache
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\obj\Release\IFRS_Test1.csproj.CopyComplete
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\obj\Release\IFRS_Test1.exe
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS_Test1\obj\Release\IFRS_Test1.pdb

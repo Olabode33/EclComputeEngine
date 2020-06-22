@@ -23,3 +23,30 @@ C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL\bin\Release\MathNet.N
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL\bin\Release\MathNet.Numerics.xml
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL\bin\Release\log4net.dll
 C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\IFRS9_ECL\bin\Release\log4net.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.exe.config
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.exe
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\ExcelFinancialFunctions.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\FSharp.Core.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Models.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Util.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\EPPlus.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Data.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\log4net.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\MathNet.Numerics.dll
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.dll.config
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Models.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Util.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\ExcelFinancialFunctions.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\ExcelFinancialFunctions.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\FSharp.Core.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\EPPlus.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\IFRS9_ECL.Data.pdb
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\log4net.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\bin\Release\MathNet.Numerics.xml
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\obj\Release\IFRS9_ECL.csprojAssemblyReference.cache
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\obj\Release\IFRS9_ECL.csproj.CopyComplete
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\obj\Release\IFRS9_ECL.exe
+C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL\obj\Release\IFRS9_ECL.pdb

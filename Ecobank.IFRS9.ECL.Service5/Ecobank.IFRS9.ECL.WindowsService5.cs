@@ -42,7 +42,7 @@ namespace Ecobank.IFRS9.ECL.Service5
 
         private void TmrMain_Elapsed(object sender, ElapsedEventArgs e)
         {
-            timer1.Interval = 3600000;
+            timer1.Interval = 10000;
             timer1.Enabled = false;
 
             Log4Net.Log.Info("Timer Disabled");
@@ -53,7 +53,7 @@ namespace Ecobank.IFRS9.ECL.Service5
             Log4Net.Log.Info("Task Completed!");
 
             timer1.Enabled = true;
-            timer1.Interval = 3600000;
+            timer1.Interval = 10000;
             Log4Net.Log.Info("Timer Re- Enabled");
         }
         protected override void OnStop()

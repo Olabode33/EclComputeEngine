@@ -22,8 +22,15 @@ namespace IFRS9_ECL.Core.Calibration
         public bool ProcessCalibration(Guid calibrationId, long affiliateId)
         {
 
-            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, affiliateId.ToString(), "LGD_Recovery_Rate.xlsx")}";
-            var path1 = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, affiliateId.ToString(), $"{calibrationId.ToString()}_LGD_Recovery_Rate.xlsx")}";
+            var baseAffPath = Path.Combine(Util.AppSettings.CalibrationModelPath, affiliateId.ToString());
+            if (!Directory.Exists(baseAffPath))
+            {
+                Directory.CreateDirectory(baseAffPath);
+            }
+            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "LGD_Recovery_Rate.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{calibrationId.ToString()}_LGD_Recovery_Rate.xlsx")}";
+
+
             if (File.Exists(path1))
             {
                 File.Delete(path1);

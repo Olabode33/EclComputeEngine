@@ -16,9 +16,9 @@ namespace IFRS9_ECL.Core
     {
         public bool ProcessRunTask()
         {
-            ProcessCalibrationRunTask();
-            ProcessMacroRunTask();
             ProcessECLRunTask();
+            //ProcessCalibrationRunTask();
+            //ProcessMacroRunTask();
             return true;
         }
         private bool ProcessECLRunTask()
@@ -47,18 +47,26 @@ namespace IFRS9_ECL.Core
                 if (eclRegister.EclType == -1)
                 {
                     var dtW = DataAccess.i.GetData(wholesaleEcls);
-                    var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtW.Rows[0]);
-                    itm.EclType = 1;
-                    itm.eclType = EclType.Wholesale;
-                    eclRegister = itm;
+
+                    if (dtW.Rows.Count > 0)
+                    {
+                        var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtW.Rows[0]);
+                        itm.EclType = 1;
+                        itm.eclType = EclType.Wholesale;
+                        eclRegister = itm;
+                    }
                 }
                 if (eclRegister.EclType == -1)
                 {
                     var dtO = DataAccess.i.GetData(obeEcls);
-                    var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtO.Rows[0]);
-                    itm.EclType = 2;
-                    itm.eclType = EclType.Obe;
-                    eclRegister = itm;
+                    if (dtO.Rows.Count > 0)
+                    {
+                        var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtO.Rows[0]);
+                        itm.EclType = 2;
+                        itm.eclType = EclType.Obe;
+                        eclRegister = itm;
+                    }
+
                 }
 
                 if (eclRegister.EclType == -1)

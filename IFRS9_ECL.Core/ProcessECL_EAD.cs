@@ -34,14 +34,16 @@ namespace IFRS9_ECL.Core
                 threads = threads + 1;
 
                 var taskLst = new List<Task>();
-
+                List<bool> tasks = new List<bool>();
                 for(int i=0; i< threads; i++)
                 {
                     var sub_LoanBook =  loanbooks.Skip(i * 1000).Take(1000).ToList();
 
                     var task=Task.Run(() => {
-                        RunEADJob(sub_LoanBook, this._eclId, this._eclType);
+                        var tR=RunEADJob(sub_LoanBook, this._eclId, this._eclType);
+                        tasks.Add(tR);
                     });
+                    
                     taskLst.Add(task);
                 }
                 Console.WriteLine($"Total Task : {taskLst.Count()}");
@@ -49,7 +51,7 @@ namespace IFRS9_ECL.Core
                 var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
                 Console.WriteLine($"Task Completed: {completedTask}");
 
-                while (!taskLst.Any(o=>o.Status== TaskStatus.RanToCompletion))
+                while (taskLst.Count!= tasks.Count)
                 {
                     var newCount=taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
                     if(completedTask!= newCount)

@@ -58,7 +58,7 @@ namespace IFRS9_ECL.Models.Raw
 
         public double? Month12PD { get; set; }
 
-        public int? DaysPastDue { get; set; }
+        public double? DaysPastDue { get; set; }
 
         public bool WatchlistIndicator { get; set; }
 
@@ -156,9 +156,9 @@ namespace IFRS9_ECL.Models.Raw
 
         public bool GuaranteeIndicator { get; set; }
 
-        public double? GuarantorPD { get; set; }
+        public string GuarantorPD { get; set; }
 
-        public double? GuarantorLGD { get; set; }
+        public string GuarantorLGD { get; set; }
 
         public double? GuaranteeValue { get; set; }
 

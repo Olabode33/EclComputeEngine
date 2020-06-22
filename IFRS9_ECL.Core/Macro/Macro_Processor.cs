@@ -589,7 +589,7 @@ namespace IFRS9_ECL.Core.Calibration
                 var itm = DataAccess.i.ParseDataToObject(new MacroData(), dr);
                 itms.Add(itm);
             }
-            var periods = itms.Select(o => o.Period).Distinct().ToList();
+            var periods = itms.Select(o => o.Period).Distinct().OrderBy(p => p).ToList();
 
             var lstMacroData = new List<string>();
             var header = new List<string>();

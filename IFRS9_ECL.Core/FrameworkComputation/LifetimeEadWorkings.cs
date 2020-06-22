@@ -159,7 +159,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<CIRProjections> GetCirProjectionData()
         {
-            var qry = Queries.WholesaleEadCirProjections(this._eclId, this._eclType);
+            var qry = Queries.EadCirProjections(this._eclId, this._eclType);
             var dt = DataAccess.i.GetData(qry);
             var cirProjectionData = new List<CIRProjections>();
 

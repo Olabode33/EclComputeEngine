@@ -305,11 +305,11 @@ namespace IFRS9_ECL.Core
                 //GUARANTY_PD, GUARANTY_LGD, GUARANTEE_VALUE
                 if (refinedRawData[i].GuaranteeIndicator.ToString() == "1")
                 {
-                    refinedRawData[i].GuarantorPD = refinedRawData[i].GuarantorPD ?? 0;
-                    accountData[i].GUARANTOR_PD = refinedRawData[i].GuarantorPD.Value;
+                    refinedRawData[i].GuarantorPD = string.IsNullOrEmpty(refinedRawData[i].GuarantorPD)? "0": refinedRawData[i].GuarantorPD;
+                    accountData[i].GUARANTOR_PD = double.Parse(refinedRawData[i].GuarantorPD);
 
-                    refinedRawData[i].GuarantorLGD = refinedRawData[i].GuarantorLGD ?? 0;
-                    accountData[i].GUARANTOR_LGD = refinedRawData[i].GuarantorLGD.Value;
+                    refinedRawData[i].GuarantorLGD = string.IsNullOrEmpty(refinedRawData[i].GuarantorLGD) ? "0" : refinedRawData[i].GuarantorLGD;
+                    accountData[i].GUARANTOR_LGD = double.Parse(refinedRawData[i].GuarantorLGD);
                      
                     value1 = refinedRawData[i].GuaranteeIndicator?tempDT[i].pd_x_ead:0;
 
@@ -1097,14 +1097,21 @@ namespace IFRS9_ECL.Core
 
                     r.eir_base_premium = EIR_Base_Premium(r.revised_base, r.eir_premium);
                     r.mths_in_force = "0";
-                    if (Convert.ToDateTime(r.start_date)< Convert.ToDateTime(r.end_date))
-                        r.mths_in_force = Math.Round(Financial.YearFrac(Convert.ToDateTime(r.start_date), Convert.ToDateTime(r.end_date), DayCountBasis.ActualActual) * 12, 0).ToString();
+
+                    try
+                    {
+                        //***********************************************
+                        if (Convert.ToDateTime(r.start_date) < Convert.ToDateTime(r.end_date))
+                            r.mths_in_force = Math.Round(Financial.YearFrac(Convert.ToDateTime(r.start_date), Convert.ToDateTime(r.end_date), DayCountBasis.ActualActual) * 12, 0).ToString();
+                    }
+                    catch { }
 
                     r.rem_interest_moritorium = Remaining_IR(i.IPT_O_PERIOD, r.mths_in_force).ToString();
 
-                    
-
-                    r.mths_to_expiry = Months_To_Expiry(ECLNonStringConstants.i.reportingDate, Convert.ToDateTime(r.end_date), i.product_type, behavioral.Expired).ToString();
+                    //************************************
+                    var endDate_Temp = new DateTime();
+                    try { endDate_Temp = Convert.ToDateTime(r.end_date); } catch { }
+                    r.mths_to_expiry = Months_To_Expiry(ECLNonStringConstants.i.reportingDate, endDate_Temp, i.product_type, behavioral.Expired).ToString();
 
                     r.interest_divisor = Interest_Divisor(i.INTEREST_PAYMENT_STRUCTURE);
 
@@ -1112,6 +1119,7 @@ namespace IFRS9_ECL.Core
                     double mths_to_expiry = Convert.ToDouble(r.mths_to_expiry);
                     double rem_interest_moritorium = Convert.ToDouble(r.rem_interest_moritorium);
                     double mths_in_force = Convert.ToDouble(r.mths_in_force);
+                    i.IPT_O_PERIOD = string.IsNullOrEmpty(i.IPT_O_PERIOD) ? "0" : i.IPT_O_PERIOD;
                     double ipt_o_period = Convert.ToDouble(i.IPT_O_PERIOD);
                     r.first_interest_month = First_Interest_Month(interest_divisor, mths_to_expiry, rem_interest_moritorium, mths_in_force, ipt_o_period).ToString();
 
@@ -1359,9 +1367,19 @@ namespace IFRS9_ECL.Core
 
         private DateTime EndOfMonth(DateTime myDate, int numberOfMonths)
         {
-            DateTime startOfMonth = new DateTime(myDate.Year, myDate.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(numberOfMonths).AddDays(-1);
-            return endOfMonth;
+            //Update Value ************************************************
+            try
+            {
+                DateTime startOfMonth = new DateTime(myDate.Year, myDate.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(numberOfMonths).AddDays(-1);
+                return endOfMonth;
+            }catch(Exception ex)
+            {
+                myDate = DateTime.Today;
+                DateTime startOfMonth = new DateTime(myDate.Year, myDate.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(numberOfMonths).AddDays(-1);
+                return endOfMonth;
+            }
         }
 
         public List<LGDPrecalculationOutput> LGDPreCalculation(List<Loanbook_Data> lstRaw)
