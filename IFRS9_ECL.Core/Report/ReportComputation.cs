@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.ECL_Result;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -23,7 +24,7 @@ namespace IFRS9_ECL.Core.Report
         public static int startCellIndex = 0;
         public bool GenerateEclReport(EclType eclType, Guid eclId)
         {
-            var rd=GetResultDetail(eclType, eclId);
+            var rd=GetResultDetail(eclType, eclId, new List<Loanbook_Data>());
             var rs=GetResultSummary(eclType, eclId, rd);
             var dataTable = new DataTable();
             var fi = new FileInfo(@"C:\Users\Dev-Sys\Desktop\ETI_template.xlsx");
@@ -1303,9 +1304,16 @@ namespace IFRS9_ECL.Core.Report
 
             return rs;
         }
-        public ResultDetail GetResultDetail(EclType eclType, Guid eclId)
+        List<TempFinalEclResult> lstTfer = new List<TempFinalEclResult>();
+        ReportDetailExtractor rde = new ReportDetailExtractor();
+        ReportDetailExtractor temp_header = new ReportDetailExtractor();
+        double overrides_overlay = 0;
+        List<TempEadInput> lstTWEI = new List<TempEadInput>();
+        List<EclOverrides> ovrde = new List<EclOverrides>();
+        ResultDetail rd = new ResultDetail();
+        public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook)
         {
-            var rd= new ResultDetail();
+            
             var _eclId = eclId.ToString();
             var _eclType = eclType.ToString();
             var _eclTypeTable = eclType.ToString();
@@ -1333,21 +1341,19 @@ namespace IFRS9_ECL.Core.Report
                 $"   Post_Optimistic=0," +
                 $"   Post_Downturn=0," +
 
-                $"   try_convert(float, isnull((select UserInputValue from {_eclType}ReportUserInput where {_eclType}EclId = '{_eclId}' and UserInputKey = 2), 0)) UserInput_EclBE," +
-                $"   try_convert(float, isnull((select UserInputValue from {_eclType}ReportUserInput where {_eclType}EclId = '{_eclId}' and UserInputKey = 3), 0)) UserInput_EclO," +
-                $"   try_convert(float, isnull((select UserInputValue from {_eclType}ReportUserInput where {_eclType}EclId = '{_eclId}' and UserInputKey = 4), 0)) UserInput_EclD";
+                $"   try_convert(float, isnull((select [Value] from {_eclType}EclAssumptions where {_eclType}EclId = '{_eclId}' and AssumptionGroup = 1 and [Key]='BestEstimateScenarioLikelihood'), 0)) UserInput_EclBE," +
+                $"   try_convert(float, isnull((select [Value] from {_eclType}EclAssumptions where {_eclType}EclId = '{_eclId}' and AssumptionGroup = 1 and  [Key]='OptimisticScenarioLikelihood'), 0)) UserInput_EclO," +
+                $"   try_convert(float, isnull((select [Value] from {_eclType}EclAssumptions where {_eclType}EclId = '{_eclId}' and AssumptionGroup = 1 and  [Key]='DownturnScenarioLikelihood'), 0)) UserInput_EclD";
 
             dt=DataAccess.i.GetData(qry);
 
-            var rde = new ReportDetailExtractor();
+            
             var temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
-
-            var overrides_overlay = 0;
 
             qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=1";
             dt = DataAccess.i.GetData(qry);
 
-            var lstTfer = new List<TempFinalEclResult>();
+            
 
             foreach(DataRow dr in dt.Rows)
             {
@@ -1359,7 +1365,7 @@ namespace IFRS9_ECL.Core.Report
             qry = $"select ContractId, [Value] from {_eclTypeTable}EadInputs where {_eclType}EclId='{_eclId}' and Months=1";
             dt = DataAccess.i.GetData(qry);
 
-            var lstTWEI = new List<TempEadInput>();
+            
 
             foreach (DataRow dr in dt.Rows)
             {
@@ -1369,15 +1375,69 @@ namespace IFRS9_ECL.Core.Report
 
             rd.ResultDetailDataMore = new List<ResultDetailDataMore>();
 
-            qry = $"select distinct ContractNo, AccountNo, CustomerNo, Segment, ProductType, Sector from {_eclTypeTable}EclDataLoanBooks where {_eclType}EclUploadId='{_eclId}'";
-            dt = DataAccess.i.GetData(qry);
 
-            var ovrde = GetOverrideDataResult(eclId, eclType);
+            ovrde = GetOverrideDataResult(eclId, eclType);
 
-            foreach (DataRow dr in dt.Rows)
+
+
+
+            var threads = loanbook.Count / 10;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+
+            //threads = 1;
+            for (int i = 0; i < threads; i++)
             {
-                var rdd = new ResultDetailData();
-                var itm = DataAccess.i.ParseDataToObject(rdd, dr);
+                var sub_LoanBook = loanbook.Skip(i * 10).Take(10).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunFrameWorkReportJob(sub_LoanBook);
+                });
+                taskLst.Add(task);
+            }
+            Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+            Console.WriteLine($"Task Completed: {completedTask}");
+
+            //while (!taskLst.Any(o => o.IsCompleted))
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+
+
+
+            rd.NumberOfContracts = rd.ResultDetailDataMore.Count();
+            rd.OutStandingBalance = rd.ResultDetailDataMore.Sum(o=>o.Outstanding_Balance);
+            rd.Pre_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.ECL_Best_Estimate);
+            rd.Pre_ECL_Optimistic = rd.ResultDetailDataMore.Sum(o => o.ECL_Optimistic);
+            rd.Pre_ECL_Downturn = rd.ResultDetailDataMore.Sum(o => o.ECL_Downturn);
+            rd.Pre_Impairment_ModelOutput = (rd.Pre_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Pre_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Pre_ECL_Downturn * temp_header.UserInput_EclD);
+
+            rd.Post_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Best_Estimate);
+            rd.Post_ECL_Optimistic = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Optimistic);
+            rd.Post_ECL_Downturn = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Downturn);
+
+            rd.Post_Impairment_ModelOutput = (rd.Pre_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Pre_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Pre_ECL_Downturn * temp_header.UserInput_EclD);
+
+            return rd;
+        }
+
+
+        private void RunFrameWorkReportJob(List<Loanbook_Data> loanbook)
+        {
+
+
+            foreach (var itm in loanbook)
+            {
 
                 var _lstTfer = lstTfer.Where(o => o.ContractId == itm.ContractNo).ToList();
 
@@ -1431,11 +1491,11 @@ namespace IFRS9_ECL.Core.Report
                     Impairment_ModelOutput = 0,
                     Overrides_Impairment_Manual = 0
                 };
-                var ovrd=ovrde.FirstOrDefault(o => o.ContractId == rddm.ContractNo);
-                if(ovrd!=null)
+                var ovrd = ovrde.FirstOrDefault(o => o.ContractId == rddm.ContractNo);
+                if (ovrd != null)
                 {
-                    rddm.Overrides_FSV = ovrd.FSV_Cash??0 + ovrd.FSV_CommercialProperty ?? 0 + ovrd.FSV_Debenture ?? 0 + ovrd.FSV_Inventory ?? 0 + ovrd.FSV_PlantAndEquipment ?? 0 + ovrd.FSV_Receivables ?? 0 + ovrd.FSV_ResidentialProperty ?? 0 + ovrd.FSV_Shares ?? 0 + ovrd.FSV_Vehicle ?? 0;
-                    rddm.Overrides_TTR_Years = ovrd.TtrYears??0;
+                    rddm.Overrides_FSV = ovrd.FSV_Cash ?? 0 + ovrd.FSV_CommercialProperty ?? 0 + ovrd.FSV_Debenture ?? 0 + ovrd.FSV_Inventory ?? 0 + ovrd.FSV_PlantAndEquipment ?? 0 + ovrd.FSV_Receivables ?? 0 + ovrd.FSV_ResidentialProperty ?? 0 + ovrd.FSV_Shares ?? 0 + ovrd.FSV_Vehicle ?? 0;
+                    rddm.Overrides_TTR_Years = ovrd.TtrYears ?? 0;
                     rddm.Overrides_Stage = ovrd.Stage ?? 0;
                 }
 
@@ -1445,22 +1505,7 @@ namespace IFRS9_ECL.Core.Report
                 rd.ResultDetailDataMore.Add(rddm);
             }
 
-            rd.NumberOfContracts = rd.ResultDetailDataMore.Count();
-            rd.OutStandingBalance = rd.ResultDetailDataMore.Sum(o=>o.Outstanding_Balance);
-            rd.Pre_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.ECL_Best_Estimate);
-            rd.Pre_ECL_Optimistic = rd.ResultDetailDataMore.Sum(o => o.ECL_Optimistic);
-            rd.Pre_ECL_Downturn = rd.ResultDetailDataMore.Sum(o => o.ECL_Downturn);
-            rd.Pre_Impairment_ModelOutput = (rd.Pre_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Pre_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Pre_ECL_Downturn * temp_header.UserInput_EclD);
-
-            rd.Post_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Best_Estimate);
-            rd.Post_ECL_Optimistic = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Optimistic);
-            rd.Post_ECL_Downturn = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Downturn);
-
-            rd.Post_Impairment_ModelOutput = (rd.Pre_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Pre_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Pre_ECL_Downturn * temp_header.UserInput_EclD);
-
-            return rd;
         }
-
 
         protected List<EclOverrides> GetOverrideDataResult(Guid eclId, EclType eclType)
         {

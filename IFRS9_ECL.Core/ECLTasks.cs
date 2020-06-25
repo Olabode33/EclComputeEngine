@@ -706,7 +706,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
-                        //Console.WriteLine(ex.ToString());
+                        //Log4Net.Log.Error(ex.ToString());
                     }
                 }
 
@@ -969,7 +969,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
-                        //Console.WriteLine(ex.ToString());
+                        //Log4Net.Log.Error(ex.ToString());
                     }
                 }
 
@@ -1020,7 +1020,7 @@ namespace IFRS9_ECL.Core
                         noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                     }catch(Exception ex)
                     {
-                        //Console.WriteLine(ex.ToString());
+                        //Log4Net.Log.Error(ex.ToString());
                     }
                 }
 

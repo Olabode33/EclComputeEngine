@@ -27,7 +27,7 @@ namespace IFRS9_ECL.Core.Calibration
                 Directory.CreateDirectory(baseAffPath);
             }
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "EAD_Behavioural_Term.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{calibrationId.ToString()}_EAD_Behavioural_Term.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_Behavioural_Term.xlsx")}";
             if (File.Exists(path1))
             {
                 File.Delete(path1);

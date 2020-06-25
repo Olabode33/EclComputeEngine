@@ -75,7 +75,7 @@ namespace IFRS9_ECL.Core
                     return true;
                 }
 
-                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 3,"");
+                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
                 DataAccess.i.ExecuteQuery(qry);
                 var eclType = eclRegister.eclType;
                 Log4Net.Log.Info($"Found ECL with ID {eclRegister.Id} of Type [{eclType.ToString()}]. Running will commence if it has not been picked by another Job");
@@ -90,32 +90,86 @@ namespace IFRS9_ECL.Core
 
                 Console.WriteLine($"Start Time {DateTime.Now}");
 
-                // Process EAD
-                new ProcessECL_EAD(masterGuid, eclType).ProcessTask(loanbook_data);
 
-                //Process LGD
-                new ProcessECL_LGD(masterGuid, eclType).ProcessTask(loanbook_data);
+                var overrideExist = CheckOverrideDataExist(masterGuid, eclType);
 
-                //Process PD
-                new ProcessECL_PD(masterGuid, eclType).ProcessTask(loanbook_data);
+                if (!overrideExist)
+                {
+                    // Process EAD
+                    new ProcessECL_EAD(masterGuid, eclType).ProcessTask(loanbook_data);
 
-                //Process PD
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data);
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data);
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data);
+                    //Process LGD
+                    new ProcessECL_LGD(masterGuid, eclType).ProcessTask(loanbook_data);
+
+                    //Process PD
+                    new ProcessECL_PD(masterGuid, eclType).ProcessTask(loanbook_data);
+
+                }
+
+                //Process Framework
+
+                var taskLst = new List<Task>();
+
+                //threads = 1;
+
+                var cummulativeDiscountFactor = new IrFactorWorkings(masterGuid, eclType).ComputeCummulativeDiscountFactor();
+                var eadInput = new LifetimeEadWorkings(masterGuid, eclType).GetTempEadInputData(loanbook_data);
+                var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(loanbook_data);
+
+               
+                var task1 = Task.Run(() =>
+                {
+                    Log4Net.Log.Info("************Processing Final Best");
+                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Best, eclType).ComputeLifetimeLGD(loanbook_data);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                });
+                taskLst.Add(task1);
+                var task2 = Task.Run(() =>
+                {
+                    Log4Net.Log.Info("*************Processing Final Optimistic");
+                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Optimistic, eclType).ComputeLifetimeLGD(loanbook_data);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                });
+                taskLst.Add(task2);
+                var task3 = Task.Run(() =>
+                {
+                    Log4Net.Log.Info("*************Processing Final Down turn");
+                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Downturn, eclType).ComputeLifetimeLGD(loanbook_data);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                });
+                taskLst.Add(task3);
+
+                //while (!taskLst.Any(o => o.IsCompleted))
+                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+                while (0 < 1)
+                {
+                    if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                    {
+                        break;
+                    }
+                    //Do Nothing
+                }
 
 
-                qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4,"");
+                qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
                 DataAccess.i.ExecuteQuery(qry);
 
                 Console.WriteLine($"End Time {DateTime.Now}");
                 return true;
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 10, ex.ToString());
                 DataAccess.i.ExecuteQuery(qry);
             }
             return true;
+        }
+
+        public bool CheckOverrideDataExist(Guid eclId, EclType eclType)
+        {
+            var qry = Queries.EclOverridesFsv(eclId, eclType);
+            var cnt = DataAccess.i.getCount(qry);
+            return cnt > 0;
         }
 
 
@@ -152,9 +206,16 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
+
+                        Log4Net.Log.Info("At Calibration");
+                        Log4Net.Log.Error(ex.ToString());
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunEadBehaviouralTerms");
                         DataAccess.i.ExecuteQuery(qry);
                     }
+                }
+                else
+                {
+                    Log4Net.Log.Info("No new Calibration found!");
                 }
 
 
@@ -183,6 +244,9 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
+                        
+                        Log4Net.Log.Info("At Calibration");
+                        Log4Net.Log.Error(ex.ToString());
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunEadCcfSummary");
                         DataAccess.i.ExecuteQuery(qry);
                     }
@@ -214,6 +278,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
+                        Log4Net.Log.Error(ex.ToString());
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunLgdHairCut");
                         DataAccess.i.ExecuteQuery(qry);
                     }
@@ -244,6 +309,7 @@ namespace IFRS9_ECL.Core
                     }
                     catch (Exception ex)
                     {
+                        Log4Net.Log.Error(ex.ToString());
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunLgdRecoveryRate");
                         DataAccess.i.ExecuteQuery(qry);
                     }
@@ -273,6 +339,7 @@ namespace IFRS9_ECL.Core
 
                     }catch(Exception ex)
                     {
+                        Log4Net.Log.Error(ex.ToString());
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunPdCrDrs");
                         DataAccess.i.ExecuteQuery(qry);
                     }
@@ -282,7 +349,9 @@ namespace IFRS9_ECL.Core
 
             }catch(Exception ex)
             {
-
+                Log4Net.Log.Info("At Calibration");
+                Log4Net.Log.Error(ex.ToString());
+                var x = 0;
 
             }
 
@@ -302,6 +371,7 @@ namespace IFRS9_ECL.Core
                 if (dt.Rows.Count == 0)
                 {
                     Console.WriteLine($"No new pending Macro");
+                    return true;
                 }
 
                 var affId = (long)dt.Rows[0]["AffiliateId"];
@@ -321,12 +391,16 @@ namespace IFRS9_ECL.Core
                 }
                 catch (Exception ex)
                 {
+                    Log4Net.Log.Info("At Macro");
+                    Log4Net.Log.Error(ex.ToString());
                     qry = Queries.MacroRegisterUpdate(macroId, 10, ex.ToString());
                     DataAccess.i.ExecuteQuery(qry);
                 }
             }
             catch (Exception ex)
             {
+                Log4Net.Log.Info("At Macro");
+                Log4Net.Log.Error(ex.ToString());
                 var qry = Queries.MacroRegisterUpdate(macroId, 10, ex.ToString());
                 DataAccess.i.ExecuteQuery(qry);
             }

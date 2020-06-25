@@ -23,28 +23,28 @@ namespace IFRS9_ECL
 
             new ProcessECL_EAD(masterGuid, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
 
-            //Console.WriteLine("Done Done Done");
-            //Console.ReadKey();
+            //Log4Net.Log.Info("Done Done Done");
+            ////Console.ReadKey();
             // return;
            // new ProcessECL_LGD(masterGuid, EclType.Wholesale).ProcessTask();
 
-            //Console.WriteLine("Done Done Done");
-            //Console.ReadKey();
+            //Log4Net.Log.Info("Done Done Done");
+            ////Console.ReadKey();
             // return;
 
             //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
 
             //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
 
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            Console.WriteLine($"Best Time {DateTime.Now}");
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            Console.WriteLine($"Optimistic Time {DateTime.Now}");
-            new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            Console.WriteLine($"Downturn Time {DateTime.Now}");
-            Console.WriteLine($"End Time {DateTime.Now}");
-            //Console.WriteLine("Done Done Done");
-            //Console.ReadKey();
+            //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
+            //Console.WriteLine($"Best Time {DateTime.Now}");
+            //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
+            //Console.WriteLine($"Optimistic Time {DateTime.Now}");
+            //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
+            //Console.WriteLine($"Downturn Time {DateTime.Now}");
+            //Console.WriteLine($"End Time {DateTime.Now}");
+            //Log4Net.Log.Info("Done Done Done");
+            ////Console.ReadKey();
             // return;
         }
     }

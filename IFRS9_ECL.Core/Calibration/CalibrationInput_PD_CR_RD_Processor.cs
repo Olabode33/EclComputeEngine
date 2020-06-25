@@ -28,7 +28,7 @@ namespace IFRS9_ECL.Core.Calibration
                 Directory.CreateDirectory(baseAffPath);
             }
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "PD_CR_RD.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{calibrationId.ToString()}_PD_CR_RD.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_PD_CR_RD.xlsx")}";
 
             if (File.Exists(path1))
             {
@@ -98,12 +98,12 @@ namespace IFRS9_ECL.Core.Calibration
 
 
 
-            Console.WriteLine("Done updating excel");
+            Log4Net.Log.Info("Done updating excel");
             //refresh and calculate to modify
             theWorkbook.RefreshAll();
-            Console.WriteLine("Done refreshing");
+            Log4Net.Log.Info("Done refreshing");
             excel.Calculate();
-            Console.WriteLine("Done Calculating");
+            Log4Net.Log.Info("Done Calculating");
 
             Worksheet worksheet1 = theWorkbook.Sheets[1];
 
@@ -124,7 +124,7 @@ namespace IFRS9_ECL.Core.Calibration
                 sb.Append(qry);
             }
 
-            Console.WriteLine("Done Extracting");
+            Log4Net.Log.Info("Done Extracting");
 
             var rs = new CalibrationResult_PD_12Months_Summary();
 
@@ -146,14 +146,14 @@ namespace IFRS9_ECL.Core.Calibration
 
             rs.Redefault_Factor = worksheet1.Cells[25, 5].Value;
 
-            Console.WriteLine("Got SUmmary");
+            Log4Net.Log.Info("Got SUmmary");
 
             theWorkbook.Save();
-            Console.WriteLine("Save to Path");
+            Log4Net.Log.Info("Save to Path");
             theWorkbook.Close(true);
-            Console.WriteLine("Close");
+            Log4Net.Log.Info("Close");
             excel.Quit();
-            Console.WriteLine("Quite");
+            Log4Net.Log.Info("Quite");
             //File.Delete(path1);
 
             qry =Queries.CalibrationResult_PD_Update_Summary(calibrationId, sb.ToString(), rs.Normal_12_Months_PD, rs.DefaultedLoansA, rs.DefaultedLoansB, rs.CuredLoansA, rs.CuredLoansB, rs.Cure_Rate, rs.CuredPopulationA, rs.CuredPopulationB, rs.RedefaultedLoansA, rs.RedefaultedLoansB, rs.Redefault_Rate, rs.Redefault_Factor);

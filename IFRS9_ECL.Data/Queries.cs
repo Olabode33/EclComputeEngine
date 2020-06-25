@@ -91,8 +91,10 @@ namespace IFRS9_ECL.Data
         public static string CalibrationResult_HairCut_Update(Guid calibrationId, DateTime? Period, double? Debenture, double? Cash, double? Inventory, double? Plant_And_Equipment, double? Residential_Property, double? Commercial_Property, double? Receivables, double? Shares, double? Vehicle)
         {
             var prd = Period == null ? "NULL" : Period.Value.ToString("dd-MMM-yyyy");
-            return $" insert into CalibrationResult_LGD_HairCut(Period,Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle, Comment, Status, CalibrationId, DateCreated) " +
-                $"values ('{prd}', {Debenture}, {Cash}, {Inventory}, {Plant_And_Equipment}, {Residential_Property}, {Commercial_Property}, {Receivables}, {Shares}, {Vehicle}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
+            return $" insert into CalibrationResult_LGD_HairCut(Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle, Comment, Status, CalibrationId, DateCreated) " +
+                $"values ({Debenture}, {Cash}, {Inventory}, {Plant_And_Equipment}, {Residential_Property}, {Commercial_Property}, {Receivables}, {Shares}, {Vehicle}, '', 1, '{calibrationId.ToString()}', GetDate()); {Environment.NewLine} ";
+    //        return $" insert into CalibrationResult_LGD_HairCut([Period],Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle, Comment, Status, CalibrationId, DateCreated) " +
+    //$"values ('{prd}', {Debenture}, {Cash}, {Inventory}, {Plant_And_Equipment}, {Residential_Property}, {Commercial_Property}, {Receivables}, {Shares}, {Vehicle}, '', 1, '{calibrationId.ToString()}', GetDate()); {Environment.NewLine} ";
         }
 
         public static string CalibrationResult_HairCut_Summary_Update(Guid calibrationId, double? Debenture, double? Cash, double? Inventory, double? Plant_And_Equipment, double? Residential_Property, double? Commercial_Property, double? Receivables, double? Shares, double? Vehicle)
@@ -229,7 +231,7 @@ namespace IFRS9_ECL.Data
         {
             //******************************************************
             //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            return $"select top 800 * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
+            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
         }
 
 
@@ -276,6 +278,10 @@ namespace IFRS9_ECL.Data
         {
             return $"select * from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
         }
+        public static string CheckOverrideDataExist(Guid eclId, EclType eclType)
+        {
+            return $"select count(*) from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
+        }
         public static string EclOverridesStage(Guid eclId, EclType eclType)
         {
             return $"select ContractId, Stage from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
@@ -298,7 +304,8 @@ namespace IFRS9_ECL.Data
 
         public static string LgdCollateralProjection(Guid eclId, int collateralProjectionType, EclType eclType)
         {
-            return $"select CollateralProjectionType, Debenture, Cash, Inventory, Plant_And_Equipment, Residential_Property, Commercial_Property, Receivables, Shares, Vehicle, Month from {eclType.ToString()}LgdCollateralProjection where {eclType.ToString()}EclId = '{eclId}' and CollateralProjectionType={collateralProjectionType}";
+            //return $"select CollateralProjectionType, Debenture, Cash, Inventory, Plant_And_Equipment, Residential_Property, Commercial_Property, Receivables, Shares, Vehicle, Month from {eclType.ToString()}LgdCollateralProjection where {eclType.ToString()}EclId = '{eclId}' and CollateralProjectionType={collateralProjectionType}";
+            return $"select  [Key], [Value], LgdGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId ='{eclId}' and LgdGroup = {collateralProjectionType}";
         }
 
         public static string PdMapping(Guid eclId, EclType eclType)

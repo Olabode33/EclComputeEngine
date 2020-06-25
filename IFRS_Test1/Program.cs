@@ -45,10 +45,10 @@ namespace IFRS_Test1
 
             //while(task.Count!= array.Count())
             //{
-            //    Console.WriteLine("Still running");
+            //    Log4Net.Log.Info("Still running");
             //}
           
-            //Console.WriteLine("DONE: {0}", stopwatch.ElapsedMilliseconds);
+            //Log4Net.Log.Info("DONE: {0}", stopwatch.ElapsedMilliseconds);
 
 
 
@@ -66,31 +66,31 @@ namespace IFRS_Test1
             ////m.ProcessMacro(1,affId);
 
 
-            //Console.WriteLine("Started Behavioural");
+            //Log4Net.Log.Info("Started Behavioural");
             //Console.WriteLine(DateTime.Now);
             //CalibrationInput_EAD_Behavioural_Terms_Processor p = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             //p.ProcessCalibration(caliId, affId);
 
-            //Console.WriteLine("Started CCF");
+            //Log4Net.Log.Info("Started CCF");
             //Console.WriteLine(DateTime.Now);
             //CalibrationInput_EAD_CCF_Summary_Processor q = new CalibrationInput_EAD_CCF_Summary_Processor();
             //q.ProcessCalibration(caliId, affId);
 
-            //Console.WriteLine("Started Haircut");
+            //Log4Net.Log.Info("Started Haircut");
             //Console.WriteLine(DateTime.Now);
             //CalibrationInput_LGD_Haricut_Processor r = new CalibrationInput_LGD_Haricut_Processor();
             //r.ProcessCalibration(caliId, affId);
 
-            //Console.WriteLine("Started CureRate");
+            //Log4Net.Log.Info("Started CureRate");
             //Console.WriteLine(DateTime.Now);
             //CalibrationInput_LGD_RecoveryRate_Processor s = new CalibrationInput_LGD_RecoveryRate_Processor();
             //s.ProcessCalibration(caliId, affId);
 
-            //Console.WriteLine("Started PD");
+            //Log4Net.Log.Info("Started PD");
             //Console.WriteLine(DateTime.Now);
             //CalibrationInput_PD_CR_RD_Processor t = new CalibrationInput_PD_CR_RD_Processor();
             //t.ProcessCalibration(caliId, affId);
-            //Console.WriteLine("Ended All");
+            //Log4Net.Log.Info("Ended All");
             //Console.WriteLine(DateTime.Now);
 
 
@@ -111,9 +111,9 @@ namespace IFRS_Test1
             //}
             //catch (Exception ex)
             //{
-            //    Console.WriteLine(ex.ToString());
+            //    Log4Net.Log.Error(ex.ToString());
             //}
-            //Console.ReadKey();
+            ////Console.ReadKey();
 
 
             //Console.ReadLine();

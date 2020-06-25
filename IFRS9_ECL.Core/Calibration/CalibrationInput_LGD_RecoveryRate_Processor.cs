@@ -28,7 +28,7 @@ namespace IFRS9_ECL.Core.Calibration
                 Directory.CreateDirectory(baseAffPath);
             }
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "LGD_Recovery_Rate.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{calibrationId.ToString()}_LGD_Recovery_Rate.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_LGD_Recovery_Rate.xlsx")}";
 
 
             if (File.Exists(path1))

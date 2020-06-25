@@ -202,19 +202,19 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lstRaw = new List<Loanbook_Data>();
             }
-            if(lstRaw.Count==0)
-            {
-                Console.WriteLine("Started");
-                var _lstRaw = DataAccess.i.GetData(qry);
-                Console.WriteLine("Selected Raw Data from table");
+            //if(lstRaw.Count==0)
+            //{
+            //    Log4Net.Log.Info("Started");
+            //    var _lstRaw = DataAccess.i.GetData(qry);
+            //    Log4Net.Log.Info("Selected Raw Data from table");
 
-                foreach (DataRow dr in _lstRaw.Rows)
-                {
-                    lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-                }
-            }
+            //    foreach (DataRow dr in _lstRaw.Rows)
+            //    {
+            //        lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
+            //    }
+            //}
             
-            Console.WriteLine("Completed pass raw data to object");
+            Log4Net.Log.Info("Completed pass raw data to object");
 
             var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);
 
@@ -224,9 +224,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         public List<Loanbook_Data> GetLoanBookData()
         {
             var qry = Queries.Raw_Data(this._eclId, this._eclType);
-            Console.WriteLine("Started");
+            Log4Net.Log.Info("Started");
             var _lstRaw = DataAccess.i.GetData(qry);
-            Console.WriteLine("Selected Raw Data from table");
+            Log4Net.Log.Info("Selected Raw Data from table");
             var lstRaw = new List<Loanbook_Data>();
             foreach (DataRow dr in _lstRaw.Rows)
             {

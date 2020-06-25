@@ -29,7 +29,7 @@ namespace IFRS9_ECL.Core.Calibration
                 Directory.CreateDirectory(baseAffPath);
             }
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "EAD_CCF.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{calibrationId.ToString()}_EAD_CCF.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_CCF.xlsx")}";
 
             if (File.Exists(path1))
             {

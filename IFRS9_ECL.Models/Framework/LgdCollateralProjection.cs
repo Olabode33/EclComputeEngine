@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace IFRS9_ECL.Models.Framework
 
     public class LgdCollateralGrowth_DepricationAssumption
     {
-        public CollateralProjectionType CollateralProjectionType { get; set; }
+        public ECL_Scenario CollateralProjectionType { get; set; }
         public double Debenture { get; set; }
         public double Cash { get; set; }
         public double Inventory { get; set; }
@@ -29,10 +30,5 @@ namespace IFRS9_ECL.Models.Framework
         public double Vehicle { get; set; }
     }
 
-    public enum CollateralProjectionType
-    {
-        Best,
-        Optimistic,
-        Downturn
-    }
+
 }

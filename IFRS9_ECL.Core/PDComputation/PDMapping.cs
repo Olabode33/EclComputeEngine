@@ -56,14 +56,14 @@ namespace IFRS9_ECL.Core.PDComputation
             var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
             var redefaultLifetimePds = _scenarioRedefaultLifetimePd.ComputeRedefaultLifetimePd();
 
-            var threads = _NonExpLoanbook_data.Count / 1000;
+            var threads = _NonExpLoanbook_data.Count / 500;
             threads = threads + 1;
 
             var taskLst = new List<Task>();
 
             for (int i = 0; i < threads; i++)
             {
-                var sub_LoanBook = _NonExpLoanbook_data.Skip(i * 1000).Take(1000).ToList();
+                var sub_LoanBook = _NonExpLoanbook_data.Skip(i * 500).Take(500).ToList();
 
                 var task = Task.Run(() => {
                     RunPDMappingJob(sub_LoanBook, _eclId, _eclType, lifetimePds, redefaultLifetimePds, expOdPerformacePastRepoting, odPerformancePastExpiry);
@@ -75,15 +75,17 @@ namespace IFRS9_ECL.Core.PDComputation
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
             Console.WriteLine($"Task Completed: {completedTask}");
 
-            while (!taskLst.Any(o => o.IsCompleted))
+            //while (!taskLst.Any(o => o.IsCompleted))
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
             {
-                var newCount = taskLst.Where(o => o.IsCompleted).Count();
-                if (completedTask != newCount)
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
                 {
-                    Console.WriteLine($"Task Completed: {completedTask}");
+                    break;
                 }
                 //Do Nothing
             }
+
 
             return true;
 

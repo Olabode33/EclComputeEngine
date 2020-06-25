@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Core.Report;
 using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.ECL_Result;
 using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.Raw;
@@ -30,9 +31,9 @@ namespace IFRS9_ECL.Core
         }
 
 
-        public string ProcessTask(List<Loanbook_Data> loanbook)
+        public string ProcessTask(List<Loanbook_Data> loanbook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput)
         {
-            var threads = loanbook.Count / 1000;
+            var threads = loanbook.Count / 500;
             threads = threads + 1;
 
             var taskLst = new List<Task>();
@@ -40,11 +41,11 @@ namespace IFRS9_ECL.Core
             //threads = 1;
             for (int i = 0; i < threads; i++)
             {
-                var sub_LoanBook = loanbook.Skip(i * 1000).Take(1000).ToList();
+                var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
 
                 var task = Task.Run(() =>
                 {
-                    RunFrameWorkJob(sub_LoanBook);
+                    RunFrameWorkJob(sub_LoanBook, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
                 });
                 taskLst.Add(task);
             }
@@ -53,18 +54,20 @@ namespace IFRS9_ECL.Core
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
             Console.WriteLine($"Task Completed: {completedTask}");
 
-            while (!taskLst.Any(o => o.Status == TaskStatus.RanToCompletion))
+            //while (!taskLst.Any(o => o.IsCompleted))
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
             {
-                var newCount = taskLst.Where(o => o.IsCompleted).Count();
-                if (completedTask != newCount)
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
                 {
-                    Console.WriteLine($"Task Completed: {completedTask}");
+                    break;
                 }
                 //Do Nothing
             }
 
+
             // Gennerate Result Details
-            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId);
+            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook);
 
             var c = new ResultDetailDataMore();
 
@@ -100,12 +103,12 @@ namespace IFRS9_ECL.Core
 
         }
 
-        private void RunFrameWorkJob(List<Loanbook_Data> loanBook)
+        private void RunFrameWorkJob(List<Loanbook_Data> loanBook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput)
         {
 
             var obj = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType);
 
-            var d = obj.ComputeFinalEcl(loanBook);
+            var d = obj.ComputeFinalEcl(loanBook, lifetimeEad, lifetimeLGD, eadInput, cummulativeDiscountFactor);
 
             var c = new FinalEcl();
 
@@ -147,11 +150,13 @@ namespace IFRS9_ECL.Core
             if(cnt>0)
             {
                 //Save to Framwork Override table
+                Console.WriteLine($"Inserting into override table {dt.Rows.Count}");
                 var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.FrameworkResultOverride(this._eclType));
             }
             else
             {
                 //save to Framework table
+                Console.WriteLine($"Inserting into Non override table {dt.Rows.Count}");
                 var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.FrameworkResult(this._eclType));
             }
             

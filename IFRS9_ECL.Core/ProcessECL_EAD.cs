@@ -30,14 +30,14 @@ namespace IFRS9_ECL.Core
             try
             {
 
-                var threads = loanbooks.Count / 1000;
+                var threads = loanbooks.Count / 500;
                 threads = threads + 1;
 
                 var taskLst = new List<Task>();
 
                 for (int i = 0; i < threads; i++)
                 {
-                    var sub_LoanBook = loanbooks.Skip(i * 1000).Take(1000).ToList();
+                    var sub_LoanBook = loanbooks.Skip(i * 500).Take(500).ToList();
 
                     var task = Task.Run(() =>
                     {
@@ -51,18 +51,26 @@ namespace IFRS9_ECL.Core
                 //var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
                 //Console.WriteLine($"Task Completed: {completedTask}");
 
-                while (taskLst.Count != tasks.Count)
+                //while (taskLst.Count != tasks.Count)
+                //while (!taskLst.Any(o => o.IsCompleted))
+                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+                while (0 < 1)
                 {
+                    if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                    {
+                        break;
+                    }
                     //Do Nothing
                 }
+
 
                 Console.WriteLine($"Completed all Tasks");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                Console.ReadKey();
+                Log4Net.Log.Error(ex.ToString());
+               // //Console.ReadKey();
                 return false;
             }
         }
@@ -70,15 +78,15 @@ namespace IFRS9_ECL.Core
         private bool RunEADJob(List<Loanbook_Data> _loanBookData, Guid eclId, EclType eclType)
         {
             var qry = "";
-            Console.WriteLine("Completed pass raw data to object");
+            Log4Net.Log.Info("Completed pass raw data to object");
 
             var refined_lstRaw = new ECLTasks(eclId, this._eclType).GenerateContractIdandRefinedData(_loanBookData);
 
-            Console.WriteLine("Completed GenerateContractIdandRefinedData");
+            Log4Net.Log.Info("Completed GenerateContractIdandRefinedData");
 
             var lifeTimeEAD = new ECLTasks(eclId, this._eclType).GenerateLifeTimeEAD(refined_lstRaw);
 
-            Console.WriteLine("Completed GenerateLifeTimeEAD");
+            Log4Net.Log.Info("Completed GenerateLifeTimeEAD");
 
             var lstContractIds = refined_lstRaw.Select(o => o.contract_no).Distinct().OrderBy(p => p).ToList();
 
@@ -91,14 +99,14 @@ namespace IFRS9_ECL.Core
 
             //populate for CIR projections
             var cirProjections = new ECLTasks(this._eclId, this._eclType).EAD_CIRProjections(lifeTimeEAD, lstContractIds);
-            Console.WriteLine("Completed EAD_CIRProjections");
+            Log4Net.Log.Info("Completed EAD_CIRProjections");
             //insert into DB
             ExecuteNative.SaveCIRProjections(cirProjections, eclId, eclType);
-            Console.WriteLine("Completed SaveCIRProjections");
+            Log4Net.Log.Info("Completed SaveCIRProjections");
 
             qry = Queries.PaymentSchedule(this._eclId, this._eclType);
             var _payment_schedule = DataAccess.i.GetData(qry);
-            Console.WriteLine("Completed Getting Payment Schedule");
+            Log4Net.Log.Info("Completed Getting Payment Schedule");
 
             var payment_schedule = new List<PaymentSchedule>();
             foreach (DataRow dr in _payment_schedule.Rows)
@@ -107,19 +115,19 @@ namespace IFRS9_ECL.Core
                 payment_schedule.Add(new PaymentSchedule { Amount = itm.Amount, Component = itm.Component, ContractRefNo = itm.ContractRefNo, StartDate = itm.StartDate, Frequency = itm.Frequency, NoOfSchedules = itm.NoOfSchedules });
             }
 
-            Console.WriteLine("Completed Parsing Payment Schedule to object");
+            Log4Net.Log.Info("Completed Parsing Payment Schedule to object");
 
             var ps_contract_ref_nos = payment_schedule.Select(o => o.ContractRefNo).Distinct().OrderBy(o => o).ToList();
             var PaymentScheduleProjection = new ECLTasks(this._eclId, this._eclType).PaymentSchedule_Projection(payment_schedule, ps_contract_ref_nos);
-            Console.WriteLine("Completed Parsing PaymentSchedule_Projection");
+            Log4Net.Log.Info("Completed Parsing PaymentSchedule_Projection");
 
             //populate for LifeTime  projections
             var lifetimeProjections = new ECLTasks(this._eclId, this._eclType).EAD_LifeTimeProjections(refined_lstRaw, lifeTimeEAD, lstContractIds, cirProjections, PaymentScheduleProjection);
-            Console.WriteLine("Completed EAD_LifeTimeProjections");
+            Log4Net.Log.Info("Completed EAD_LifeTimeProjections");
 
             ExecuteNative.SaveLifeTimeProjections(lifetimeProjections, eclId, _eclType);
-            Console.WriteLine("All Jobs Completed");
-            //Console.ReadKey();
+            Log4Net.Log.Info("All Jobs Completed");
+            ////Console.ReadKey();
 
             tasks.Add(true);
             return true;
@@ -130,10 +138,10 @@ namespace IFRS9_ECL.Core
 
             //populate for EIR projections
             var eirProjections = new ECLTasks(this._eclId, this._eclType).EAD_EIRProjections(lifeTimeEAD, lstContractIds);
-            Console.WriteLine("Completed EAD_EIRProjections");
+            Log4Net.Log.Info("Completed EAD_EIRProjections");
             //insert into DB
             ExecuteNative.SaveEIRProjections(eirProjections, masterGuid, this._eclType);
-            Console.WriteLine("Completed SaveEIRProjections");
+            Log4Net.Log.Info("Completed SaveEIRProjections");
         }
 
     }

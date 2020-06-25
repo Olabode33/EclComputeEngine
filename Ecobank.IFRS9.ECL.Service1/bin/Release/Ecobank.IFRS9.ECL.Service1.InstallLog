@@ -11,3 +11,45 @@ Affected parameters are:
    logtoconsole = 
    assemblypath = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
    logfile = C:\PwC\Nigeria\IFRS9_ECL_Computation_1\IFRS9_ECL\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Uninstalling assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Removing EventLog source IFRS9_ECL1.
+Service IFRS9_ECL1 is being removed from the system...
+Service IFRS9_ECL1 was successfully removed from the system.
+Installing assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Installing service IFRS9_ECL1...
+Service IFRS9_ECL1 has been successfully installed.
+Creating EventLog source IFRS9_ECL1 in log Application...
+Committing assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Uninstalling assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Removing EventLog source IFRS9_ECL1.
+Service IFRS9_ECL1 is being removed from the system...
+Service IFRS9_ECL1 was successfully removed from the system.
+Installing assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Installing service IFRS9_ECL1...
+Creating EventLog source IFRS9_ECL1 in log Application...
+Rolling back assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service1\bin\Release\Ecobank.IFRS9.ECL.Service1.InstallLog
+Restoring event log to previous state for source IFRS9_ECL1.

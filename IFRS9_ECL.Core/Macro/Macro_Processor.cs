@@ -90,7 +90,10 @@ namespace IFRS9_ECL.Core.Calibration
                 }
                 var _indx = tempResult.Select((n, j) => (Number: n, Index: j)).Max().Index;
 
-                if (!loadingOutputResult.Contains(dataLoaded[_indx].Take(4).ToList()))
+                var tkVal = 4;
+                if (colCount < tkVal)
+                    tkVal = colCount;
+                if (!loadingOutputResult.Contains(dataLoaded[_indx].Take(tkVal).ToList()))
                 {
                     var varTitle = macvarCol[_indx];
                     varTitle = varTitle.Replace(" ", "").Replace("\"", "");
@@ -161,7 +164,7 @@ namespace IFRS9_ECL.Core.Calibration
 
                             if (firstPick)
                             {
-                                actual_filtered_lineData.AddRange(allLineData.Skip(i - maxBackLag).Take(maxBackLag).ToList());
+                                actual_filtered_lineData.AddRange(allLineData.Skip(i - maxBackLag-1).Take(maxBackLag+1).ToList());
                                 firstPick = false;
                             }
                             actual_filtered_lineData.Add(lineData);
@@ -193,7 +196,7 @@ namespace IFRS9_ECL.Core.Calibration
             var started = false;
 
             var allDataStartPeriod = lstMacroData[1].Split(',')[0];
-            for (int i = 1; i < all_score.Count(); i++)
+            for (int i = 1; i <=all_score.Count(); i++)
             {
                 var _singleLine = all_score[i].Split(',');
                 allDataStartPeriod=GetNextPeriod(allDataStartPeriod, i);
@@ -204,14 +207,14 @@ namespace IFRS9_ECL.Core.Calibration
 
                 if (started)
                 {
-                    mcPrincipalComponent.Add(new MacroResult_PrincipalComponent
-                    {
-                        PrincipalComponent1 = double.Parse(_singleLine[1].Trim()),
-                        PrincipalComponent2 = double.Parse(_singleLine[2].Trim()),
-                        PrincipalComponent3 = double.Parse(_singleLine[3].Trim()),
-                        PrincipalComponent4 = double.Parse(_singleLine[4].Trim()),
-                        MacroId = macroId
-                    });
+                    var mp = new MacroResult_PrincipalComponent();
+                    
+                        try { mp.PrincipalComponent1 = double.Parse(_singleLine[1].Trim()); } catch { mp.PrincipalComponent1 = 0; }
+                        try{mp.PrincipalComponent2 = double.Parse(_singleLine[2].Trim()); } catch { mp.PrincipalComponent2 = 0; }
+                        try{mp.PrincipalComponent3 = double.Parse(_singleLine[3].Trim()); } catch { mp.PrincipalComponent3 = 0; }
+                        try{mp.PrincipalComponent4 = double.Parse(_singleLine[4].Trim()); } catch { mp.PrincipalComponent4 = 0; }
+
+                        mcPrincipalComponent.Add(mp);
                 }
                 if (allDataStartPeriod == endPeriod)
                 {
@@ -229,18 +232,38 @@ namespace IFRS9_ECL.Core.Calibration
                 sum.PrincipalComponentIdB = 4 + i;
                 sum.PricipalComponentLabelA = "Mean";
                 sum.PricipalComponentLabelB = $"PrinComp{i + 1}";
-                sum.MacroId = macroId;
-                sum.Value = groupMacroData.Average(o => o.MacroValue1);
-                lstPrinSummary.Add(sum);
+                sum.MacroId = macroId;              
 
-                sum = new MacroResult_PrincipalComponentSummary();
-                sum.PrincipalComponentIdA = 2;
-                sum.PrincipalComponentIdB = 4 + i;
-                sum.PricipalComponentLabelA = "std.Dev";
-                sum.PricipalComponentLabelB = $"PrinComp{i + 1}";
-                sum.MacroId = macroId;
-                sum.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue1));
+                var sum1 = new MacroResult_PrincipalComponentSummary();
+                sum1.PrincipalComponentIdA = 2;
+                sum1.PrincipalComponentIdB = 4 + i;
+                sum1.PricipalComponentLabelA = "std.Dev";
+                sum1.PricipalComponentLabelB = $"PrinComp{i + 1}";
+                sum1.MacroId = macroId;
+                
+                if (i == 0)
+                {
+                    sum.Value = groupMacroData.Average(o => o.MacroValue1);
+                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue1));
+                }
+                if (i == 1)
+                {
+                    sum.Value = groupMacroData.Average(o => o.MacroValue2);
+                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue2));
+                }
+                if (i == 2)
+                {
+                    sum.Value = groupMacroData.Average(o => o.MacroValue3);
+                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue3));
+                }
+                if (i == 3)
+                {
+                    sum.Value = groupMacroData.Average(o => o.MacroValue4);
+                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue4));
+                }
+
                 lstPrinSummary.Add(sum);
+                lstPrinSummary.Add(sum1);
 
 
                 sum = new MacroResult_PrincipalComponentSummary();
@@ -461,7 +484,7 @@ namespace IFRS9_ECL.Core.Calibration
             {
                 //do nothing
             }
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
             try
             {
                 if (!prs.HasExited)
@@ -472,7 +495,7 @@ namespace IFRS9_ECL.Core.Calibration
                 }
             }
             catch(Exception ex) {
-                Console.WriteLine(ex.Message);
+                Log4Net.Log.Error(ex.Message);
             }
 
 
@@ -564,7 +587,7 @@ namespace IFRS9_ECL.Core.Calibration
                 }
             }
             catch { }
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
         }
 
         public List<string> GeneratesaveMacroData(long affiliateId, int macroId, List<AffiliateMacroEconomicVariableOffsets> affM)

@@ -43,3 +43,74 @@
 2020-06-22 12:23:06,043 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
 2020-06-22 12:34:30,219 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
 2020-06-22 12:53:45,232 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 11:40:25,844 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 12:57:57,769 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:00:42,595 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:15:49,952 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:16:59,395 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:18:03,159 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:23:07,536 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:25:41,068 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:26:24,970 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 13:26:47,714 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:00:01,838 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:16:07,215 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:20:01,731 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:23:02,055 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:24:42,005 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:27:02,167 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 14:56:07,645 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 15:02:58,751 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 15:23:52,922 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 15:25:01,492 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 15:41:17,690 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 15:41:48,907 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 15:47:07,928 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 15:47:25,767 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 15:54:15,561 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 16:11:43,487 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 16:16:17,923 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 16:36:04,055 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 18:47:07,501 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 19:09:43,727 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 19:41:34,199 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 19:44:40,983 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 20:25:59,896 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 20:40:24,323 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 20:56:42,495 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 21:43:53,486 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 23:02:32,876 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 23:22:41,850 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-23 23:32:59,698 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-23 23:35:34,029 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:29:33,582 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:31:08,383 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:39:00,057 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:43:39,026 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:44:18,158 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:48:35,271 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:49:02,656 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:50:36,305 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 00:56:37,547 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 01:02:52,884 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 01:23:52,431 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 01:35:49,303 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 01:54:06,668 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:07:32,743 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:11:42,804 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:17:30,907 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-24 03:17:56,018 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:25:48,899 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:30:02,666 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:38:40,660 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:40:54,026 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 09:33:20,061 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 09:55:04,914 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 09:57:26,234 [1] INFO  IFRS9_ECL.Util.Log4Net Found No Pending ECL
+2020-06-24 09:58:25,892 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 09:59:46,111 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 10:02:53,890 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 10:10:24,715 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 10:11:25,778 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 10:17:52,158 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 10:30:32,733 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job

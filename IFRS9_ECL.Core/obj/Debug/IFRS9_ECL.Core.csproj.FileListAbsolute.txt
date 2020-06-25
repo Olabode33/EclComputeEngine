@@ -64,9 +64,6 @@ C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFR
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.csproj.CopyComplete
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.dll
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.pdb
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.csprojAssemblyReference.cache
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.dll
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\IFRS9_ECL.Core.dll.config
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\IFRS9_ECL.Core.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\IFRS9_ECL.Core.pdb
@@ -96,4 +93,7 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\ICSharpCode.
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\ICSharpCode.SharpZipLib.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\bin\Debug\MathNet.Numerics.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.csproj.CopyComplete
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Core\obj\Debug\IFRS9_ECL.Core.pdb

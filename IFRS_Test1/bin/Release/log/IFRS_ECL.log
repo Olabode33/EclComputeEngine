@@ -1,0 +1,2 @@
+2020-06-24 02:54:47,582 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job
+2020-06-24 03:03:42,552 [1] INFO  IFRS9_ECL.Util.Log4Net Found ECL with ID 9527d419-b547-4a5c-2f06-08d8161e0b2b of Type [Wholesale]. Running will commence if it has not been picked by another Job

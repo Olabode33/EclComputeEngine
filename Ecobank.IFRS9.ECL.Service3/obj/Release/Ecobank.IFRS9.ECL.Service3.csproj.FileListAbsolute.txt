@@ -51,3 +51,32 @@ C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\Eco
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.csproj.CopyComplete
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.exe
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\Ecobank.IFRS9.ECL.Service3.exe.config
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\Ecobank.IFRS9.ECL.Service3.exe
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\Ecobank.IFRS9.ECL.Service3.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Core.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Util.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\log4net.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Models.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\ExcelFinancialFunctions.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\EPPlus.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Data.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\MathNet.Numerics.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\FSharp.Core.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Core.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Core.dll.config
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Util.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\log4net.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Models.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\ExcelFinancialFunctions.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\ExcelFinancialFunctions.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\EPPlus.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\IFRS9_ECL.Data.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\MathNet.Numerics.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\bin\Release\FSharp.Core.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.csprojAssemblyReference.cache
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.ProjectInstaller.resources
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.csproj.GenerateResource.cache
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.csproj.CopyComplete
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.exe
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service3\obj\Release\Ecobank.IFRS9.ECL.Service3.pdb

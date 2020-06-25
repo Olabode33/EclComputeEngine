@@ -18,3 +18,13 @@ C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFR
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.csproj.CopyComplete
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.dll
 C:\Users\Ryemitan\Desktop\Dev\ECL Automation\ETI\App\ComputeEngine\eti_ifrs9\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\IFRS9_ECL.Models.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\IFRS9_ECL.Models.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\IFRS9_ECL.Util.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\log4net.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\IFRS9_ECL.Util.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\bin\Release\log4net.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.csprojAssemblyReference.cache
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.csproj.CopyComplete
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Models\obj\Release\IFRS9_ECL.Models.pdb

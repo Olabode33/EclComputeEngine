@@ -38,23 +38,74 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _lifetimeEadWorkings = new LifetimeEadWorkings(eclId, this._eclType);
         }
 
+        List<FinalEcl> finalEcl;
+        List<FinalEcl> monthlyEcl;
+        List<IrFactor> cummulativeDiscountFactor;
+        List<LifeTimeProjections> eadInput;
+        List<LifetimeEad> lifetimeEad;
+        List<LifetimeLgd> lifetimeLGD;
 
-
-        public List<FinalEcl> ComputeFinalEcl(List<Loanbook_Data> loanbook)
+        public List<FinalEcl> ComputeFinalEcl(List<Loanbook_Data> loanbook, List<LifetimeEad> _lifetimeEad, List<LifetimeLgd> _lifetimeLGD, List<LifeTimeProjections> _eadInput, List<IrFactor> _cummulativeDiscountFactor)
         {
-            var finalEcl = new List<FinalEcl>();
+            finalEcl = new List<FinalEcl>();
+            eadInput = new List<LifeTimeProjections>();
             
-            var monthlyEcl = ComputeMonthlyEcl(loanbook);
-            var cummulativeDiscountFactor = GetCummulativeDiscountFactor();
-            var eadInput = GetTempEadInputData(loanbook);
-            var lifetimeEad = GetLifetimeEadResult(loanbook);
-            var lifetimeLGD = GetLifetimeLgdResult(loanbook);
+            eadInput = _eadInput;// = GetTempEadInputData(loanbook);
+            cummulativeDiscountFactor = new List<IrFactor>();
+            cummulativeDiscountFactor = _cummulativeDiscountFactor;
 
+            lifetimeEad = new List<LifetimeEad>();
+            lifetimeLGD = new List<LifetimeLgd>();
             
+            lifetimeEad = _lifetimeEad;
+            lifetimeLGD = _lifetimeLGD;
+
+            //lifetimeEad = GetLifetimeEadResult(loanbook);
+            //lifetimeLGD = GetLifetimeLgdResult(loanbook);
+            monthlyEcl = ComputeMonthlyEcl(loanbook, lifetimeLGD, lifetimeEad);
+
             var stageClassifcation = GetStageClassification(loanbook);
 
-            
+            var threads = stageClassifcation.Count / 100;
+            threads = threads + 1;
 
+            var taskLst = new List<Task>();
+
+            //threads = 1;
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_stageClassification = stageClassifcation.Skip(i * 100).Take(100).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunFinalJob(sub_stageClassification);
+                });
+                taskLst.Add(task);
+            }
+            Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+            Console.WriteLine($"Task Completed: {completedTask}");
+
+            
+            //while (!taskLst.Any(o => o.IsCompleted))
+                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+
+
+            return finalEcl;
+        }
+
+        private void RunFinalJob(List<StageClassification>  stageClassifcation)
+        {
+            var _finalEcl = new List<FinalEcl>();
             foreach (var row in stageClassifcation)
             {
                 string contractId = row.ContractId;
@@ -78,10 +129,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 {
                     itm.FinalEclValue = finalEclValue;
                     itm.Stage = stage;
-                    finalEcl.Add(itm);
+                    _finalEcl.Add(itm);
                 }
             }
-            return finalEcl;
+            finalEcl.AddRange(_finalEcl);
         }
 
         private double ComputeFinalEclValue(List<FinalEcl> monthlyEcl, List<IrFactor> cummulativeDiscountFactor, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, string contractId, int stage, string eirGroup)
@@ -121,13 +172,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
 
    
-        public List<FinalEcl> ComputeMonthlyEcl(List<Loanbook_Data> loanbook)
+        public List<FinalEcl> ComputeMonthlyEcl(List<Loanbook_Data> loanbook, List<LifetimeLgd> lifetimeLgds, List<LifetimeEad> lifetimeEads)
         {
             var monthlyEcl = new List<FinalEcl>();
             
             var lifetimePds = Get_LifetimePd_And_RedefaultLifetimePD_Result();
-            var lifetimeEads = GetLifetimeEadResult(loanbook);
-            var lifetimeLgds = GetLifetimeLgdResult(loanbook).Where(x => x.Month != 0).ToList();
+
+            lifetimeLgds = lifetimeLgds.Where(x => x.Month != 0).ToList();
 
             foreach (var row in lifetimeLgds)
             {
@@ -182,16 +233,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return monthlyArray;
         }
 
-        
-        protected List<LifetimeLgd> GetLifetimeLgdResult(List<Loanbook_Data> loanbook)
-        {
-            return _lifetimeLgd.ComputeLifetimeLGD(loanbook);
-            
-        }
-        protected List<LifetimeEad> GetLifetimeEadResult(List<Loanbook_Data> loanbook)
-        {
-            return _lifetimeEad.ComputeLifetimeEad(loanbook);
-        }
+
         protected List<LifeTimeObject> Get_LifetimePd_And_RedefaultLifetimePD_Result()
         {
 
@@ -218,15 +260,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
-            Console.WriteLine("Completed pass data to object");
+            Log4Net.Log.Info("Completed pass data to object");
 
             return lifetimePd;
         }
-        protected List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
+        public List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
         {
             return _lifetimeEad.GetTempEadInputData(loanbook);// JsonUtil.DeserializeToDatatable(DbUtil.GetTempEadInputsData());
         }
-        protected List<IrFactor> GetCummulativeDiscountFactor()
+        public List<IrFactor> GetCummulativeDiscountFactor()
         {
             return _irFactorWorkings.ComputeCummulativeDiscountFactor();
         }

@@ -53,30 +53,84 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //var dataTable = ComputeLifetimeLGD();
             string stop = "Ma te";
         }
+        List<LGDAccountData> contractData;
+        List<PdMappings> pdMapping;
+        List<LgdInputAssumptions_UnsecuredRecovery> lgdAssumptions;
+        List<SicrInputs> sicrInput;
+        List<StageClassification> stageClassification;
+        List<EclAssumptions> impairmentAssumptions;
+        List<LifeTimeObject> lifetimePd;
+        List<LifeTimeObject> redefaultPd;
+        List<LifetimeEad> lifetimeEAD;
+        List<CreditIndex_Output> creditIndex;
+        List<LifetimeCollateral> lifetimeCollateral;
 
+        List<LifetimeLgd> lifetimeLGD = new List<LifetimeLgd>();
+        int stage2to3Forward = 0;
         public List<LifetimeLgd> ComputeLifetimeLGD(List<Loanbook_Data> loanbook)
         {
-            var lifetimeLGD = new List<LifetimeLgd>();
+            
 
-            var contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
-            var pdMapping = GetPdIndexMappingResult();
-            var lgdAssumptions = GetLgdAssumptionsData();
-            var sicrInput = GetSicrResult();
-            var stageClassification = GetStagingClassificationResult(loanbook);
-            var impairmentAssumptions = GetECLFrameworkAssumptions();
-            var lifetimePd = GetScenarioLifetimePdResult();
-            var redefaultPd = GetScenarioRedfaultLifetimePdResult();
-            var lifetimeEAD = GetLifetimeEadResult(loanbook);
-            var creditIndex = GetCreditRiskResult();
-            var lifetimeCollateral = GetScenarioLifetimeCollateralResult(loanbook);
+            contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
+            pdMapping = GetPdIndexMappingResult();
+            lgdAssumptions = GetLgdAssumptionsData();
+            sicrInput = GetSicrResult();
+            stageClassification = GetStagingClassificationResult(loanbook);
+            impairmentAssumptions = GetECLFrameworkAssumptions();
+            lifetimePd = GetScenarioLifetimePdResult();
+            redefaultPd = GetScenarioRedfaultLifetimePdResult();
+            lifetimeEAD = GetLifetimeEadResult(loanbook);
+            creditIndex = GetCreditRiskResult();
+            lifetimeCollateral = GetScenarioLifetimeCollateralResult(loanbook);
 
             //xxxxxxxxxxxxx
             //try { Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value); } catch { }
-            int stage2to3Forward = 0;
+            
             stage2to3Forward=Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value);
             //double creditIndexHurdle = Convert.ToDouble(GetImpairmentAssumptionValue(impairmentAssumptions, ImpairmentRowKeys.CreditIndexThreshold));
 
-            foreach (var row in contractData)
+
+
+            var threads = contractData.Count / 10;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+            for (int i = 0; i < threads; i++)
+            {
+                var subcontract = contractData.Skip(i * 10).Take(10).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunLGDJob(subcontract);
+                });
+                taskLst.Add(task);
+            }
+            Console.WriteLine($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+            Console.WriteLine($"Task Completed: {completedTask}");
+
+            var tskStatusLst = new List<TaskStatus> {TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (!taskLst.Any(o => tskStatusLst.Contains(o.Status)))
+            {
+                var newCount = taskLst.Where(o => o.IsCompleted).Count();
+                if (completedTask != newCount)
+                {
+                    Console.WriteLine($"Task Completed: {completedTask}");
+                }
+                //Do Nothing
+            }
+
+
+
+            return lifetimeLGD;
+        }
+
+        private void RunLGDJob(List<LGDAccountData> subcontract)
+        {
+
+            var _lifetimeLGD = new List<LifetimeLgd>();
+            foreach (var row in subcontract)
             {
                 string contractId = row.CONTRACT_NO;
                 double costOfRecovery = row.COST_OF_RECOVERY;
@@ -90,7 +144,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 int loanStage = 0;
                 loanStage = stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
 
-                
+
                 var pdMappingRow = pdMapping.FirstOrDefault(x => x.ContractId == contractId);
 
                 //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -125,7 +179,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 double unsecuredRecoveriesBest = 0;
                 double unsecuredRecoveriesDownturn = 0;
 
-                if (lgdAssumptionColumn==0)
+                if (lgdAssumptionColumn == 0)
                 {
                     unsecuredRecoveriesBest = best_downTurn_Assumption.Days_0;
                     unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_0;
@@ -155,7 +209,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 for (int month = 0; month < FrameworkConstants.TempExcelVariable_LIM_MONTH; month++)
                 {
-
+                    
                     double monthLifetimeEAD = GetLifetimeEADPerMonth(lifetimeEAD, contractId, month);  //Excel lifetimeEAD!F
                     double monthCreditIndex = GetCreditIndexPerMonth(creditIndex, month);           // Excel $O$3
                     double sumLifetimePds = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePd, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
@@ -181,7 +235,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     ///
 
                     //xxxxxxxxxxxxxxxxxxxxxxxx
-                    double  creditIndexHurdle= 0;
+                    double creditIndexHurdle = 0;
                     creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value);
                     //try { creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value); } catch { };
 
@@ -215,16 +269,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRow.Stage = loanStage;
                     newRow.Month = month;
                     newRow.Value = lifetimeLgdValue;
-                    lifetimeLGD.Add(newRow);
+                    _lifetimeLGD.Add(newRow);
                     //xxxxxxxxxxxaaaaaaaaaa
                 }
             }
-
-
-            return lifetimeLGD;
+            lifetimeLGD.AddRange(_lifetimeLGD);
         }
-
-
 
         private double ComputeLifetimeCollateralValuePerMonth(List<LifetimeCollateral> lifetimeCollateral, string contractId, int month)
         {
@@ -307,10 +357,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
         protected List<Loanbook_Data> GetContractData()
         {
+            _lifetimeEadWorkings= new LifetimeEadWorkings(this._eclId, this._eclType);
             return _lifetimeEadWorkings.GetLoanBookData();
         }
         protected List<PdMappings> GetPdIndexMappingResult()
         {
+            _pdMapping = new PDMapping(this._eclId, this._eclType);
             return _pdMapping.GetPdMapping();
         }
         protected List<LgdInputAssumptions_UnsecuredRecovery> GetLgdAssumptionsData()
@@ -344,6 +396,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var _ldg_inputassumption = new List<LgdInputAssumptions_UnsecuredRecovery>();
             foreach (var itm in ldg_inputassumption)
             {
+                itm.Segment_Product_Type = itm.Segment_Product_Type ?? "";
                 if (itm.Segment_Product_Type.ToLower().EndsWith("curerate"))
                 {
                     itm.Days_0 = 0;
@@ -360,15 +413,18 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         protected List<SicrInputs> GetSicrResult()
         {
+            _sicrInputs = new SicrInputWorkings(this._eclId, this._eclType);
             return _sicrInputs.GetSircInputResult();
         }
 
         protected List<StageClassification> GetStagingClassificationResult(List<Loanbook_Data> loanbook)
         {
+            _sicrWorkings= new SicrWorkings(this._eclId, this._eclType);
             return _sicrWorkings.ComputeStageClassification(loanbook);
         }
         protected List<LifetimeEad> GetLifetimeEadResult(List<Loanbook_Data> loanbook)
         {
+            _lifetimeEadWorkings= new LifetimeEadWorkings(this._eclId, this._eclType);
             return _lifetimeEadWorkings.ComputeLifetimeEad(loanbook);
         }
         protected List<LifeTimeObject> GetScenarioLifetimePdResult()
@@ -397,7 +453,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
-            Console.WriteLine("Completed pass data to object");
+            Log4Net.Log.Info("Completed pass data to object");
 
             return lifetimePd;
         }
@@ -426,16 +482,18 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
-            Console.WriteLine("Completed pass data to object");
+            Log4Net.Log.Info("Completed pass data to object");
 
             return lifetimePd;
         }
         protected List<CreditIndex_Output> GetCreditRiskResult()
         {
+            _creditIndex = new CreditIndex(this._eclId, this._eclType);
             return _creditIndex.GetCreditIndexResult();
         }
         protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook)
         {
+            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(this._scenario, this._eclId, this._eclType);
             return _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook);
         }
     }
