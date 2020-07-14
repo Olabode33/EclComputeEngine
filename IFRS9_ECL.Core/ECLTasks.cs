@@ -768,7 +768,7 @@ namespace IFRS9_ECL.Core
                 };
 
                 //noOfMonths reset to one because value is same accross board (as adviced by Femi Longe)
-                noOfMonths = 27; /// for Sao tome testing
+               // noOfMonths = 27; /// for Sao tome testing
                 for (int monthIndex = 0; monthIndex <= noOfMonths; monthIndex++)
                 {
                     if (monthIndex == 0)
