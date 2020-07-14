@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.PDComputation.cmPD;
 using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
@@ -17,23 +18,56 @@ namespace IFRS9_ECL.Core.PDComputation
         ECL_Scenario _Scenario;
         Guid _eclId;
         EclType _eclType;
+        
         public IndexForecastWorkings(ECL_Scenario eCL_Scenario, Guid eclId, EclType eclType)
         {
             this._Scenario = eCL_Scenario;
             this._eclId = eclId;
             this._eclType = eclType;
+            
         }
+
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
 
         public List<IndexForecast> ComputeIndexForecast()
         {
             List<IndexForecast> indexForecast = new List<IndexForecast>();
 
-            var principalData = ComputeScenarioPrincipalComponents();
+            var statisticalInputs = GetStatisticalInputData();
+            var principalData = ComputeScenarioPrincipalComponents(statisticalInputs);
 
             double indexStandardDeviation = ComputeHistoricIndexStandardDeviation();
             double indexMean = ComputeHistoricIndexMean();
 
             var cp = new Macro_Processor().GetMacroResult_Statistics(this._eclId, this._eclType);
+
+            var engenValues = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.Eigenvalues).Select(p=>p.MacroEconomicValue).ToList();
+
+            for (int i = 0; i < engenValues.Count; i++)
+            {
+                if (i == 0)
+                    cp.IndexWeight1 = engenValues[i] / engenValues.Take(2).Sum();
+
+                if (i == 1)
+                    cp.IndexWeight2 = engenValues[i] / engenValues.Take(2).Sum();
+
+                if (i == 2)
+                    cp.IndexWeight3 = 0;// engenValues[i] / engenValues.Take(3).Sum();
+
+                if (i == 3)
+                    cp.IndexWeight4 = 0;// engenValues[i] / engenValues.Take(4).Sum();
+            }
 
             foreach (var itm in principalData)
             {
@@ -50,11 +84,11 @@ namespace IFRS9_ECL.Core.PDComputation
             return indexForecast;
         }
 
-        protected List<IndexForecast> ComputeScenarioPrincipalComponents()
+        protected List<IndexForecast> ComputeScenarioPrincipalComponents(List<PDI_StatisticalInputs> statisticalInputs)
         {
             var principalData = new List<IndexForecast>();
 
-            var statisticalInputs = GetStatisticalInputData();
+            
             var standardisedData = ComputeScenarioStandardisedData(statisticalInputs);
             standardisedData=standardisedData.OrderBy(o => o.Date).ToList();
             var macroeconomicPrincipal1 = statisticalInputs.Where(o => o.Mode == StatisticalInputsRowKeys.PrincipalScore1).ToList();
@@ -178,7 +212,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
             for (int i = 0; i < projections.Count; i++)
             {
-                if (projections[i].Date > ECLNonStringConstants.i.reportingDate) // && i > 3
+                if (projections[i].Date > GetReportingDate(_eclType, _eclId)) // && i > 3
                 {
 
                     var itm = projections[i];
@@ -237,60 +271,92 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var actualMacEcoVar = new Macro_Processor().Get_MacroResult_SelectedMacroEconomicVariables(this._eclId, this._eclType.ToString());
 
-            var statInput = new Macro_Processor().GetMacroResult_PCSummary(this._eclId, this._eclType);
+            var prinCSummary = new Macro_Processor().GetMacroResult_PCSummary(this._eclId, this._eclType);
 
             var itms = new List<PDI_StatisticalInputs>();
 
-            var varBle = statInput.Max(o => o.PrincipalComponentIdB) - 3;
-            foreach (var itm in statInput)
+            for(int i=0; i<actualMacEcoVar.Count; i++)
             {
-                var o = new PDI_StatisticalInputs();
-
-                if (itm.PrincipalComponentIdA == 1)
+                var sub = prinCSummary.Where(o => o.PrincipalComponentIdB == i + 4).OrderBy(p => p.PricipalComponentLabelA).ToList();
+                foreach(var _v in sub)
                 {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
+                    itms.Add(new PDI_StatisticalInputs { EclId= this._eclId, Mode= _v.PricipalComponentLabelA, MacroEconomicValue= _v.Value??0, MacroEconomicVariableId= actualMacEcoVar[i].MacroeconomicVariableId });
                 }
-                if (itm.PrincipalComponentIdA == 2)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                if (itm.PrincipalComponentIdA == 3)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                if (itm.PrincipalComponentIdA == 4)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                if (itm.PrincipalComponentIdA == 5)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                if (itm.PrincipalComponentIdA == 6)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                if (itm.PrincipalComponentIdA == 7)
-                {
-                    o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
-                    o.MacroEconomicValue = itm.Value.Value;
-                    o.Mode = itm.PricipalComponentLabelA;
-                }
-                itms.Add(o);
             }
+
             return itms;
+
+            //foreach (var itm in prinCSummary)
+            //{
+            //    var o = new PDI_StatisticalInputs();
+
+            //    if (itm.PrincipalComponentIdA == 1)
+            //    {
+            //        if(actualMacEcoVar.Count> itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 2)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 3)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 4)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 5)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 6)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    if (itm.PrincipalComponentIdA == 7)
+            //    {
+            //        if (actualMacEcoVar.Count > itm.PrincipalComponentIdB - varBle)
+            //        {
+            //            o.MacroEconomicVariableId = actualMacEcoVar[itm.PrincipalComponentIdB - varBle].MacroeconomicVariableId;
+            //            o.MacroEconomicValue = itm.Value.Value;
+            //            o.Mode = itm.PricipalComponentLabelA;
+            //        }
+            //    }
+            //    itms.Add(o);
+            //}
+
+
 
             //var obj = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_StatisticalInputs();
             //return obj;

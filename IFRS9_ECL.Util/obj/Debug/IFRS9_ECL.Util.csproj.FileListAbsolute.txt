@@ -21,3 +21,4 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Util\bin\Debug\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL.Util\obj\Debug\IFRS9_ECL.Util.csprojAssemblyReference.cache

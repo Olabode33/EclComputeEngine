@@ -28,8 +28,8 @@ namespace Ecobank.IFRS9.ECL.Service1
             {
                 Log4Net.Log.Info("Started Service");
                 timer1.Elapsed += new System.Timers.ElapsedEventHandler(TmrMain_Elapsed);
-                timer1.Interval = 10000;
-                var runTime = (10000 / (60000));
+                timer1.Interval = AppSettings.ServiceInterval;
+                var runTime = (AppSettings.ServiceInterval / (60000));
                 Log4Net.Log.InfoFormat("Service will run in the next {0}", runTime);
                 timer1.Enabled = true;
             }
@@ -41,7 +41,7 @@ namespace Ecobank.IFRS9.ECL.Service1
 
         private void TmrMain_Elapsed(object sender, ElapsedEventArgs e)
         {
-            timer1.Interval = 10000;
+            timer1.Interval = AppSettings.ServiceInterval;
             timer1.Enabled = false;
 
             Log4Net.Log.Info("Timer Disabled");
@@ -52,7 +52,7 @@ namespace Ecobank.IFRS9.ECL.Service1
             Log4Net.Log.Info("Task Completed!");
 
             timer1.Enabled = true;
-            timer1.Interval = 10000;
+            timer1.Interval = AppSettings.ServiceInterval;
             Log4Net.Log.Info("Timer Re- Enabled");
         }
         protected override void OnStop()

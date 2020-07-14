@@ -27,17 +27,26 @@ namespace IFRS9_ECL.Core.Calibration
             {
                 Directory.CreateDirectory(baseAffPath);
             }
-            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "PD_CR_RD.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_PD_CR_RD.xlsx")}";
+            
+            var qry = Queries.CalibrationInput_PD_CR_DR(calibrationId);
+            var _dt = DataAccess.i.GetData(qry);
+
+            //DataView dv = _dt.DefaultView;
+            //dv.Sort = "Account_No,Contract_No,RAPP_Date";
+            var dt = _dt;// dv.ToTable();
+
+            if (dt.Rows.Count == 0)
+                return true;
+
+            var counter = Util.AppSettings.GetCounter(affiliateId);
+
+            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "PD_CR_RD.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}PD_CR_RD.xlsx")}";
 
             if (File.Exists(path1))
             {
-                File.Delete(path1);
+                try { File.Delete(path1); } catch { };
             }
-
-            var qry = Queries.CalibrationInput_PD_CR_DR(calibrationId);
-            var dt=DataAccess.i.GetData(qry);
-
 
 
 
@@ -56,9 +65,12 @@ namespace IFRS9_ECL.Core.Calibration
 
                 for (int i = 0; i < dt.Rows.Count; i++)// DataRow dr in dt.Rows)
                 {
-                    Console.WriteLine(i);
+                    Log4Net.Log.Info(i);
                     DataRow dr = dt.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new CalibrationInput_PD_CR_DR(), dr);
+
+                    if (string.IsNullOrEmpty(itm.Account_No) && string.IsNullOrEmpty(itm.Contract_No) && itm.RAPP_Date == null)
+                        continue;
 
                     worksheet.Cells[i + 2, 1].Value = itm.Customer_No;
                     worksheet.Cells[i + 2, 2].Value = itm.Account_No;

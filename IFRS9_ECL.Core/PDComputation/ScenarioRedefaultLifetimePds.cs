@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Data;
+﻿using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
@@ -77,7 +78,8 @@ namespace IFRS9_ECL.Core.PDComputation
             var redefaultLifetimePd = new List<LifeTimeObject>();
 
             var marginalPd = GetScenarioMarginalPd();
-            double readjustmentFactor = GetRedefaultAdjustmentFactor();
+            var pdCali = new CalibrationInput_PD_CR_RD_Processor().GetPDRedefaultFactorCureRate(this._eclId, this._eclType);
+            double readjustmentFactor = pdCali[0];
 
             //double test = GetMonthMarginalPdForPdGroup(marginalPd, "2", 10, readjustmentFactor);
             //double test2 = marginalPd.FirstOrDefault(row => row.PdGroup == "2" && row.Month == 10).Value;
@@ -115,11 +117,7 @@ namespace IFRS9_ECL.Core.PDComputation
             var aggr = range.Aggregate(1.0, (acc, x) => acc * (1.0 - x));
             return aggr;
         }
-        protected double GetRedefaultAdjustmentFactor()
-        {
-            //************************
-            try { return Convert.ToDouble(GetPdInputAssumptions().FirstOrDefault(row => row.PdGroup == PdInputAssumptionGroupEnum.General && row.Key == PdAssumptionsRowKey.ReDefaultAdjustmentFactor).Value); } catch { return 0; }
-        }
+        
         protected List<PDI_Assumptions> GetPdInputAssumptions()
         {
             return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();

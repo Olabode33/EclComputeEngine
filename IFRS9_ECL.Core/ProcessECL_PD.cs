@@ -45,10 +45,10 @@ namespace IFRS9_ECL.Core
                     });
                     taskLst.Add(task);
                 }
-                Console.WriteLine($"Total Task : {taskLst.Count()}");
+                Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
                 var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-                Console.WriteLine($"Task Completed: {completedTask}");
+                Log4Net.Log.Info($"Task Completed: {completedTask}");
 
                 //while (!taskLst.Any(o => o.IsCompleted))
                 var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
@@ -69,49 +69,57 @@ namespace IFRS9_ECL.Core
                 Log4Net.Log.Error(ex);
                 return true;
             }
-
-
-
         }
+
+
 
         private void RunPDJob(List<Loanbook_Data> sub_LoanBook)
         {
+            try
+            {
 
-            // Compute Credit Index
-            var crdIndx = new CreditIndex(this._eclId, this._eclType);
-            crdIndx.Run();
+                // Compute Credit Index
+                var crdIndx = new CreditIndex(this._eclId, this._eclType);
+                crdIndx.Run();
 
-            // Compute PD mapping
-            var pDMapping = new PDMapping(this._eclId, this._eclType);
-            pDMapping.Run(sub_LoanBook);
+                // Compute PD mapping
+                var pDMapping = new PDMapping(this._eclId, this._eclType);
+                pDMapping.Run(sub_LoanBook);
 
-            // Compute Scenario Life time Pd -- best
-            var slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
-            slt_Pd_b.Run();
+                // Compute Scenario Life time Pd -- best
+                var slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
+                slt_Pd_b.Run();
 
-            // Compute Scenario Redefault Lifetime Pds  -- best
-            var sRedefault_lt_pd_b = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Best, this._eclId, this._eclType);
-            sRedefault_lt_pd_b.Run();
+                // Compute Scenario Redefault Lifetime Pds  -- best
+                var sRedefault_lt_pd_b = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Best, this._eclId, this._eclType);
+                sRedefault_lt_pd_b.Run();
 
-            // Compute Scenario Life time Pd -- Optimistic
-            var slt_Pd_o = new ScenarioLifetimePd(ECL_Scenario.Optimistic, this._eclId, this._eclType);
-            slt_Pd_o.Run();
+                // Compute Scenario Life time Pd -- Optimistic
+                var slt_Pd_o = new ScenarioLifetimePd(ECL_Scenario.Optimistic, this._eclId, this._eclType);
+                slt_Pd_o.Run();
 
-            // Compute Scenario Redefault Lifetime Pds  -- Optimistic
-            var sRedefault_lt_pd_o = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
-            sRedefault_lt_pd_o.Run();
+                // Compute Scenario Redefault Lifetime Pds  -- Optimistic
+                var sRedefault_lt_pd_o = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
+                sRedefault_lt_pd_o.Run();
 
 
 
-            // Compute Scenario Life time Pd -- Downturn
-            var slt_Pd_de = new ScenarioLifetimePd(ECL_Scenario.Downturn, this._eclId, this._eclType);
-            slt_Pd_de.Run();
+                // Compute Scenario Life time Pd -- Downturn
+                var slt_Pd_de = new ScenarioLifetimePd(ECL_Scenario.Downturn, this._eclId, this._eclType);
+                slt_Pd_de.Run();
 
-            // Compute Scenario Redefault Lifetime Pds  -- Downturn
-            var sRedefault_lt_pd_de = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
-            sRedefault_lt_pd_de.Run();
-
+                // Compute Scenario Redefault Lifetime Pds  -- Downturn
+                var sRedefault_lt_pd_de = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
+                sRedefault_lt_pd_de.Run();
+            }
+            catch(Exception ex)
+            {
+                var cc = ex;
+            }
         }
+
+
+
 
         public List<PDI_Assumptions> Get_PDI_Assumptions()
         {

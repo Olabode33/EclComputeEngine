@@ -1,4 +1,6 @@
 ﻿using IFRS9_ECL.Core.PDComputation.cmPD;
+using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -14,13 +16,28 @@ namespace IFRS9_ECL.Core.PDComputation
 
         Guid _eclId;
         EclType _eclType;
+        
 
         public VasicekWorkings(ECL_Scenario screnario, Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
             this._eclType = eclType;
             _scenario = screnario;
+            
         }
+
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
 
         public void Run()
         {
@@ -61,7 +78,7 @@ namespace IFRS9_ECL.Core.PDComputation
         protected double ComputeVasicekAverageFitted()
         {
             var fitted = ComputeEtiNplIndex();
-            return fitted.Where(m => m.Date >= new DateTime(ECLNonStringConstants.i.reportingDate.Year - 3, ECLNonStringConstants.i.reportingDate.Month, ECLNonStringConstants.i.reportingDate.Day))
+            return fitted.Where(m => m.Date >= new DateTime(GetReportingDate(_eclType, _eclId).Year - 3, GetReportingDate(_eclType, _eclId).Month, GetReportingDate(_eclType, _eclId).Day))
                     .Average(o => o.Fitted);
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()
@@ -74,7 +91,8 @@ namespace IFRS9_ECL.Core.PDComputation
 
             foreach (var etiNplRecord in etiNpl)
             {
-                double index = historicIndex.FirstOrDefault(o => o.Date == etiNplRecord.Date).Standardised;
+                double index = 0;
+                try { index = historicIndex.FirstOrDefault(o => o.Date == etiNplRecord.Date).Standardised; } catch { }
 
                 var newRecord = new VasicekEtiNplIndex();
                 newRecord.Date = etiNplRecord.Date;

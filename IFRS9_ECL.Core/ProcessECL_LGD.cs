@@ -22,18 +22,14 @@ namespace IFRS9_ECL.Core
         {
             this._eclId = eclId;
             this._eclType = eclType;
-            _eclTask = new ECLTasks(eclId, eclType);
+            
         }
         public bool ProcessTask(List<Loanbook_Data> loanbooks)
         {
             try
             {
 
-                foreach (var itm in loanbooks)
-                {
-                    itm.ContractId = _eclTask.GenerateContractId(itm);
-                }
-                Console.WriteLine($"Finished Extracting Raw Data - {DateTime.Now}");
+                Log4Net.Log.Info($"Finished Extracting Raw Data - {DateTime.Now}");
 
 
                 var threads = loanbooks.Count / 500;
@@ -52,10 +48,10 @@ namespace IFRS9_ECL.Core
                     });
                     taskLst.Add(task);
                 }
-                Console.WriteLine($"Total Task : {taskLst.Count()}");
+                Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
                 var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-                Console.WriteLine($"Task Completed: {completedTask}");
+                Log4Net.Log.Info($"Task Completed: {completedTask}");
 
                 //while (!taskLst.Any(o => o.IsCompleted))
                 var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
@@ -82,12 +78,12 @@ namespace IFRS9_ECL.Core
 
             //Next Line to be removed
             //lstRaw = lstRaw.Where(o => o.ContractStartDate == null && o.ContractEndDate == null).Take(5).ToList();
-
+            _eclTask = new ECLTasks(_eclId, _eclType);
             var LGDPreCalc = _eclTask.LGDPreCalculation(lstRaw);
-            Console.WriteLine($"Done with LGD Precalculation - {DateTime.Now}");
+            Log4Net.Log.Info($"Done with LGD Precalculation - {DateTime.Now}");
 
             var collateral_R = _eclTask.Collateral_OMV_FSV(lstRaw, LGDPreCalc);
-            Console.WriteLine($"Computed Collateral OVM - {DateTime.Now}");
+            Log4Net.Log.Info($"Computed Collateral OVM - {DateTime.Now}");
 
             ///
             /// Save Collateral OMV_FSV
@@ -95,17 +91,17 @@ namespace IFRS9_ECL.Core
 
             //Insert to Database
             ExecuteNative.SaveLGDCollaterals(collateral_R, _eclId, _eclType);
-            Console.WriteLine($"Save LGD Collateral - {DateTime.Now}");
+            Log4Net.Log.Info($"Save LGD Collateral - {DateTime.Now}");
 
             var corTable = _eclTask.CalculateCoR_Main(LGDPreCalc, lstRaw, collateral_R);
-            Console.WriteLine($"Done with Calculate CoR main - {DateTime.Now}");
-
+            Log4Net.Log.Info($"Done with Calculate CoR main - {DateTime.Now}");
+            
             var accountData = _eclTask.AccountData(lstRaw, LGDPreCalc, collateral_R, corTable);
-            Console.WriteLine($"Done Calculating Account data - {DateTime.Now}");
+            Log4Net.Log.Info($"Done Calculating Account data - {DateTime.Now}");
 
             //Insert to Database
             ExecuteNative.SaveLGDAccountdata(accountData, _eclId, _eclType);
-            Console.WriteLine($"Saved LGD Account Data - {DateTime.Now}");
+            Log4Net.Log.Info($"Saved LGD Account Data - {DateTime.Now}");
 
             return true;
         }

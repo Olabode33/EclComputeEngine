@@ -20,15 +20,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         private Guid _eclId;
         EclType _eclType;
 
-        public ScenarioLifetimeLGD(Guid eclId, ECL_Scenario scenario, EclType eclType)
+        public ScenarioLifetimeLGD(Guid eclId, EclType eclType, ECL_Scenario _scenario)
         {
             this._eclId = eclId;
-            this._scenario = scenario;
+           // this._scenario = scenario;
             this._eclType = eclType;
             _sicrInputs = new SicrInputWorkings(this._eclId, _eclType);
             _sicrWorkings = new SicrWorkings(this._eclId, _eclType);
             _lifetimeEadWorkings = new LifetimeEadWorkings(this._eclId, _eclType);
-            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(this._scenario, this._eclId, _eclType);
+            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral( ECL_Scenario.Best,this._eclId, _eclType);
             _pdMapping = new PDMapping(this._eclId, _eclType);
             _creditIndex = new CreditIndex(this._eclId, _eclType);
 
@@ -40,7 +40,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             this._eclType = eclType;
         }
 
-        protected ECL_Scenario _scenario;
+
+        //protected ECL_Scenario _scenario;
         protected SicrWorkings _sicrWorkings;
         protected LifetimeEadWorkings _lifetimeEadWorkings;
         protected ScenarioLifetimeCollateral _scenarioLifetimeCollateral;
@@ -48,22 +49,27 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected SicrInputWorkings _sicrInputs;
         protected CreditIndex _creditIndex;
 
-        public void Run()
-        {
-            //var dataTable = ComputeLifetimeLGD();
-            string stop = "Ma te";
-        }
+     
         List<LGDAccountData> contractData;
         List<PdMappings> pdMapping;
         List<LgdInputAssumptions_UnsecuredRecovery> lgdAssumptions;
         List<SicrInputs> sicrInput;
         List<StageClassification> stageClassification;
         List<EclAssumptions> impairmentAssumptions;
-        List<LifeTimeObject> lifetimePd;
-        List<LifeTimeObject> redefaultPd;
+
+        List<LifeTimeObject> lifetimePdBest;
+        List<LifeTimeObject> lifetimePdOptimistic;
+        List<LifeTimeObject> lifetimePdDownturn;
+
+        List<LifeTimeObject> redefaultPdBest;
+        List<LifeTimeObject> redefaultPdOptimistic;
+        List<LifeTimeObject> redefaultPdDownturn;
+
         List<LifetimeEad> lifetimeEAD;
         List<CreditIndex_Output> creditIndex;
-        List<LifetimeCollateral> lifetimeCollateral;
+        List<LifetimeCollateral> lifetimeCollateralBest;
+        List<LifetimeCollateral> lifetimeCollateralOptimistic;
+        List<LifetimeCollateral> lifetimeCollateralDownturn;
 
         List<LifetimeLgd> lifetimeLGD = new List<LifetimeLgd>();
         int stage2to3Forward = 0;
@@ -77,27 +83,37 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             sicrInput = GetSicrResult();
             stageClassification = GetStagingClassificationResult(loanbook);
             impairmentAssumptions = GetECLFrameworkAssumptions();
-            lifetimePd = GetScenarioLifetimePdResult();
-            redefaultPd = GetScenarioRedfaultLifetimePdResult();
+
+            lifetimePdBest = GetScenarioLifetimePdResult(ECL_Scenario.Best);
+            lifetimePdOptimistic = GetScenarioLifetimePdResult(ECL_Scenario.Optimistic);
+            lifetimePdDownturn = GetScenarioLifetimePdResult(ECL_Scenario.Downturn);
+
+            redefaultPdBest = GetScenarioRedfaultLifetimePdResult(ECL_Scenario.Best);
+            redefaultPdOptimistic = GetScenarioRedfaultLifetimePdResult(ECL_Scenario.Optimistic);
+            redefaultPdDownturn = GetScenarioRedfaultLifetimePdResult(ECL_Scenario.Downturn);
+
             lifetimeEAD = GetLifetimeEadResult(loanbook);
             creditIndex = GetCreditRiskResult();
-            lifetimeCollateral = GetScenarioLifetimeCollateralResult(loanbook);
+
+            lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, ECL_Scenario.Best);
+            lifetimeCollateralOptimistic = GetScenarioLifetimeCollateralResult(loanbook, ECL_Scenario.Optimistic);
+            lifetimeCollateralDownturn = GetScenarioLifetimeCollateralResult(loanbook, ECL_Scenario.Downturn);
 
             //xxxxxxxxxxxxx
             //try { Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value); } catch { }
-            
-            stage2to3Forward=Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value);
+
+            try { stage2to3Forward = Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value); } catch { }
             //double creditIndexHurdle = Convert.ToDouble(GetImpairmentAssumptionValue(impairmentAssumptions, ImpairmentRowKeys.CreditIndexThreshold));
 
 
 
-            var threads = contractData.Count / 10;
+            var threads = contractData.Count / 500;
             threads = threads + 1;
 
             var taskLst = new List<Task>();
             for (int i = 0; i < threads; i++)
             {
-                var subcontract = contractData.Skip(i * 10).Take(10).ToList();
+                var subcontract = contractData.Skip(i * 500).Take(500).ToList();
 
                 var task = Task.Run(() =>
                 {
@@ -105,10 +121,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 });
                 taskLst.Add(task);
             }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
+            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
+            Log4Net.Log.Info($"Task Completed: {completedTask}");
 
             var tskStatusLst = new List<TaskStatus> {TaskStatus.RanToCompletion, TaskStatus.Faulted };
             while (!taskLst.Any(o => tskStatusLst.Contains(o.Status)))
@@ -116,7 +132,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 var newCount = taskLst.Where(o => o.IsCompleted).Count();
                 if (completedTask != newCount)
                 {
-                    Console.WriteLine($"Task Completed: {completedTask}");
+                    Log4Net.Log.Info($"Task Completed: {completedTask}");
                 }
                 //Do Nothing
             }
@@ -211,65 +227,185 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 {
                     
                     double monthLifetimeEAD = GetLifetimeEADPerMonth(lifetimeEAD, contractId, month);  //Excel lifetimeEAD!F
-                    double monthCreditIndex = GetCreditIndexPerMonth(creditIndex, month);           // Excel $O$3
-                    double sumLifetimePds = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePd, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
-                    double sumRedefaultPds = ComputeLifetimeRedefaultPdValuePerMonth(redefaultPd, pdGroup, month); //Excel SUM(OFFSET(RD_PD_BE, $C8-1, 1, 1, O$7)))
-                    double lifetimeCollateralValue = ComputeLifetimeCollateralValuePerMonth(lifetimeCollateral, contractId, month);  // Excel 'Lifetime Collateral (BE)'!E4
 
-                    var newRow = new LifetimeLgd();
+                    double monthCreditIndexBest = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Best);           // Excel $O$3
+                    double monthCreditIndexOptimistic = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Optimistic);
+                    double monthCreditIndexDownturn = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Downturn);
 
-                    double month1pdValue = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePd, pdGroup, 1);  // Excel INDEX(PD_BE,$C8, 2)
-                    double resultUsingMonth1pdValue = month1pdValue == 1.0 ? 1.0 : 0.0; // IF(INDEX(PD_BE,$C8, 2) = 1,1,0),
-                    double redefaultCalculation = (redefaultLifetimePd - sumRedefaultPds) / (1 - sumLifetimePds);
-                    double maxRedefaultPdValue = Math.Max(redefaultCalculation, 0.0);
-                    double ifSumLifetimePd = sumLifetimePds == 1.0 ? resultUsingMonth1pdValue : maxRedefaultPdValue;
-                    double checkForMonth0 = month == 0.0 ? redefaultLifetimePd : ifSumLifetimePd;
-                    double checkForStage1 = loanStage != 1.0 ? cureRates * checkForMonth0 : 0.0;
-                    double maxCurerateResult = Math.Max((1.0 - cureRates) + checkForStage1, 0.0);  //result not in double
-                    double minMaxCureRateResult = Math.Min(maxCurerateResult, 1.0);
+                    double sumLifetimePdsBest = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdBest, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
+                    double sumLifetimePdsOptimistic = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdOptimistic, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
+                    double sumLifetimePdsDownturn = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdDownturn, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
+
+                    double sumRedefaultPdsBest = ComputeLifetimeRedefaultPdValuePerMonth(redefaultPdBest, pdGroup, month); //Excel SUM(OFFSET(RD_PD_BE, $C8-1, 1, 1, O$7)))
+                    double sumRedefaultPdsOptimistic = ComputeLifetimeRedefaultPdValuePerMonth(redefaultPdOptimistic, pdGroup, month);
+                    double sumRedefaultPdsDownturn = ComputeLifetimeRedefaultPdValuePerMonth(redefaultPdDownturn, pdGroup, month);
+
+                    double lifetimeCollateralValueBest = ComputeLifetimeCollateralValuePerMonth(lifetimeCollateralBest, contractId, month);  // Excel 'Lifetime Collateral (BE)'!E4
+                    double lifetimeCollateralValueOptimistic = ComputeLifetimeCollateralValuePerMonth(lifetimeCollateralOptimistic, contractId, month);  // Excel 'Lifetime Collateral (BE)'!E4
+                    double lifetimeCollateralValueDownturn = ComputeLifetimeCollateralValuePerMonth(lifetimeCollateralDownturn, contractId, month);  // Excel 'Lifetime Collateral (BE)'!E4
+
+
+                    double month1pdValueBest = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdBest, pdGroup, 1);  // Excel INDEX(PD_BE,$C8, 2)
+                    double month1pdValueOptimistic = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdBest, pdGroup, 1);
+                    double month1pdValueDownturn = ComputeLifetimeRedefaultPdValuePerMonth(lifetimePdBest, pdGroup, 1);
+
+                    double resultUsingMonth1pdValueBest = month1pdValueBest == 1.0 ? 1.0 : 0.0; // IF(INDEX(PD_BE,$C8, 2) = 1,1,0),
+                    double resultUsingMonth1pdValueOptimistic = month1pdValueOptimistic == 1.0 ? 1.0 : 0.0;
+                    double resultUsingMonth1pdValueDownturn = month1pdValueDownturn == 1.0 ? 1.0 : 0.0;
+
+                    double redefaultCalculationBest = (redefaultLifetimePd - sumRedefaultPdsBest) / (1 - sumLifetimePdsBest);
+                    double redefaultCalculationOptimistic = (redefaultLifetimePd - sumRedefaultPdsOptimistic) / (1 - sumLifetimePdsOptimistic);
+                    double redefaultCalculationDownturn = (redefaultLifetimePd - sumRedefaultPdsDownturn) / (1 - sumLifetimePdsDownturn);
+
+                    double maxRedefaultPdValueBest = Math.Max(redefaultCalculationBest, 0.0);
+                    double maxRedefaultPdValueOptimistic = Math.Max(redefaultCalculationOptimistic, 0.0);
+                    double maxRedefaultPdValueDownturn = Math.Max(redefaultCalculationDownturn, 0.0);
+
+                    double ifSumLifetimePdBest = sumLifetimePdsBest == 1.0 ? resultUsingMonth1pdValueBest : maxRedefaultPdValueBest;
+                    double ifSumLifetimePdOptimistic = sumLifetimePdsOptimistic == 1.0 ? resultUsingMonth1pdValueOptimistic : maxRedefaultPdValueOptimistic;
+                    double ifSumLifetimePdDownturn = sumLifetimePdsDownturn == 1.0 ? resultUsingMonth1pdValueDownturn : maxRedefaultPdValueDownturn;
+
+                    double checkForMonth0Best = month == 0.0 ? redefaultLifetimePd : ifSumLifetimePdBest;
+                    double checkForMonth0Optimistic = month == 0.0 ? redefaultLifetimePd : ifSumLifetimePdOptimistic;
+                    double checkForMonth0Downturn = month == 0.0 ? redefaultLifetimePd : ifSumLifetimePdDownturn;
+
+                    double checkForStage1Best = loanStage != 1.0 ? cureRates * checkForMonth0Best : 0.0;
+                    double checkForStage1Optimistic = loanStage != 1.0 ? cureRates * checkForMonth0Optimistic : 0.0;
+                    double checkForStage1Downturn = loanStage != 1.0 ? cureRates * checkForMonth0Downturn : 0.0;
+
+                    double maxCurerateResultBest = Math.Max((1.0 - cureRates) + checkForStage1Best, 0.0);
+                    double maxCurerateResultOptimistic = Math.Max((1.0 - cureRates) + checkForStage1Optimistic, 0.0);
+                    double maxCurerateResultDownturn = Math.Max((1.0 - cureRates) + checkForStage1Downturn, 0.0);
+
+                    double minMaxCureRateResultBest = Math.Min(maxCurerateResultBest, 1.0);
+                    double minMaxCureRateResultOptimistic = Math.Min(maxCurerateResultOptimistic, 1.0);
+                    double minMaxCureRateResultDownturn = Math.Min(maxCurerateResultDownturn, 1.0);
                     ///
-                    double lifetimeCollateralForMonthCor = lifetimeCollateralValue * (1 - costOfRecovery);
+                    double lifetimeCollateralForMonthCorBest = lifetimeCollateralValueBest * (1 - costOfRecovery);
+                    double lifetimeCollateralForMonthCorOptimistic = lifetimeCollateralValueOptimistic * (1 - costOfRecovery);
+                    double lifetimeCollateralForMonthCorDownturn = lifetimeCollateralValueDownturn * (1 - costOfRecovery);
+
                     double min_gvalue_glevel = Math.Min(guaranteeValue, guaranteeLevel * monthLifetimeEAD);
                     double gLgd_gPd = (1 - guarantorLgd * guarantorPd);
-                    double multiplerMinColl = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCor;
+
+                    double multiplerMinCollBest = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCorBest;
+                    double multiplerMinCollOptimistic = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCorOptimistic;
+                    double multiplerMinCollDownturn = (gLgd_gPd * min_gvalue_glevel) + lifetimeCollateralForMonthCorDownturn;
                     ///
 
                     //xxxxxxxxxxxxxxxxxxxxxxxx
                     double creditIndexHurdle = 0;
-                    creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value);
+                    try { creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value); } catch { }
                     //try { creditIndexHurdle = Convert.ToDouble(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.CreditIndexThreshold).Value); } catch { };
 
-                    double ifCreditIndexHurdle;
-                    if (monthCreditIndex > creditIndexHurdle)
+                    double ifCreditIndexHurdleBest = 0;
+                    if (monthCreditIndexBest > creditIndexHurdle)
                     {
-                        ifCreditIndexHurdle = ((1 - unsecuredRecoveriesDownturn) * multiplerMinColl) + (unsecuredRecoveriesDownturn * monthLifetimeEAD);
+                        ifCreditIndexHurdleBest = ((1 - unsecuredRecoveriesDownturn) * multiplerMinCollBest) + (unsecuredRecoveriesDownturn * monthLifetimeEAD);
                     }
                     else
                     {
-                        ifCreditIndexHurdle = ((1 - unsecuredRecoveriesBest) * multiplerMinColl) + (unsecuredRecoveriesBest * monthLifetimeEAD);
+                        ifCreditIndexHurdleBest = ((1 - unsecuredRecoveriesBest) * multiplerMinCollBest) + (unsecuredRecoveriesBest * monthLifetimeEAD);
                     }
 
-                    double maxCreditIndexHurdle = Math.Max(1 - (ifCreditIndexHurdle) / monthLifetimeEAD, 0);
-                    double minMaxCreditIndexHurdle = Math.Min(maxCreditIndexHurdle, 1);
-                    double lifetimeLgdValue = monthLifetimeEAD == 0 ? 0 : minMaxCureRateResult * minMaxCreditIndexHurdle;
+                    double ifCreditIndexHurdleOptimistic=0;
+                    if (monthCreditIndexOptimistic > creditIndexHurdle)
+                    {
+                        ifCreditIndexHurdleOptimistic = ((1 - unsecuredRecoveriesDownturn) * multiplerMinCollOptimistic) + (unsecuredRecoveriesDownturn * monthLifetimeEAD);
+                    }
+                    else
+                    {
+                        ifCreditIndexHurdleOptimistic = ((1 - unsecuredRecoveriesBest) * multiplerMinCollOptimistic) + (unsecuredRecoveriesBest * monthLifetimeEAD);
+                    }
+
+                    double ifCreditIndexHurdleDownturn=0;
+                    if (monthCreditIndexDownturn > creditIndexHurdle)
+                    {
+                        ifCreditIndexHurdleDownturn = ((1 - unsecuredRecoveriesDownturn) * multiplerMinCollDownturn) + (unsecuredRecoveriesDownturn * monthLifetimeEAD);
+                    }
+                    else
+                    {
+                        ifCreditIndexHurdleDownturn = ((1 - unsecuredRecoveriesBest) * multiplerMinCollDownturn) + (unsecuredRecoveriesBest * monthLifetimeEAD);
+                    }
 
 
-                    newRow.ContractId = contractId;
-                    newRow.PdIndex = pdGroup;
-                    newRow.LgdIndex = segment + "_" + productType;
-                    newRow.RedefaultLifetimePD = redefaultLifetimePd;
-                    newRow.CureRate = cureRates;
-                    newRow.UrBest = unsecuredRecoveriesBest;
-                    newRow.URDownturn = unsecuredRecoveriesDownturn;
-                    newRow.Cor = costOfRecovery;
-                    newRow.GPd = guarantorPd;
-                    newRow.GuarantorLgd = guarantorLgd;
-                    newRow.GuaranteeValue = guaranteeValue;
-                    newRow.GuaranteeLevel = guaranteeLevel;
-                    newRow.Stage = loanStage;
-                    newRow.Month = month;
-                    newRow.Value = lifetimeLgdValue;
-                    _lifetimeLGD.Add(newRow);
+                    double maxCreditIndexHurdleBest = Math.Max(1 - (ifCreditIndexHurdleBest) / monthLifetimeEAD, 0);
+                    double maxCreditIndexHurdleOptimistic = Math.Max(1 - (ifCreditIndexHurdleOptimistic) / monthLifetimeEAD, 0);
+                    double maxCreditIndexHurdleDownturn = Math.Max(1 - (ifCreditIndexHurdleDownturn) / monthLifetimeEAD, 0);
+
+                    double minMaxCreditIndexHurdleBest = Math.Min(maxCreditIndexHurdleBest, 1);
+                    double minMaxCreditIndexHurdleOptimistic = Math.Min(maxCreditIndexHurdleOptimistic, 1);
+                    double minMaxCreditIndexHurdleDownturn = Math.Min(maxCreditIndexHurdleDownturn, 1);
+
+                    double lifetimeLgdValueBest = monthLifetimeEAD == 0 ? 0 : minMaxCureRateResultBest * minMaxCreditIndexHurdleBest;
+                    double lifetimeLgdValueOptimistic = monthLifetimeEAD == 0 ? 0 : minMaxCureRateResultOptimistic * minMaxCreditIndexHurdleOptimistic;
+                    double lifetimeLgdValueDownturn = monthLifetimeEAD == 0 ? 0 : minMaxCureRateResultDownturn * minMaxCreditIndexHurdleDownturn;
+
+
+                    var newRowBest = new LifetimeLgd();
+                    
+                    
+
+                    newRowBest.ContractId = contractId;
+                    newRowBest.PdIndex = pdGroup;
+                    newRowBest.LgdIndex = segment + "_" + productType;
+                    newRowBest.RedefaultLifetimePD = redefaultLifetimePd;
+                    newRowBest.CureRate = cureRates;
+                    newRowBest.UrBest = unsecuredRecoveriesBest;
+                    newRowBest.URDownturn = unsecuredRecoveriesDownturn;
+                    newRowBest.Cor = costOfRecovery;
+                    newRowBest.GPd = guarantorPd;
+                    newRowBest.GuarantorLgd = guarantorLgd;
+                    newRowBest.GuaranteeValue = guaranteeValue;
+                    newRowBest.GuaranteeLevel = guaranteeLevel;
+                    newRowBest.Stage = loanStage;
+                    newRowBest.Month = month;
+
+                    newRowBest.Ecl_Scenerio = ECL_Scenario.Best;
+                    newRowBest.Value = lifetimeLgdValueBest;
+                    _lifetimeLGD.Add(newRowBest);
+
+                    var newRowOptimistic = new LifetimeLgd();
+                    newRowOptimistic.ContractId = contractId;
+                    newRowOptimistic.PdIndex = pdGroup;
+                    newRowOptimistic.LgdIndex = segment + "_" + productType;
+                    newRowOptimistic.RedefaultLifetimePD = redefaultLifetimePd;
+                    newRowOptimistic.CureRate = cureRates;
+                    newRowOptimistic.UrBest = unsecuredRecoveriesBest;
+                    newRowOptimistic.URDownturn = unsecuredRecoveriesDownturn;
+                    newRowOptimistic.Cor = costOfRecovery;
+                    newRowOptimistic.GPd = guarantorPd;
+                    newRowOptimistic.GuarantorLgd = guarantorLgd;
+                    newRowOptimistic.GuaranteeValue = guaranteeValue;
+                    newRowOptimistic.GuaranteeLevel = guaranteeLevel;
+                    newRowOptimistic.Stage = loanStage;
+                    newRowOptimistic.Month = month;
+                    newRowOptimistic.Ecl_Scenerio = ECL_Scenario.Optimistic;
+                    newRowOptimistic.Value = lifetimeLgdValueOptimistic;
+                    _lifetimeLGD.Add(newRowOptimistic);
+
+
+                    var newRowDownturn = new LifetimeLgd();
+
+                    newRowDownturn.ContractId = contractId;
+                    newRowDownturn.PdIndex = pdGroup;
+                    newRowDownturn.LgdIndex = segment + "_" + productType;
+                    newRowDownturn.RedefaultLifetimePD = redefaultLifetimePd;
+                    newRowDownturn.CureRate = cureRates;
+                    newRowDownturn.UrBest = unsecuredRecoveriesBest;
+                    newRowDownturn.URDownturn = unsecuredRecoveriesDownturn;
+                    newRowDownturn.Cor = costOfRecovery;
+                    newRowDownturn.GPd = guarantorPd;
+                    newRowDownturn.GuarantorLgd = guarantorLgd;
+                    newRowDownturn.GuaranteeValue = guaranteeValue;
+                    newRowDownturn.GuaranteeLevel = guaranteeLevel;
+                    newRowDownturn.Stage = loanStage;
+                    newRowDownturn.Month = month;
+
+                    newRowDownturn.Ecl_Scenerio = ECL_Scenario.Downturn;
+                    newRowDownturn.Value = lifetimeLgdValueDownturn;
+                    _lifetimeLGD.Add(newRowDownturn);
+
                     //xxxxxxxxxxxaaaaaaaaaa
                 }
             }
@@ -301,18 +437,18 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return pds.Aggregate(0.0, (acc, x) => acc + x);
         }
 
-        private double GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month)
+        private double GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month, ECL_Scenario _scenario)
         {
 
             var _creditIndx = creditIndex.FirstOrDefault(x => x.ProjectionMonth == (month > 60 ? 60 : month));
 
-            if (this._scenario == ECL_Scenario.Best)
+            if (_scenario == ECL_Scenario.Best)
                 return _creditIndx.BestEstimate;
 
-            if (this._scenario == ECL_Scenario.Downturn)
+            if (_scenario == ECL_Scenario.Downturn)
                 return _creditIndx.Downturn;
 
-            if (this._scenario == ECL_Scenario.Optimistic)
+            if (_scenario == ECL_Scenario.Optimistic)
                 return _creditIndx.Optimistic;
 
             return 0;
@@ -323,7 +459,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
             //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             try { return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue; }
-            catch { return lifetimeEAD.FirstOrDefault().ProjectionValue; }
+            catch { try { return lifetimeEAD.FirstOrDefault().ProjectionValue; } catch { return 0; } }
 
         }
 
@@ -427,7 +563,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _lifetimeEadWorkings= new LifetimeEadWorkings(this._eclId, this._eclType);
             return _lifetimeEadWorkings.ComputeLifetimeEad(loanbook);
         }
-        protected List<LifeTimeObject> GetScenarioLifetimePdResult()
+        protected List<LifeTimeObject> GetScenarioLifetimePdResult(ECL_Scenario _scenario)
         {
             
             var qry = "";
@@ -457,7 +593,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             return lifetimePd;
         }
-        protected List<LifeTimeObject> GetScenarioRedfaultLifetimePdResult()
+        protected List<LifeTimeObject> GetScenarioRedfaultLifetimePdResult(ECL_Scenario _scenario)
         {
             var qry = "";
             switch (_scenario)
@@ -491,9 +627,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _creditIndex = new CreditIndex(this._eclId, this._eclType);
             return _creditIndex.GetCreditIndexResult();
         }
-        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook)
+        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook, ECL_Scenario _scenario)
         {
-            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(this._scenario, this._eclId, this._eclType);
+            _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(_scenario, this._eclId, this._eclType);
             return _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook);
         }
     }

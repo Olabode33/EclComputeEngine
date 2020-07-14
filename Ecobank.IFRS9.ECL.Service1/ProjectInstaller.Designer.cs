@@ -39,6 +39,7 @@
             // serviceInstaller1
             // 
             this.serviceInstaller1.ServiceName = "IFRS9_ECL1";
+            this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
             // ProjectInstaller
             // 

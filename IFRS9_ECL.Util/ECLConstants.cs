@@ -122,11 +122,10 @@ namespace IFRS9_ECL.Util
         public double NGN_Currency { get { return 1; } }
         public double Conversion_Factor_OBE { get { return 1; } } ///It will be obtained from the DB this is in percentage
             //*********************************************************
-        public DateTime reportingDate { get { return new DateTime(2018, 06, 30); } }
 
-        public double Rho = 0.217333590280369; //******************************
+        public double Rho = 0.00474702758444; //******************************
 
-        public int prepaymentFactor { get { return 0; } }
+        
 
         public string SnpMapping = "SnpMapping";
         public int MaxMarginalLifetimeRedefaultPdMonth = 120;
@@ -168,8 +167,8 @@ namespace IFRS9_ECL.Util
     {
         public const string EIR = "EIR";
         public const string CIR = "CIR";
-        public const int MaxIrFactorProjectionMonths = 242;
-        public const int TempExcelVariable_LIM_MONTH = 204;
+        public const int MaxIrFactorProjectionMonths = 56;//242;***************************
+        public const int TempExcelVariable_LIM_MONTH = 56; //204**************************
         public const int TempExcelVariable_MPD_DEFAULT_CRITERIA = 3;
         public const int ScenerioWorkingMaxMonth = 12;
         public const int ProjectionMonth = 207;

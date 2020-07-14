@@ -28,18 +28,26 @@ namespace IFRS9_ECL.Core.Calibration
             {
                 Directory.CreateDirectory(baseAffPath);
             }
-            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "EAD_CCF.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_CCF.xlsx")}";
+            
+            var qry = Queries.CalibrationInput_EAD_CCF(calibrationId);
+            var _dt = DataAccess.i.GetData(qry);
+
+            //DataView dv = _dt.DefaultView;
+            //dv.Sort = "Account_No,Snapshot_Date";
+            var dt = _dt;// dv.ToTable();
+
+            if (dt.Rows.Count == 0)
+                return true;
+
+            var counter = Util.AppSettings.GetCounter(affiliateId);
+
+            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "EAD_CCF.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}EAD_CCF.xlsx")}";
 
             if (File.Exists(path1))
             {
-                File.Delete(path1);
+                try { File.Delete(path1); } catch { };
             }
-
-            var qry = Queries.CalibrationInput_EAD_CCF(calibrationId);
-            var dt=DataAccess.i.GetData(qry);
-
-
 
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -57,9 +65,13 @@ namespace IFRS9_ECL.Core.Calibration
 
                 for (int i = 0; i < dt.Rows.Count; i++)// DataRow dr in dt.Rows)
                 {
-                    Console.WriteLine(i);
+                    Log4Net.Log.Info(i);
                     DataRow dr = dt.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new EAD_CCF_Summary(), dr);
+
+
+                    if (string.IsNullOrEmpty(itm.Account_No) &&  itm.Snapshot_Date.ToString().Contains("0001"))
+                        continue;
 
                     worksheet.Cells[i + 2, 1].Value = itm.Customer_No ?? "";
                     worksheet.Cells[i + 2, 2].Value = itm.Account_No ?? "";
@@ -127,25 +139,36 @@ namespace IFRS9_ECL.Core.Calibration
                 var r = new CalibrationResult_EAD_CCF_Summary();
 
 
-                r.OD_TotalLimitOdDefaultedLoan = worksheet1.Cells[2, 2].Value;
-                r.OD_BalanceAtDefault = worksheet1.Cells[3, 2].Value;
-                r.OD_Balance12MonthBeforeDefault = worksheet1.Cells[4, 2].Value;
-                r.OD_TotalConversation = worksheet1.Cells[5, 2].Value;
-                r.OD_CCF = worksheet1.Cells[6, 2].Value;
+                try { r.OD_TotalLimitOdDefaultedLoan = double.Parse(worksheet1.Cells[2, 2].Value.ToString()); } catch { }
+                try{r.OD_BalanceAtDefault = double.Parse(worksheet1.Cells[3, 2].Value.ToString()); } catch { }
+                try{r.OD_Balance12MonthBeforeDefault = double.Parse(worksheet1.Cells[4, 2].Value.ToString()); } catch { }
+                try{r.OD_TotalConversation = double.Parse(worksheet1.Cells[5, 2].Value.ToString()); } catch { }
+                try{r.OD_CCF = double.Parse(worksheet1.Cells[6, 2].Value.ToString()); } catch { }
 
-                r.Card_TotalLimitOdDefaultedLoan = worksheet1.Cells[2, 3].Value;
-                r.Card_BalanceAtDefault = worksheet1.Cells[3, 3].Value;
-                r.Card_Balance12MonthBeforeDefault = worksheet1.Cells[4, 3].Value;
-                r.Card_TotalConversation = worksheet1.Cells[5, 3].Value;
-                r.Card_CCF = worksheet1.Cells[6, 3].Value;
+                try{r.Card_TotalLimitOdDefaultedLoan = double.Parse(worksheet1.Cells[2, 3].Value.ToString()); } catch { }
+                try{r.Card_BalanceAtDefault = double.Parse(worksheet1.Cells[3, 3].Value.ToString()); } catch { }
+                try{r.Card_Balance12MonthBeforeDefault = double.Parse(worksheet1.Cells[4, 3].Value.ToString()); } catch { }
+                try{r.Card_TotalConversation = double.Parse(worksheet1.Cells[5, 3].Value.ToString()); } catch { }
+                try{r.Card_CCF = double.Parse(worksheet1.Cells[6, 3].Value.ToString()); } catch { }
 
-                r.Overall_TotalLimitOdDefaultedLoan = worksheet1.Cells[2, 4].Value;
-                r.Overall_BalanceAtDefault = worksheet1.Cells[3, 4].Value;
-                r.Overall_Balance12MonthBeforeDefault = worksheet1.Cells[4, 4].Value;
-                r.Overall_TotalConversation = worksheet1.Cells[5, 4].Value;
-                r.Overall_CCF = worksheet1.Cells[6, 4].Value;
+                try{r.Overall_TotalLimitOdDefaultedLoan = double.Parse(worksheet1.Cells[2, 4].Value.ToString()); } catch { }
+                try{r.Overall_BalanceAtDefault = double.Parse(worksheet1.Cells[3, 4].Value.ToString()); } catch { }
+                try{r.Overall_Balance12MonthBeforeDefault = double.Parse(worksheet1.Cells[4, 4].Value.ToString()); } catch { }
+                try{r.Overall_TotalConversation = double.Parse(worksheet1.Cells[5, 4].Value.ToString()); } catch { }
+                try{r.Overall_CCF = double.Parse(worksheet1.Cells[6, 4].Value.ToString()); } catch { }
 
-
+                if (r.OD_CCF== -2146826281)
+                {
+                    r.OD_CCF = 0;
+                }
+                if (r.Card_CCF == -2146826281)
+                {
+                    r.Card_CCF = 0;
+                }
+                if (r.Overall_CCF == -2146826281)
+                {
+                    r.Overall_CCF = 0;
+                }
 
                 theWorkbook.Save();
                 theWorkbook.Close(true);
@@ -159,6 +182,7 @@ namespace IFRS9_ECL.Core.Calibration
             }
             catch (Exception ex)
             {
+                Log4Net.Log.Error(ex);
                 theWorkbook.Save();
                 theWorkbook.Close(true);
                 excel.Quit();

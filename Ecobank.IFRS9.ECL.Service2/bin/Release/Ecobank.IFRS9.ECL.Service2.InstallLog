@@ -1,0 +1,13 @@
+﻿Installing assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.InstallLog
+Installing service IFRS9_ECL2...
+Service IFRS9_ECL2 has been successfully installed.
+Creating EventLog source IFRS9_ECL2 in log Application...
+Committing assembly 'C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.exe'.
+Affected parameters are:
+   logtoconsole = 
+   assemblypath = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.exe
+   logfile = C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\Ecobank.IFRS9.ECL.Service2.InstallLog

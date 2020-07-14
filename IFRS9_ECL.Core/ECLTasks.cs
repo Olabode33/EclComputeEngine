@@ -3,6 +3,7 @@ using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
+using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
@@ -19,14 +20,43 @@ namespace IFRS9_ECL.Core
         private Guid _eclId;
         private EclType _eclType;
         ScenarioLifetimeLGD _scenarioLifetimeLGD;
+
+        
+        List<EclAssumptions> _eclEadInputAssumption;
         public ECLTasks(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
             this._eclType = eclType;
             _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, eclType);
+            this._eclEadInputAssumption = GetECLEADInputAssumptions();
         }
 
-        public double Conversion_Factor_OBE = 1;
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
+        public List<EclAssumptions> GetECLEADInputAssumptions()
+        {
+            var qry = Queries.eclEadInputAssumptions(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+            var eclAssumptions = new List<EclAssumptions>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                eclAssumptions.Add(DataAccess.i.ParseDataToObject(new EclAssumptions(), dr));
+            }
+
+            return eclAssumptions;
+        }
+
 
 
         public List<Refined_Raw_Retail_Wholesale> GenerateContractIdandRefinedData(List<Loanbook_Data> lstRaw)
@@ -36,9 +66,9 @@ namespace IFRS9_ECL.Core
             foreach (var rr in lstRaw)
             {
                 i++;
-                //Console.WriteLine(i);
+                //Log4Net.Log.Info(i);
                 var refined = new Refined_Raw_Retail_Wholesale();
-                refined.contract_no=GenerateContractId(rr);
+                refined.contract_no = rr.ContractId;// GenerateContractId(rr);
 
                 var filtLstRaw = lstRaw.Where(o => o.ContractNo == refined.contract_no).ToList();
 
@@ -112,32 +142,31 @@ namespace IFRS9_ECL.Core
 
             var lgd_first = new LGD_Assumptions_CollateralType_TTR_Years();
 
-            lgd_first.collateral_value = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value);
-            lgd_first.debenture = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
-            lgd_first.cash = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
-            lgd_first.commercial_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
-            lgd_first.Receivables = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
-            lgd_first.inventory = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
-            lgd_first.plant_and_equipment = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
-            lgd_first.residential_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
-            lgd_first.shares = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
-            lgd_first.vehicle = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
-
-            var lgd_last = new LGD_Assumptions_CollateralType_TTR_Years();
-
-
-            lgd_last.collateral_value = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value);
-            lgd_last.debenture = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
-            lgd_last.cash = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
-            lgd_last.commercial_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
-            lgd_last.Receivables = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
-            lgd_last.inventory = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
-            lgd_last.plant_and_equipment = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
-            lgd_last.residential_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
-            lgd_last.shares = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
-            lgd_last.vehicle = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
-
+            try { lgd_first.collateral_value = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value); } catch { lgd_first.collateral_value = 0; }
+            try { lgd_first.debenture = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);        } catch { lgd_first.debenture = 0; }
+            try { lgd_first.cash = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);        } catch { lgd_first.cash = 0; }
+            try { lgd_first.commercial_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);        } catch { lgd_first.commercial_property = 0; }
+            try { lgd_first.Receivables = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);        } catch { lgd_first.Receivables = 0; }
+            try { lgd_first.inventory = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);        } catch { lgd_first.inventory = 0; }
+            try { lgd_first.plant_and_equipment = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);        } catch { lgd_first.plant_and_equipment = 0; }
+            try { lgd_first.residential_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);        } catch { lgd_first.residential_property = 0; }
+            try { lgd_first.shares = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);        } catch { lgd_first.shares = 0; }
+            try { lgd_first.vehicle = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);        } catch { lgd_first.vehicle = 0; }
             
+                var lgd_last = new LGD_Assumptions_CollateralType_TTR_Years();
+
+
+
+            try { lgd_last.collateral_value = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value); } catch { lgd_first.collateral_value = 0; }
+            try { lgd_last.debenture = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value); } catch { lgd_first.debenture = 0; }
+            try { lgd_last.cash = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value); } catch { lgd_first.cash = 0; }
+            try { lgd_last.commercial_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value); } catch { lgd_first.commercial_property = 0; }
+            try { lgd_last.Receivables = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value); } catch { lgd_first.Receivables = 0; }
+            try { lgd_last.inventory = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value); } catch { lgd_first.inventory = 0; }
+            try { lgd_last.plant_and_equipment = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value); } catch { lgd_first.plant_and_equipment = 0; }
+            try { lgd_last.residential_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value); } catch { lgd_first.residential_property = 0; }
+            try { lgd_last.shares = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value); } catch { lgd_first.shares = 0; }
+            try { lgd_last.vehicle = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value); } catch { lgd_first.vehicle = 0; }
 
             for (int i = 0; i < loanbook_Data.Count; i++)
             {
@@ -214,40 +243,42 @@ namespace IFRS9_ECL.Core
 
         public List<LGDAccountData> AccountData(List<Loanbook_Data> refinedRawData, List<LGDPrecalculationOutput> tempDT, List<LGDCollateralData> collateralTable, List<CoR> coR)
         {
+            
             var accountData = new List<LGDAccountData>();
 
-
-            var lgd_Assumptions_2= _scenarioLifetimeLGD.GetECLLgdAssumptions();
-
-            lgd_Assumptions_2 = lgd_Assumptions_2.Where(o => o.AssumptionGroup == 8).ToList();
-            var selection = new double[9];
-
-            selection[0]= double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value);
-            selection[1] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash.ToLower())).Value);
-            selection[2] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory.ToLower())).Value);
-            selection[3] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment.ToLower())).Value);
-            selection[4] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty.ToLower())).Value);
-            selection[5] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty.ToLower())).Value);
-            selection[6] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables.ToLower())).Value);
-            selection[7] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares.ToLower())).Value);
-            selection[8] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle.ToLower())).Value);
-
-
-            for (var i = 0; i < collateralTable.Count; i++)
+            try
             {
-                refinedRawData[i].GuaranteeValue = refinedRawData[i].GuaranteeValue ?? 0;
-                LGD_Inputs obj = new LGD_Inputs()
+                var lgd_Assumptions_2 = _scenarioLifetimeLGD.GetECLLgdAssumptions();
+
+                lgd_Assumptions_2 = lgd_Assumptions_2.Where(o => o.AssumptionGroup == 8).ToList();
+                var selection = new double[9];
+
+                try { selection[0] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value); } catch { }
+                try{selection[1] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash.ToLower())).Value); } catch { }
+                try{selection[2] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory.ToLower())).Value); } catch { }
+                try{selection[3] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment.ToLower())).Value); } catch { }
+                try{selection[4] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty.ToLower())).Value); } catch { }
+                try{selection[5] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty.ToLower())).Value); } catch { }
+                try{selection[6] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables.ToLower())).Value); } catch { }
+                try{selection[7] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares.ToLower())).Value); } catch { }
+                try{selection[8] = double.Parse(lgd_Assumptions_2.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle.ToLower())).Value); } catch { }
+
+
+                for (var i = 0; i < collateralTable.Count; i++)
                 {
-                    contractid = collateralTable[i].contract_no,
-                    guarantee_value = refinedRawData[i].GuaranteeValue.Value.ToString(),
-                    customer_no = refinedRawData[i].CustomerNo
-                };
+                    refinedRawData[i].GuaranteeValue = refinedRawData[i].GuaranteeValue ?? 0;
+                    LGD_Inputs obj = new LGD_Inputs()
+                    {
+                        contractid = collateralTable[i].contract_no,
+                        guarantee_value = refinedRawData[i].GuaranteeValue.Value.ToString(),
+                        customer_no = refinedRawData[i].CustomerNo
+                    };
 
-                var cor_value = coR.FirstOrDefault(o => o.contract_no == obj.contractid);
-                if (cor_value == null) cor_value = new CoR();
-                accountData.Add(new LGDAccountData { COST_OF_RECOVERY = cor_value.cor });
+                    var cor_value = coR.FirstOrDefault(o => o.contract_no == obj.contractid);
+                    if (cor_value == null) cor_value = new CoR();
+                    accountData.Add(new LGDAccountData { COST_OF_RECOVERY = cor_value.cor });
 
-                double[] tempOVMarray = {
+                    double[] tempOVMarray = {
                                         refinedRawData[i].DebentureOMV??0 ,
                      refinedRawData[i].CashOMV??0 ,
                      refinedRawData[i].InventoryOMV??0 ,
@@ -259,84 +290,88 @@ namespace IFRS9_ECL.Core
                      refinedRawData[i].VehicleOMV??0
                 };
 
-                double valueArray2 =
+                    double valueArray2 =
 
-                    collateralTable[i].debenture_omv+
-                                        collateralTable[i].cash_omv +
-                                        collateralTable[i].inventory_omv +
-                                        collateralTable[i].plant_and_equipment_omv +
-                                        collateralTable[i].residential_property_omv +
-                                        collateralTable[i].commercial_property_omv +
-                                        collateralTable[i].receivables_omv +
-                                        collateralTable[i].shares_omv +
-                                        collateralTable[i].vehicle_omv;
-                    
-
-                double product_1 = SumProduct(tempOVMarray, selection);
-                double result;
-                double value1, value2;
-
-                if (valueArray2 != 0)
-                {
-                    value1 = product_1 / valueArray2;
-                }
-                else
-                {
-                    value1 = 0;
-                }
+                        collateralTable[i].debenture_omv +
+                                            collateralTable[i].cash_omv +
+                                            collateralTable[i].inventory_omv +
+                                            collateralTable[i].plant_and_equipment_omv +
+                                            collateralTable[i].residential_property_omv +
+                                            collateralTable[i].commercial_property_omv +
+                                            collateralTable[i].receivables_omv +
+                                            collateralTable[i].shares_omv +
+                                            collateralTable[i].vehicle_omv;
 
 
-                if (tempDT[i].project_finance_ind.ToString() == "1")
-                {
-                    value2 = 0; //HLOOKUP("PF_"&'Collateral Type OMV'!$AE4,SPECIALISED_LENDING_TTR_TABLE,2,FALSE) - i do not understand this part so i hardcoded a 0
-                }
-                else
-                {
-                    value2 = 0;
-                }
+                    double product_1 = SumProduct(tempOVMarray, selection);
+                    double result;
+                    double value1, value2;
 
-                result = value1 + value2;
-
-                accountData[i].TTR_YEARS = result;
-                accountData[i].CONTRACT_NO = collateralTable[i].contract_no;
-
-                //END OF TTM
-
-                //GUARANTY_PD, GUARANTY_LGD, GUARANTEE_VALUE
-                if (refinedRawData[i].GuaranteeIndicator.ToString() == "1")
-                {
-                    refinedRawData[i].GuarantorPD = string.IsNullOrEmpty(refinedRawData[i].GuarantorPD)? "0": refinedRawData[i].GuarantorPD;
-                    accountData[i].GUARANTOR_PD = double.Parse(refinedRawData[i].GuarantorPD);
-
-                    refinedRawData[i].GuarantorLGD = string.IsNullOrEmpty(refinedRawData[i].GuarantorLGD) ? "0" : refinedRawData[i].GuarantorLGD;
-                    accountData[i].GUARANTOR_LGD = double.Parse(refinedRawData[i].GuarantorLGD);
-                     
-                    value1 = refinedRawData[i].GuaranteeIndicator?tempDT[i].pd_x_ead:0;
-
-                    var pd_x_ead_List = tempDT.Select(o=>o.pd_x_ead).ToArray();
-
-                    var guarantee_values = refinedRawData.Select(o => Convert.ToString(o.GuaranteeValue)).ToList();
-                    var customer_nos = refinedRawData.Select(o => Convert.ToString(o.CustomerNo)).ToList();
-                    string[] Guarantee_value_array = GetArray(guarantee_values, obj.guarantee_value);
-                    string[] Customer_no_array = GetArray(customer_nos, obj.customer_no);
-
-                    double product = SumProduct(pd_x_ead_List, Guarantee_value_array, Customer_no_array);
-                    if (product != 0)
+                    if (valueArray2 != 0)
                     {
-                        accountData[i].GUARANTEE_VALUE = value1 / product;
+                        value1 = product_1 / valueArray2;
                     }
                     else
                     {
+                        value1 = 0;
+                    }
+
+
+                    if (tempDT[i].project_finance_ind.ToString() == "1")
+                    {
+                        value2 = 0; //HLOOKUP("PF_"&'Collateral Type OMV'!$AE4,SPECIALISED_LENDING_TTR_TABLE,2,FALSE) - i do not understand this part so i hardcoded a 0
+                    }
+                    else
+                    {
+                        value2 = 0;
+                    }
+
+                    result = value1 + value2;
+
+                    accountData[i].TTR_YEARS = result;
+                    accountData[i].CONTRACT_NO = collateralTable[i].contract_no;
+
+                    //END OF TTM
+
+                    //GUARANTY_PD, GUARANTY_LGD, GUARANTEE_VALUE
+                    if (refinedRawData[i].GuaranteeIndicator.ToString() == "1")
+                    {
+                        refinedRawData[i].GuarantorPD = string.IsNullOrEmpty(refinedRawData[i].GuarantorPD) ? "0" : refinedRawData[i].GuarantorPD;
+                        accountData[i].GUARANTOR_PD = double.Parse(refinedRawData[i].GuarantorPD);
+
+                        refinedRawData[i].GuarantorLGD = string.IsNullOrEmpty(refinedRawData[i].GuarantorLGD) ? "0" : refinedRawData[i].GuarantorLGD;
+                        accountData[i].GUARANTOR_LGD = double.Parse(refinedRawData[i].GuarantorLGD);
+
+                        value1 = refinedRawData[i].GuaranteeIndicator ? tempDT[i].pd_x_ead : 0;
+
+                        var pd_x_ead_List = tempDT.Select(o => o.pd_x_ead).ToArray();
+
+                        var guarantee_values = refinedRawData.Select(o => Convert.ToString(o.GuaranteeValue)).ToList();
+                        var customer_nos = refinedRawData.Select(o => Convert.ToString(o.CustomerNo)).ToList();
+                        string[] Guarantee_value_array = GetArray(guarantee_values, obj.guarantee_value);
+                        string[] Customer_no_array = GetArray(customer_nos, obj.customer_no);
+
+                        double product = SumProduct(pd_x_ead_List, Guarantee_value_array, Customer_no_array);
+                        if (product != 0)
+                        {
+                            accountData[i].GUARANTEE_VALUE = value1 / product;
+                        }
+                        else
+                        {
+                            accountData[i].GUARANTEE_VALUE = 0;
+                        }
+                    }
+                    else
+                    {
+                        accountData[i].GUARANTOR_PD = 0;
+                        accountData[i].GUARANTOR_LGD = 0;
                         accountData[i].GUARANTEE_VALUE = 0;
                     }
-                }
-                else
-                {
-                    accountData[i].GUARANTOR_PD = 0;
-                    accountData[i].GUARANTOR_LGD = 0;
-                    accountData[i].GUARANTEE_VALUE = 0;
-                }
 
+                }
+            }catch(Exception ex)
+            {
+                var xx = ex;
             }
             return accountData;
 
@@ -701,7 +736,7 @@ namespace IFRS9_ECL.Core
                     try
                     {
                         var maximumDate = DateTime.Parse(lifetime_query.end_date);
-                        double noOfDays = (maximumDate - ECLNonStringConstants.i.reportingDate).Days;
+                        double noOfDays = (maximumDate - GetReportingDate(_eclType, _eclId)).Days;
                         noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                     }
                     catch (Exception ex)
@@ -733,7 +768,7 @@ namespace IFRS9_ECL.Core
                 };
 
                 //noOfMonths reset to one because value is same accross board (as adviced by Femi Longe)
-                noOfMonths = 1;
+                noOfMonths = 27; /// for Sao tome testing
                 for (int monthIndex = 0; monthIndex <= noOfMonths; monthIndex++)
                 {
                     if (monthIndex == 0)
@@ -745,8 +780,9 @@ namespace IFRS9_ECL.Core
                     }
                     else
                     {
-                        double overallvalue = 0, value1, value2;
-                        double previousMonth = lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value;
+                        double overallvalue = 0, value1=0, value2=0;
+                        double previousMonth = 0;
+                        try { previousMonth=lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value; } catch { };
 
 
                         if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i.CARDS && obj.product_type != ECLStringConstants.i._productType_lease & obj.product_type != ECLStringConstants.i._productType_mortgage)
@@ -772,7 +808,7 @@ namespace IFRS9_ECL.Core
 
                                 if (obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i._productType_card)
                                 {
-                                    value2 = Convert.ToDouble(Conversion_Factor_OBE);
+                                    try { value2 = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "CreditConversionFactorObe)").Value); } catch { }  //***************************************
                                 }
                                 else
                                 {
@@ -813,7 +849,9 @@ namespace IFRS9_ECL.Core
 
 
                                     //obtain value from payment schedule and multiply by exchange rate
-                                    double f_value = paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value * ECLNonStringConstants.i.NGN_Currency;
+                                    double f_value = 0;
+                                    try { f_value=paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value; } catch { };
+                                    f_value = f_value * ECLNonStringConstants.i.NGN_Currency;
                                     //NGN_Currency will be obtained from the DB
                                     //(f_value + x)
 
@@ -872,8 +910,9 @@ namespace IFRS9_ECL.Core
                                     }
 
                                     f_value += g_value;
-
-                                    overallvalue = Math.Max(f_value, 0) * (1 - ECLNonStringConstants.i.prepaymentFactor);
+                                    var val = 0.0;
+                                    try { val=Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "PrePaymentFactor)").Value); } catch { }
+                                    overallvalue = Math.Max(f_value, 0) * (1 - val);
                                 }
                             }
 
@@ -917,10 +956,10 @@ namespace IFRS9_ECL.Core
         }
         private double projection_Calulcation_lifetimeEAD_0(double outstanding_bal_lcy, string product_type)
         {
-            double value;
+            double value=0;
             if (product_type != ECLStringConstants.i._productType_loan && product_type != ECLStringConstants.i._productType_lease && product_type != ECLStringConstants.i._productType_mortgage && product_type != ECLStringConstants.i._productType_od && product_type != ECLStringConstants.i._productType_card)
             {
-                value = Conversion_Factor_OBE;
+                try { value = double.Parse(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "CreditConversionFactorObe").Value); } catch { }
             }
             else
             {
@@ -937,7 +976,7 @@ namespace IFRS9_ECL.Core
             r.CreditLimit = r.CreditLimit ?? 0;
             r.OriginalBalanceLCY = r.OriginalBalanceLCY ?? 0;
 
-            if (r.ContractStartDate == null && r.ContractEndDate == null && r.CreditLimit == 0 && r.CreditLimit == 0)
+            if (r.ContractStartDate == null && r.ContractEndDate == null && r.CreditLimit == 0 && r.OriginalBalanceLCY == 0)
             {
                 var colSum = r.DebentureOMV ?? +r.CashOMV ?? +r.InventoryOMV ?? +r.PlantEquipmentOMV ?? +r.ResidentialPropertyOMV ?? +r.CommercialPropertyOMV ?? +r.ReceivablesOMV ?? +r.SharesOMV ?? +r.VehicleOMV ?? +(r.GuaranteeIndicator ? 1 : 0);
                 return colSum == 0 ? $"{ECLStringConstants.i.ExpiredContractsPrefix}{r.ProductType}|{r.Segment}" : $"{ECLStringConstants.i.ExpiredContractsPrefix}{r.ProductType}|{r.ContractNo}";
@@ -960,12 +999,13 @@ namespace IFRS9_ECL.Core
 
                 //Perform Projections
                 double noOfMonths = 0;
-                if (_ltEAD.end_date!=null)
+                if (_ltEAD.end_date != null)
                 {
-                    try { 
-                    var maximumDate = DateTime.Parse(_ltEAD.end_date);
-                    double noOfDays = (maximumDate - ECLNonStringConstants.i.reportingDate).Days;
-                    noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
+                    try
+                    {
+                        var maximumDate = DateTime.Parse(_ltEAD.end_date);
+                        double noOfDays = (maximumDate - GetReportingDate(_eclType, _eclId)).Days;
+                        noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                     }
                     catch (Exception ex)
                     {
@@ -974,7 +1014,7 @@ namespace IFRS9_ECL.Core
                 }
 
                 //noOfMonths reset to one because value is same accross board (as adviced by Femi Longe)
-                noOfMonths = 1;
+                noOfMonths = 27;//****************************************27 was Picked from Excel for a single contract Id(Wrong though)
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1016,7 +1056,7 @@ namespace IFRS9_ECL.Core
                     try
                     {
                         var maximumDate = DateTime.Parse(_ltEAD.end_date);
-                        double noOfDays = (maximumDate - ECLNonStringConstants.i.reportingDate).Days;
+                        double noOfDays = (maximumDate - GetReportingDate(_eclType, _eclId)).Days;
                         noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                     }catch(Exception ex)
                     {
@@ -1026,7 +1066,7 @@ namespace IFRS9_ECL.Core
 
 
                 //noOfMonths reset to one because value is same accross board (as adviced by Femi Longe)
-                noOfMonths = 1;
+                //noOfMonths = 1;
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1070,7 +1110,7 @@ namespace IFRS9_ECL.Core
                 r.end_date = S_E_Date(i.RESTRUCTURE_END_DATE.ToString(), i.RESTRUCTURE_INDICATOR.ToString(), i.CONTRACT_END_DATE.ToString());
 
                 //remaining IP
-                r.remaining_ip = Remaining_IP(i, ECLNonStringConstants.i.reportingDate).ToString();
+                r.remaining_ip = Remaining_IP(i, GetReportingDate(_eclType, _eclId)).ToString();
 
                 if (i.contract_no.Substring(0, 3) == ECLStringConstants.i.ExpiredContractsPrefix)
                 {
@@ -1111,7 +1151,7 @@ namespace IFRS9_ECL.Core
                     //************************************
                     var endDate_Temp = new DateTime();
                     try { endDate_Temp = Convert.ToDateTime(r.end_date); } catch { }
-                    r.mths_to_expiry = Months_To_Expiry(ECLNonStringConstants.i.reportingDate, endDate_Temp, i.product_type, behavioral.Expired).ToString();
+                    r.mths_to_expiry = Months_To_Expiry(GetReportingDate(_eclType, _eclId), endDate_Temp, i.product_type, behavioral.Expired).ToString();
 
                     r.interest_divisor = Interest_Divisor(i.INTEREST_PAYMENT_STRUCTURE);
 
@@ -1565,11 +1605,11 @@ namespace IFRS9_ECL.Core
                     //Allowed for this to be negative. This will be used later.
                     start_date = item.StartDate;
 
-                    if (start_date > ECLNonStringConstants.i.reportingDate)
+                    if (start_date > GetReportingDate(_eclType, _eclId))
                     {
                         if (!start_month_adjustment)
                         {
-                            start_month = Math.Round(Financial.YearFrac(ECLNonStringConstants.i.reportingDate, start_date, DayCountBasis.ActualActual) * 12, 0);
+                            start_month = Math.Round(Financial.YearFrac(GetReportingDate(_eclType, _eclId), start_date, DayCountBasis.ActualActual) * 12, 0);
                             if (start_month == 0)
                             {
                                 start_month_adjustment = true;
@@ -1578,9 +1618,9 @@ namespace IFRS9_ECL.Core
                         if (start_month_adjustment)
                         {
                             var start_date_ = EndOfMonth(start_date, 0);
-                            if (ECLNonStringConstants.i.reportingDate < start_date_)
+                            if (GetReportingDate(_eclType, _eclId) < start_date_)
                             {
-                                start_month = Math.Round(Financial.YearFrac(ECLNonStringConstants.i.reportingDate, start_date_, DayCountBasis.ActualActual) * 12, 0);
+                                start_month = Math.Round(Financial.YearFrac(GetReportingDate(_eclType, _eclId), start_date_, DayCountBasis.ActualActual) * 12, 0);
                             }
                             else
                             {
@@ -1593,9 +1633,9 @@ namespace IFRS9_ECL.Core
                     else
                     {
                         //'Set negative number of months if the payment entry started in the past. If it is a bullet payment entry it should not pull through.
-                        if (start_date>ECLNonStringConstants.i.reportingDate)
+                        if (start_date>GetReportingDate(_eclType, _eclId))
                         {
-                            start_month = -1 * Math.Round(Financial.YearFrac(start_date, ECLNonStringConstants.i.reportingDate, DayCountBasis.ActualActual) * 12, 0);
+                            start_month = -1 * Math.Round(Financial.YearFrac(start_date, GetReportingDate(_eclType, _eclId), DayCountBasis.ActualActual) * 12, 0);
                         }
                         else
                         {
@@ -1640,7 +1680,7 @@ namespace IFRS9_ECL.Core
             else
             {
                 long longDate = 0;
-                long reportDate = ConvertToTimeStamp(ECLNonStringConstants.i.reportingDate);
+                long reportDate = ConvertToTimeStamp(GetReportingDate(_eclType, _eclId));
                 double temp_value1 = 0;
 
                 if (input.restructure_indicator && input.restructure_end_date!=null)
@@ -1650,7 +1690,7 @@ namespace IFRS9_ECL.Core
 
                     if (longDate > reportDate)
                     {
-                        temp_value1 = Math.Floor(Financial.YearFrac(ECLNonStringConstants.i.reportingDate, temp_value, 0) * 12);
+                        temp_value1 = Math.Floor(Financial.YearFrac(GetReportingDate(_eclType, _eclId), temp_value, 0) * 12);
                     }
                 }
                 else if (input.contract_end_date != null)
@@ -1660,7 +1700,7 @@ namespace IFRS9_ECL.Core
 
                     if (longDate > reportDate)
                     {
-                        temp_value1 = Math.Floor(Financial.YearFrac(ECLNonStringConstants.i.reportingDate, temp_value, 0) * 12);
+                        temp_value1 = Math.Floor(Financial.YearFrac(GetReportingDate(_eclType, _eclId), temp_value, 0) * 12);
                     }
                 }
                     
@@ -1676,7 +1716,7 @@ namespace IFRS9_ECL.Core
 
                         if (longDate < reportDate)
                         {
-                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
+                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, GetReportingDate(_eclType, _eclId), 0) * 12);
                             //temp_value2 = Convert.ToDouble(Expired);
                         }
                         else
@@ -1691,7 +1731,7 @@ namespace IFRS9_ECL.Core
 
                         if (longDate < reportDate)
                         {
-                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, ECLNonStringConstants.i.reportingDate, 0) * 12);
+                            temp_value2 = behave.Expired - Math.Floor(Financial.YearFrac(temp_value, GetReportingDate(_eclType, _eclId), 0) * 12);
                             //temp_value2 = Convert.ToDouble(Expired);
                         }
                         else

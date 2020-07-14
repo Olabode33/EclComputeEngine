@@ -1,5 +1,6 @@
 ﻿using IFRS9_ECL.Core.PDComputation.cmPD;
 using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
@@ -22,6 +23,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         Guid _eclId;
         EclType _eclType;
+        
         public CreditIndex(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
@@ -30,7 +32,21 @@ namespace IFRS9_ECL.Core.PDComputation
             _indexForecastBest = new IndexForecastWorkings(ECL_Scenario.Best, this._eclId, this._eclType);
             _indexForecastOptimistics = new IndexForecastWorkings(ECL_Scenario.Optimistic, this._eclId, this._eclType);
             _indexForecastDownturn = new IndexForecastWorkings(ECL_Scenario.Downturn, this._eclId, this._eclType);
+            
         }
+
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
 
         public string Run()
         {
@@ -90,7 +106,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 int monthOffset = Convert.ToInt32((month - 1) / 3) * 3 + 3;
                 
-                DateTime eoMonth = ExcelFormulaUtil.EOMonth(ECLNonStringConstants.i.reportingDate, monthOffset);
+                var eoMonth = ExcelFormulaUtil.EOMonth(GetReportingDate(_eclType, _eclId), monthOffset);
                
                 var dr = new CreditIndex_Output();
                 dr.ProjectionMonth = month;
@@ -130,7 +146,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double GetScenarioVasicekIndex()
         {
-            return _vasicekWorkings.ComputeEtiNplIndex().FirstOrDefault(o => o.Date == ECLNonStringConstants.i.reportingDate).Index;
+            try { return _vasicekWorkings.ComputeEtiNplIndex().FirstOrDefault(o => o.Date == GetReportingDate(_eclType, _eclId)).Index; } catch { return 0; }
         }
     }
 }

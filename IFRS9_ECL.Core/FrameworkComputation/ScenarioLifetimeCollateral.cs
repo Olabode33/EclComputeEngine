@@ -32,11 +32,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId, this._eclType);
             _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
-        public void Run()
-        {
-            //var dataTable = ComputeLifetimeCollateral();
-            string stop = "Ma te";
-        }
+      
         public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook)
         {
             var lifetimeCollateral = new List<LifetimeCollateral>();
@@ -200,15 +196,24 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 assumptions = assumptions.Where(o => o.AssumptionGroup == 7).ToList();
             }
 
-            var debenture = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value);
-            var cash = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value);
-            var commercialProperty = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value);
-            var inventory = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value);
-            var plantEquipment = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value);
-            var receivables = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value);
-            var residentialProperty = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value);
-            var shares = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value);
-            var vehicle = double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value);
+            var debenture = 0.0;
+            try { debenture=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value); } catch { }
+            var cash = 0.0;
+            try{ cash=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value); } catch { }
+            var commercialProperty = 0.0;
+            try{ commercialProperty=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value); } catch { }
+            var inventory = 0.0;
+            try{ inventory=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value); } catch { }
+            var plantEquipment = 0.0;
+            try{ plantEquipment=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value); } catch { }
+            var receivables = 0.0;
+            try{ receivables=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value); } catch { }
+            var residentialProperty = 0.0;
+            try{ residentialProperty=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value); } catch { }
+            var shares = 0.0;
+            try{ shares=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value); } catch { }
+            var vehicle = 0.0;
+            try{ vehicle=double.Parse(assumptions.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value); } catch { }
 
             var itms = new List<LgdCollateralProjection>();
 

@@ -54,56 +54,63 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         public List<IrFactor> ComputeMarginalDiscountFactor()
         {
             var marginalDiscountFactor = new List<IrFactor>();
-
-            var eirProjection = GetEirProjectionData();
-
-            var groups = eirProjection.Select(o => o.eir_group).Distinct();
-
-
-            int rank = 1;
-            double prevMonthValue = 0.0;
-
-
-            foreach (var grp in groups)
+            try
             {
-                var month0Record = new IrFactor();
-                month0Record.EirGroup = grp;
-                month0Record.Rank = rank;
-                month0Record.ProjectionMonth = 0;
-                month0Record.ProjectionValue = 1.0;
-                marginalDiscountFactor.Add(month0Record);
+                
 
-                var _eirProjection = eirProjection.Where(o => o.eir_group == grp).OrderByDescending(p=>p.months).ToList();
+                var eirProjection = GetEirProjectionData();
 
-                for (int month = 1; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
+                var groups = eirProjection.Select(o => o.eir_group).Distinct();
+
+
+                int rank = 1;
+                double prevMonthValue = 0.0;
+
+
+                foreach (var grp in groups)
                 {
-                    var row = new EIRProjections();
-                    if (_eirProjection.Count>=month)
-                    {
-                        row = _eirProjection[month - 1];
-                    }
-                    else
-                    {
-                        row = _eirProjection.LastOrDefault();
-                    }
-                    
-
-                    prevMonthValue = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == row.eir_group
-                                                                                           && x.ProjectionMonth == row.months).ProjectionValue;
-
-
-                    month0Record = new IrFactor();
-                    month0Record.EirGroup = row.eir_group;
+                    var month0Record = new IrFactor();
+                    month0Record.EirGroup = grp;
                     month0Record.Rank = rank;
-                    month0Record.ProjectionMonth = month;
-                    month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE);
+                    month0Record.ProjectionMonth = 0;
+                    month0Record.ProjectionValue = 1.0;
                     marginalDiscountFactor.Add(month0Record);
 
-                    rank += 1;
+                    var _eirProjection = eirProjection.Where(o => o.eir_group == grp).OrderBy(p => p.months).ToList();
+
+                    for (int month = 1; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
+                    {
+                        var row = new EIRProjections();
+                        if (_eirProjection.Count >= month)
+                        {
+                            row = _eirProjection[month - 1];
+                        }
+                        else
+                        {
+                            row = _eirProjection.LastOrDefault();
+                        }
+
+                        //********************************************************************
+                        prevMonthValue = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == row.eir_group
+                                                                                               && x.ProjectionMonth == row.months).ProjectionValue;
+
+
+                        month0Record = new IrFactor();
+                        month0Record.EirGroup = row.eir_group;
+                        month0Record.Rank = rank;
+                        month0Record.ProjectionMonth = month;
+                        month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE);
+                        marginalDiscountFactor.Add(month0Record);
+
+                        rank += 1;
+                    }
+
                 }
-
             }
-
+            catch(Exception ex)
+            {
+                var cc = ex;
+            }
 
             return marginalDiscountFactor;
         }

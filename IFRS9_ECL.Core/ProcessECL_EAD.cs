@@ -30,6 +30,17 @@ namespace IFRS9_ECL.Core
             try
             {
 
+                var qry = Queries.PaymentSchedule(this._eclId, this._eclType);
+                var _payment_schedule = DataAccess.i.GetData(qry);
+                Log4Net.Log.Info("Completed Getting Payment Schedule");
+
+                var payment_schedule = new List<PaymentSchedule>();
+                foreach (DataRow dr in _payment_schedule.Rows)
+                {
+                    var itm = DataAccess.i.ParseDataToObject(new TempPaymentSchedule(), dr);
+                    payment_schedule.Add(new PaymentSchedule { Amount = itm.Amount, Component = itm.Component, ContractRefNo = itm.ContractRefNo, StartDate = itm.StartDate, Frequency = itm.Frequency, NoOfSchedules = itm.NoOfSchedules });
+                }
+
                 var threads = loanbooks.Count / 500;
                 threads = threads + 1;
 
@@ -39,17 +50,20 @@ namespace IFRS9_ECL.Core
                 {
                     var sub_LoanBook = loanbooks.Skip(i * 500).Take(500).ToList();
 
+                    var contractIds = sub_LoanBook.Select(o => o.ContractNo).ToList();
+                    var sub_payment_schedule = payment_schedule.Where(o => contractIds.Contains(o.ContractRefNo)).ToList();
+
                     var task = Task.Run(() =>
                     {
-                        RunEADJob(sub_LoanBook, this._eclId, this._eclType);
+                        RunEADJob(sub_LoanBook, sub_payment_schedule, this._eclId, this._eclType);
                     });
 
                     taskLst.Add(task);
                 }
-                Console.WriteLine($"Total Task : {taskLst.Count()}");
+                Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
                 //var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
-                //Console.WriteLine($"Task Completed: {completedTask}");
+                //Log4Net.Log.Info($"Task Completed: {completedTask}");
 
                 //while (taskLst.Count != tasks.Count)
                 //while (!taskLst.Any(o => o.IsCompleted))
@@ -64,7 +78,7 @@ namespace IFRS9_ECL.Core
                 }
 
 
-                Console.WriteLine($"Completed all Tasks");
+                Log4Net.Log.Info($"Completed all Tasks");
                 return true;
             }
             catch (Exception ex)
@@ -75,9 +89,8 @@ namespace IFRS9_ECL.Core
             }
         }
 
-        private bool RunEADJob(List<Loanbook_Data> _loanBookData, Guid eclId, EclType eclType)
+        private bool RunEADJob(List<Loanbook_Data> _loanBookData, List<PaymentSchedule> payment_schedule, Guid eclId, EclType eclType)
         {
-            var qry = "";
             Log4Net.Log.Info("Completed pass raw data to object");
 
             var refined_lstRaw = new ECLTasks(eclId, this._eclType).GenerateContractIdandRefinedData(_loanBookData);
@@ -104,16 +117,6 @@ namespace IFRS9_ECL.Core
             ExecuteNative.SaveCIRProjections(cirProjections, eclId, eclType);
             Log4Net.Log.Info("Completed SaveCIRProjections");
 
-            qry = Queries.PaymentSchedule(this._eclId, this._eclType);
-            var _payment_schedule = DataAccess.i.GetData(qry);
-            Log4Net.Log.Info("Completed Getting Payment Schedule");
-
-            var payment_schedule = new List<PaymentSchedule>();
-            foreach (DataRow dr in _payment_schedule.Rows)
-            {
-                var itm = DataAccess.i.ParseDataToObject(new TempPaymentSchedule(), dr);
-                payment_schedule.Add(new PaymentSchedule { Amount = itm.Amount, Component = itm.Component, ContractRefNo = itm.ContractRefNo, StartDate = itm.StartDate, Frequency = itm.Frequency, NoOfSchedules = itm.NoOfSchedules });
-            }
 
             Log4Net.Log.Info("Completed Parsing Payment Schedule to object");
 

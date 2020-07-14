@@ -15,7 +15,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 {
     public class ScenarioEclWorkings
     {
-        protected ScenarioLifetimeLGD _lifetimeLgd;
+        //protected ScenarioLifetimeLGD _lifetimeLgd;
         protected LifetimeEadWorkings _lifetimeEad;
         protected IrFactorWorkings _irFactorWorkings;
         protected SicrWorkings _sicrWorkings;
@@ -31,7 +31,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             this._eclType = eclType;
 
             _lifetimeEad = new LifetimeEadWorkings(eclId, this._eclType);
-            _lifetimeLgd = new ScenarioLifetimeLGD(eclId, _scenario, this._eclType);
+            //_lifetimeLgd = new ScenarioLifetimeLGD(eclId,this._eclType);
             _irFactorWorkings = new IrFactorWorkings(eclId, this._eclType);
             _sicrWorkings = new SicrWorkings(eclId, this._eclType);
 
@@ -45,7 +45,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         List<LifetimeEad> lifetimeEad;
         List<LifetimeLgd> lifetimeLGD;
 
-        public List<FinalEcl> ComputeFinalEcl(List<Loanbook_Data> loanbook, List<LifetimeEad> _lifetimeEad, List<LifetimeLgd> _lifetimeLGD, List<LifeTimeProjections> _eadInput, List<IrFactor> _cummulativeDiscountFactor)
+        public List<FinalEcl> ComputeFinalEcl(List<Loanbook_Data> loanbook, List<LifetimeEad> _lifetimeEad, List<LifetimeLgd> _lifetimeLGD, List<LifeTimeProjections> _eadInput, List<IrFactor> _cummulativeDiscountFactor, List<LifeTimeObject> lifetimePds)
         {
             finalEcl = new List<FinalEcl>();
             eadInput = new List<LifeTimeProjections>();
@@ -62,11 +62,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             //lifetimeEad = GetLifetimeEadResult(loanbook);
             //lifetimeLGD = GetLifetimeLgdResult(loanbook);
-            monthlyEcl = ComputeMonthlyEcl(loanbook, lifetimeLGD, lifetimeEad);
+
+            
+
+            monthlyEcl = ComputeMonthlyEcl(loanbook, lifetimeLGD, lifetimeEad, lifetimePds);
 
             var stageClassifcation = GetStageClassification(loanbook);
 
-            var threads = stageClassifcation.Count / 100;
+            var threads = stageClassifcation.Count / 500;
             threads = threads + 1;
 
             var taskLst = new List<Task>();
@@ -74,7 +77,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //threads = 1;
             for (int i = 0; i < threads; i++)
             {
-                var sub_stageClassification = stageClassifcation.Skip(i * 100).Take(100).ToList();
+                var sub_stageClassification = stageClassifcation.Skip(i * 500).Take(500).ToList();
 
                 var task = Task.Run(() =>
                 {
@@ -82,10 +85,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 });
                 taskLst.Add(task);
             }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
+            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
+            Log4Net.Log.Info($"Task Completed: {completedTask}");
 
             
             //while (!taskLst.Any(o => o.IsCompleted))
@@ -108,28 +111,34 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var _finalEcl = new List<FinalEcl>();
             foreach (var row in stageClassifcation)
             {
-                string contractId = row.ContractId;
-                int stage = row.Stage;
-                //xxxxxxxxxxxxxxxx
-                string eirGroup = "";
                 try
                 {
-                    eirGroup = eadInput.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
-                }
-                catch { eirGroup = eadInput.FirstOrDefault().Eir_Group; }
-                double finalEclValue = ComputeFinalEclValue(monthlyEcl, cummulativeDiscountFactor, lifetimeEad, lifetimeLGD, contractId, stage, eirGroup);
+                    string contractId = row.ContractId;
+                    int stage = row.Stage;
+                    //xxxxxxxxxxxxxxxx
+                    string eirGroup = "";
+                    try
+                    {
+                        eirGroup = eadInput.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
+                    }
+                    catch { try { eirGroup = eadInput.FirstOrDefault().Eir_Group; } catch { } }
+                    double finalEclValue = ComputeFinalEclValue(monthlyEcl, cummulativeDiscountFactor, lifetimeEad, lifetimeLGD, contractId, stage, eirGroup);
 
-                var newRow = new FinalEcl();
-                newRow.ContractId = contractId;
-                newRow.Stage = stage;
-                newRow.FinalEclValue = finalEclValue;
-                var mntECL = monthlyEcl.Where(o => o.ContractId == row.ContractId).ToList();
+                    var newRow = new FinalEcl();
+                    newRow.ContractId = contractId;
+                    newRow.Stage = stage;
+                    newRow.FinalEclValue = finalEclValue;
+                    var mntECL = monthlyEcl.Where(o => o.ContractId == row.ContractId).ToList();
 
-                foreach (var itm in mntECL)
+                    foreach (var itm in mntECL)
+                    {
+                        itm.FinalEclValue = finalEclValue;
+                        itm.Stage = stage;
+                        _finalEcl.Add(itm);
+                    }
+                }catch(Exception ex)
                 {
-                    itm.FinalEclValue = finalEclValue;
-                    itm.Stage = stage;
-                    _finalEcl.Add(itm);
+                    var cc = ex;
                 }
             }
             finalEcl.AddRange(_finalEcl);
@@ -139,7 +148,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             //xxxxxxxxxxxxxxxxxxx
             double lifetimeLgdMonth0Value = 0;
-            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId == contractId && o.Month == 0).Value; } catch { lifetimeLgdMonth0Value= lifetimeLGD.FirstOrDefault().Value; }
+            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId == contractId && o.Month == 0).Value; } catch { try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault().Value; } catch { } }
             double lifetimeEadMonth0Value = 0;
             try
             {
@@ -172,13 +181,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
 
    
-        public List<FinalEcl> ComputeMonthlyEcl(List<Loanbook_Data> loanbook, List<LifetimeLgd> lifetimeLgds, List<LifetimeEad> lifetimeEads)
+        public List<FinalEcl> ComputeMonthlyEcl(List<Loanbook_Data> loanbook, List<LifetimeLgd> lifetimeLgds, List<LifetimeEad> lifetimeEads, List<LifeTimeObject> lifetimePds)
         {
             var monthlyEcl = new List<FinalEcl>();
             
-            var lifetimePds = Get_LifetimePd_And_RedefaultLifetimePD_Result();
 
-            lifetimeLgds = lifetimeLgds.Where(x => x.Month != 0).ToList();
+           // lifetimeLgds = lifetimeLgds.Where(x => x.Month != 0).ToList();
 
             foreach (var row in lifetimeLgds)
             {
@@ -216,7 +224,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private double GetLifetimePdValueFromTable(List<LifeTimeObject> lifetimePds, string pdGroup, int month)
         {
-            return lifetimePds.FirstOrDefault(x => x.PdGroup == pdGroup && x.Month == (month > 120 ? 120 : month)).Value;
+            lifetimePds = lifetimePds.OrderBy(o => o.Month).ToList();
+            try { return lifetimePds.FirstOrDefault(x => x.PdGroup == pdGroup && x.Month == (month > 120 ? 120 : month)).Value; } catch { return 0; }
         }
 
         public double[] ComputeMonthArray(DataTable dataTable, string contractColumnName, string monthColumnName, string valueColumnName, string contractId, int maxMonth)
@@ -234,7 +243,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
 
 
-        protected List<LifeTimeObject> Get_LifetimePd_And_RedefaultLifetimePD_Result()
+        public List<LifeTimeObject> Get_LifetimePd_And_RedefaultLifetimePD_Result()
         {
 
             var qry = "";

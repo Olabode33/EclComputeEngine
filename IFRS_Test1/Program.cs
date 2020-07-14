@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,37 +21,79 @@ namespace IFRS_Test1
     class Program
     {
 
-        static void Start()
+        static void DeployServices()
         {
-            // This method takes ten seconds to terminate.
-            Thread.Sleep(10000);
-            task.Add(true);
-        }
+            var serviceCount = AppSettings.ServiceCount;
+            
+            Log4Net.Log.Info("Deploying...");
+            Log4Net.Log.Info("Should services be started? (YES/NO):");
+            var val=Console.ReadLine();
 
-        static List<bool> task = new List<bool>();
+
+            for (int i = 1; i <= serviceCount; i++)
+            {
+
+                
+                try
+                {
+                    string serviceDirectory = AppSettings.ServiceFolder;
+                    serviceDirectory = serviceDirectory.Replace("[i]", i.ToString());
+
+                    if (!Directory.Exists(serviceDirectory))
+                    {
+                        continue;
+                    }
+                    ServiceController service= new ServiceController();
+                    try
+                    {
+                        service = new ServiceController($"IFRS9_ECL{i}");
+                        if (service.Status == ServiceControllerStatus.Running)
+                        {
+                            Log4Net.Log.Info($"Service {i} has been stopped");
+                            //restart service
+                            var timeoutMilliseconds = 60000;
+                            int millisec1 = Environment.TickCount;
+                            TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
+
+                            service.Stop();
+                            service.WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                            Log4Net.Log.Info($"Service {i} stopped");
+
+                        }
+                    }
+                    catch { }
+
+                    //Replace files
+
+                    var deployFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Deploy");
+                    var files = new DirectoryInfo(deployFolderPath).GetFiles();
+                    foreach(var fl in files)
+                    {
+                        File.Copy(fl.FullName, Path.Combine(serviceDirectory, fl.Name),true);
+                    }
+
+                    if(val=="YES")
+                    {
+                        //Start Service
+                        service.Start();
+                        Log4Net.Log.Info($"Service {i} Started");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Info(ex);
+                    Console.ReadKey();
+                }
+            }
+            Log4Net.Log.Info("Done!");
+            Console.ReadKey();
+
+        }
         static void Main(string[] args)
         {
 
-
-
-            //var stopwatch = Stopwatch.StartNew();
-            //// Create an array of Thread references.
-            //Thread[] array = new Thread[4];
-            //for (int i = 0; i < array.Length; i++)
-            //{
-            //    // Start the thread with a ThreadStart.
-            //    array[i] = new Thread(new ThreadStart(Start));
-            //    array[i].Start();
-            //}
-
-            //while(task.Count!= array.Count())
-            //{
-            //    Log4Net.Log.Info("Still running");
-            //}
-          
-            //Log4Net.Log.Info("DONE: {0}", stopwatch.ElapsedMilliseconds);
-
-
+            //DeployServices();
 
             Core c = new Core();
             c.ProcessRunTask();
@@ -67,31 +110,31 @@ namespace IFRS_Test1
 
 
             //Log4Net.Log.Info("Started Behavioural");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
             //CalibrationInput_EAD_Behavioural_Terms_Processor p = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             //p.ProcessCalibration(caliId, affId);
 
             //Log4Net.Log.Info("Started CCF");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
             //CalibrationInput_EAD_CCF_Summary_Processor q = new CalibrationInput_EAD_CCF_Summary_Processor();
             //q.ProcessCalibration(caliId, affId);
 
             //Log4Net.Log.Info("Started Haircut");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
             //CalibrationInput_LGD_Haricut_Processor r = new CalibrationInput_LGD_Haricut_Processor();
             //r.ProcessCalibration(caliId, affId);
 
             //Log4Net.Log.Info("Started CureRate");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
             //CalibrationInput_LGD_RecoveryRate_Processor s = new CalibrationInput_LGD_RecoveryRate_Processor();
             //s.ProcessCalibration(caliId, affId);
 
             //Log4Net.Log.Info("Started PD");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
             //CalibrationInput_PD_CR_RD_Processor t = new CalibrationInput_PD_CR_RD_Processor();
             //t.ProcessCalibration(caliId, affId);
             //Log4Net.Log.Info("Ended All");
-            //Console.WriteLine(DateTime.Now);
+            //Log4Net.Log.Info(DateTime.Now);
 
 
             //var masterGuid = Guid.NewGuid();
@@ -100,14 +143,14 @@ namespace IFRS_Test1
             //rc.GenerateEclReport(EclType.Wholesale, masterGuid);
             //try
             //{
-            //    Console.WriteLine($"Start Time {DateTime.Now}");
+            //    Log4Net.Log.Info($"Start Time {DateTime.Now}");
             //    //Process Wholesale
             //    var masterGuid = Guid.NewGuid();
             //    // ProcessECL_Wholesale_EAD.i.ProcessTask(masterGuid);
             //    new ProcessECL_LGD(masterGuid, EclType.Retail).ProcessTask();
 
             //    //new ProcessECL_Wholesale_PD(masterGuid).ProcessTask();
-            //    Console.WriteLine($"End Time {DateTime.Now}");
+            //    Log4Net.Log.Info($"End Time {DateTime.Now}");
             //}
             //catch (Exception ex)
             //{

@@ -1348,12 +1348,10 @@ namespace IFRS9_ECL.Core.Report
             dt=DataAccess.i.GetData(qry);
 
             
-            var temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
+            temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
 
             qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=1";
             dt = DataAccess.i.GetData(qry);
-
-            
 
             foreach(DataRow dr in dt.Rows)
             {
@@ -1361,27 +1359,21 @@ namespace IFRS9_ECL.Core.Report
                 lstTfer.Add(DataAccess.i.ParseDataToObject(tfer, dr));
             }
 
-
-            qry = $"select ContractId, [Value] from {_eclTypeTable}EadInputs where {_eclType}EclId='{_eclId}' and Months=1";
+            qry = $"select Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";
             dt = DataAccess.i.GetData(qry);
-
-            
 
             foreach (DataRow dr in dt.Rows)
             {
-                var twei= new TempEadInput();
+                var twei = new TempEadInput();
                 lstTWEI.Add(DataAccess.i.ParseDataToObject(twei, dr));
             }
 
             rd.ResultDetailDataMore = new List<ResultDetailDataMore>();
 
-
             ovrde = GetOverrideDataResult(eclId, eclType);
 
 
-
-
-            var threads = loanbook.Count / 10;
+            var threads = loanbook.Count / 500;
             threads = threads + 1;
 
             var taskLst = new List<Task>();
@@ -1389,7 +1381,7 @@ namespace IFRS9_ECL.Core.Report
             //threads = 1;
             for (int i = 0; i < threads; i++)
             {
-                var sub_LoanBook = loanbook.Skip(i * 10).Take(10).ToList();
+                var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
 
                 var task = Task.Run(() =>
                 {
@@ -1397,10 +1389,10 @@ namespace IFRS9_ECL.Core.Report
                 });
                 taskLst.Add(task);
             }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
+            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
+            Log4Net.Log.Info($"Task Completed: {completedTask}");
 
             //while (!taskLst.Any(o => o.IsCompleted))
             var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
@@ -1425,8 +1417,7 @@ namespace IFRS9_ECL.Core.Report
             rd.Post_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Best_Estimate);
             rd.Post_ECL_Optimistic = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Optimistic);
             rd.Post_ECL_Downturn = rd.ResultDetailDataMore.Sum(o => o.Overrides_ECL_Downturn);
-
-            rd.Post_Impairment_ModelOutput = (rd.Pre_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Pre_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Pre_ECL_Downturn * temp_header.UserInput_EclD);
+            rd.Post_Impairment_ModelOutput = (rd.Post_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rd.Post_ECL_Optimistic + temp_header.UserInput_EclO) + (rd.Post_ECL_Downturn * temp_header.UserInput_EclD);
 
             return rd;
         }
@@ -1457,13 +1448,13 @@ namespace IFRS9_ECL.Core.Report
                 try { stage_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 1).StageOverride; } catch { }
 
                 var BE_Value_Override = 0.0;
-                try { BE_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 1).FinalEclValueOverride; } catch { BE_Value_Override = BE_Value; }
+                try { BE_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 1).FinalEclValueOverride; } catch { BE_Value_Override = 0; }
 
                 var O_Value_Override = 0.0;
-                try { O_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 2).FinalEclValueOverride; } catch { O_Value_Override = O_Value; }
+                try { O_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 2).FinalEclValueOverride; } catch { O_Value_Override = 0; }
 
                 var D_Value_Override = 0.0;
-                try { D_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 3).FinalEclValueOverride; } catch { D_Value_Override = D_Value; }
+                try { D_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 3).FinalEclValueOverride; } catch { D_Value_Override = 0; }
 
                 var outStandingBal = 0.0;
                 try { outStandingBal = lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractNo).Value; } catch { }
@@ -1499,8 +1490,8 @@ namespace IFRS9_ECL.Core.Report
                     rddm.Overrides_Stage = ovrd.Stage ?? 0;
                 }
 
-                rddm.Impairment_ModelOutput = (rddm.ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.ECL_Optimistic + temp_header.UserInput_EclO) + (rddm.ECL_Downturn * temp_header.UserInput_EclD);
-                rddm.Overrides_Impairment_Manual = (rddm.Overrides_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.Overrides_ECL_Optimistic + temp_header.UserInput_EclO) + (rddm.Overrides_ECL_Downturn * temp_header.UserInput_EclD);
+                rddm.Impairment_ModelOutput = (rddm.ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.ECL_Downturn * temp_header.UserInput_EclD);
+                rddm.Overrides_Impairment_Manual = (rddm.Overrides_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.Overrides_ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.Overrides_ECL_Downturn * temp_header.UserInput_EclD);
 
                 rd.ResultDetailDataMore.Add(rddm);
             }

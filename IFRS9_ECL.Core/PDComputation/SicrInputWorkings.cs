@@ -1,4 +1,5 @@
 ﻿using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
@@ -19,6 +20,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         Guid _eclId;
         EclType _eclType;
+        
         public SicrInputWorkings(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
@@ -26,7 +28,21 @@ namespace IFRS9_ECL.Core.PDComputation
             //_scenarioLifetimePd = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId);
             //_scenarioRedefaultLifetimePd = new ScenarioRedefaultLifetimePds(ECL_Scenario.Best, this._eclId);
             //_pdMapping = new PDMapping(this._eclId);
+            
         }
+
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
 
         //public void Run()
         //{
@@ -65,7 +81,7 @@ namespace IFRS9_ECL.Core.PDComputation
         //        {
         //            defaultDate = loanbookRow.DefaultDate.ToString().Contains("1900") ? null : loanbookRow.DefaultDate.ToString();
         //        }
-                
+
         //        int maxClassification = contractPdMapping.MaxClassificationScore;
         //        long maxDpd = contractPdMapping.MaxDpd;
 
@@ -153,9 +169,9 @@ namespace IFRS9_ECL.Core.PDComputation
                 return 360;
             }
         }
-        protected double ComputeStageDaysPastDue(string date)
+        protected double ComputeStageDaysPastDue(string date)   
         {
-            var r= date == null ? 0 : ExcelFormulaUtil.YearFrac(DateTime.Parse(date), ECLNonStringConstants.i.reportingDate) * 365;
+            var r= date == null ? 0 : ExcelFormulaUtil.YearFrac(DateTime.Parse(date), GetReportingDate(_eclType, _eclId)) * 365;
             return r;
         }
         protected double ComputeLifetimeAndRedefaultPds(List<LifeTimeObject> lifetimePd, string contractPdMapping, int noOfMonths)

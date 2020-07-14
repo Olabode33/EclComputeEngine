@@ -22,7 +22,7 @@ namespace IFRS9_ECL.Data
 
         public static string Get_macroEconomicsQuery(Guid eclId, EclType eclType)
         {
-            return $"SELECT [Date],MacroeconomicVariableId MacroEconomicVariableId,BestValue BestEstimateMacroEconomicValue,OptimisticValue OptimisticMacroEconomicValue, DownturnValue DowntimeMacroEconomicValue, {eclType.ToString()}EclId EclId FROM {eclType.ToString()}EclPdAssumptionMacroeconomicProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"SELECT [Date],MacroeconomicVariableId MacroEconomicVariableId,BestValue BestEstimateMacroEconomicValue,OptimisticValue OptimisticMacroEconomicValue, DownturnValue DownturnMacroEconomicValue, {eclType.ToString()}EclId EclId FROM {eclType.ToString()}EclPdAssumptionMacroeconomicProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
         public static string Get_nonInternalmodelInputQuery(Guid eclId, EclType eclType, int month)
         {

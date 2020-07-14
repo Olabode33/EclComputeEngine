@@ -1,4 +1,6 @@
-﻿using IFRS9_ECL.Data;
+﻿using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Data;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
@@ -21,6 +23,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         Guid _eclId;
         EclType _eclType;
+        
         public PDMapping(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
@@ -28,7 +31,21 @@ namespace IFRS9_ECL.Core.PDComputation
             _scenarioLifetimePd = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
             _scenarioRedefaultLifetimePd = new ScenarioRedefaultLifetimePds(ECL_Scenario.Best, this._eclId, this._eclType);
             //_pdMapping = new PDMapping(this._eclId);
+            
         }
+
+        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        {
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            if (dtR.Rows.Count > 0)
+            {
+                var itm = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+                return itm.ReportingDate;
+            }
+            return DateTime.Now;
+        }
+
 
         public string Run(List<Loanbook_Data> loanbook_Data)
         {
@@ -38,17 +55,18 @@ namespace IFRS9_ECL.Core.PDComputation
 
         public bool ComputePdMappingTable(List<Loanbook_Data> loanbook_Data)
         {
+            var expireNoExpire = new CalibrationInput_EAD_Behavioural_Terms_Processor().GetBehaviouralData(this._eclId, this._eclType);
             var temp = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions();
             //string[] testAccounts = { "103ABLD150330005", "15036347", "222017177" };
             //*****************************************************
             int expOdPerformacePastRepoting = 0;
-            try { Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.Expired).Value); } catch { }
+            try { expOdPerformacePastRepoting=int.Parse(expireNoExpire.NonExpired.ToString()); } catch { }
             int odPerformancePastExpiry = 0;
-            try { Convert.ToInt32(temp.FirstOrDefault(o => o.PdGroup == PdInputAssumptionGroupEnum.General && o.Key == PdAssumptionsRowKey.NonExpired).Value); } catch { }
+            try { odPerformancePastExpiry = int.Parse(expireNoExpire.Expired.ToString()); } catch { }
 
             //Get Data Excel/Database
-            var qry = Queries.Raw_Data(this._eclId,this._eclType);
-            var _lstRaw = DataAccess.i.GetData(qry);
+            //var qry = Queries.Raw_Data(this._eclId,this._eclType);
+            //var _lstRaw = DataAccess.i.GetData(qry);
 
             var _NonExpLoanbook_data = loanbook_Data.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
 
@@ -70,10 +88,10 @@ namespace IFRS9_ECL.Core.PDComputation
                 });
                 taskLst.Add(task);
             }
-            Console.WriteLine($"Total Task : {taskLst.Count()}");
+            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
             var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Console.WriteLine($"Task Completed: {completedTask}");
+            Log4Net.Log.Info($"Task Completed: {completedTask}");
 
             //while (!taskLst.Any(o => o.IsCompleted))
             var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
@@ -100,18 +118,24 @@ namespace IFRS9_ECL.Core.PDComputation
             foreach (var loanbookRecord in sub_LoanBook)
             {
                 var mappingRow = new PdMappings();
-                mappingRow.ContractId = loanbookRecord.ContractId;
-                mappingRow.AccountNo = loanbookRecord.AccountNo;
-                mappingRow.ProductType = loanbookRecord.ProductType;
-                mappingRow.RatingModel = loanbookRecord.RatingModel;
-                mappingRow.Segment = loanbookRecord.Segment;
-                mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
-                mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord) ?? 0;
-                mappingRow.MaxDpd = Convert.ToInt32(Math.Round(ComputeMaxDpdPerRecord(loanbookRecord, sub_LoanBook)));
-                mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
-                mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
 
+                try
+                {
+                    mappingRow.ContractId = loanbookRecord.ContractId;
+                    mappingRow.AccountNo = loanbookRecord.AccountNo;
+                    mappingRow.ProductType = loanbookRecord.ProductType;
+                    mappingRow.RatingModel = loanbookRecord.RatingModel;
+                    mappingRow.Segment = loanbookRecord.Segment;
+                    mappingRow.RatingUsed = ComputeRatingUsedPerRecord(loanbookRecord);
+                    mappingRow.ClassificationScore = ComputeClassificationScorePerRecord(loanbookRecord) ?? 0;
+                    mappingRow.MaxDpd = Convert.ToInt32(Math.Round(ComputeMaxDpdPerRecord(loanbookRecord, sub_LoanBook)));
+                    mappingRow.TtmMonths = ComputeTimeToMaturityMonthsPerRecord(loanbookRecord, expOdPerformacePastRepoting, odPerformancePastExpiry);
+                    mappingRow.PdGroup = ComputePdGroupingPerRecord(mappingRow);
 
+                }catch(Exception ex)
+                {
+                    var cc = ex;
+                }
 
                 pdMappingTable.Add(mappingRow);
             }
@@ -205,27 +229,42 @@ namespace IFRS9_ECL.Core.PDComputation
                 int xValue = 0;
                 int yValue = 0;
 
-                DateTime? endDate;
+                DateTime? endDate = new DateTime(1900, 01, 01);
                 if (loanbookRecord.RestructureIndicator && loanbookRecord.RestructureEndDate != null)
                 {
-                    endDate = DateTime.Parse(loanbookRecord.RestructureEndDate.ToString());
+                    if (loanbookRecord.RestructureEndDate == null)
+                        xValue = 0;
+                    else
+                        endDate = DateTime.Parse(loanbookRecord.RestructureEndDate.ToString());
                 }
                 else
                 {
-                    if(loanbookRecord.ContractEndDate==null)
+                    if (loanbookRecord.ContractEndDate == null)
                     {
-                        return 0;
+                        xValue = 0;
                     }
-                    endDate = DateTime.Parse(loanbookRecord.ContractEndDate.ToString());
+                    else
+                    {
+                        endDate = DateTime.Parse(loanbookRecord.ContractEndDate.ToString());
+                    }
                 }
-                var eomonth = ExcelFormulaUtil.EOMonth(endDate);
-                var yearFrac = ExcelFormulaUtil.YearFrac(ECLNonStringConstants.i.reportingDate, eomonth);
-                var round = Convert.ToInt32(Math.Round(yearFrac * 12, 0));
 
-                xValue = endDate > ECLNonStringConstants.i.reportingDate ? round : 0;
+                var prod = 0;
+                if (endDate!=null && endDate != new DateTime(1900, 01, 01))
+                {
+                    if(!endDate.ToString().Contains("001"))
+                    {
 
-                var maxx = Math.Max(expOdPerformacePastRepoting - round, 0);
-                var prod = endDate < ECLNonStringConstants.i.reportingDate ? maxx : odPerformancePastExpiry;
+                        var eomonth = ExcelFormulaUtil.EOMonth(endDate);
+                        var yearFrac = ExcelFormulaUtil.YearFrac(GetReportingDate(_eclType, _eclId), eomonth);
+                        var round = Convert.ToInt32(Math.Round(yearFrac * 12, 0));
+
+                        xValue = endDate > GetReportingDate(_eclType, _eclId) ? round : 0;
+
+                        var maxx = Math.Max(expOdPerformacePastRepoting - round, 0);
+                        prod = endDate < GetReportingDate(_eclType, _eclId) ? maxx : odPerformancePastExpiry;
+                    }
+                }
                 yValue = loanbookRecord.ProductType == ECLStringConstants.i._productType_card || loanbookRecord.ProductType == ECLStringConstants.i._productType_od ? prod : 0;
 
                 //Financial.YearFrac()
@@ -278,7 +317,7 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             loanbookRecord.CurrentRating=loanbookRecord.CurrentRating ?? 0;
             var current_rating = loanbookRecord.CurrentRating.Value; ;
-            return current_rating > 10 ? current_rating / 10 : current_rating;
+            return current_rating > 10 ? int.Parse(current_rating.ToString().Substring(0,1)) : current_rating;
         }
 
         internal List<PdMappings> GetPdMapping()

@@ -26,13 +26,7 @@ namespace IFRS9_ECL.Core.PDComputation
             this._eclId = eclId;
         }
 
-        public void Run()
-        {
-            List<MonthlyLogOddsRatio> dataTable = ComputeMonthlyCummulativeSurvival();
-
-            string stop = "stop";
-        }
-
+       
         protected List<MonthlyLogOddsRatio> ComputeMonthlyCummulativeSurvival()
         {
             var monthlyLogOddsRatio = ComputeMonthlyLogOddsRatio();

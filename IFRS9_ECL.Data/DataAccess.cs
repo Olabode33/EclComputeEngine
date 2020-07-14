@@ -114,7 +114,7 @@ namespace IFRS9_ECL.Data
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex.ToString());
-                Console.WriteLine(qry);
+                Log4Net.Log.Info(qry);
                 ////Console.ReadKey();
             }
                 return dt;

@@ -3,6 +3,7 @@ using IFRS9_ECL.Data;
 using IFRS9_ECL.Util;
 using Microsoft.Office.Interop.Excel;
 using NPOI.HSSF.UserModel;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
@@ -26,18 +27,29 @@ namespace IFRS9_ECL.Core.Calibration
             {
                 Directory.CreateDirectory(baseAffPath);
             }
-            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "EAD_Behavioural_Term.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_Behavioural_Term.xlsx")}";
-            if (File.Exists(path1))
-            {
-                File.Delete(path1);
-            }
+
+          
 
             var qry = Queries.CalibrationInput_EAD_Behavioural_Terms(calibrationId);
-            var dt = DataAccess.i.GetData(qry);
+            var _dt = DataAccess.i.GetData(qry);
+
+            //DataView dv = _dt.DefaultView;
+            //dv.Sort = "Account_No,Contract_No,Snapshot_Date";
+            var dt = _dt;// dv.ToTable();
 
             if (dt.Rows.Count == 0)
                 return true;
+
+            var counter=Util.AppSettings.GetCounter(affiliateId);
+
+            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "EAD_Behavioural_Term.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_Behavioural_Term.xlsx")}";
+
+            Log4Net.Log.Info(path);
+            if (File.Exists(path1))
+            {
+                try { File.Delete(path1); } catch { };
+            }
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -48,16 +60,20 @@ namespace IFRS9_ECL.Core.Calibration
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
 
-                // loop through the worksheet rows
 
+                // loop through the worksheet rows
+                
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
 
                 for (int i = 0; i < dt.Rows.Count; i++)// DataRow dr in dt.Rows)
                 {
-                    Console.WriteLine(i);
+                    Log4Net.Log.Info(i);
                     DataRow dr = dt.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new EAD_Behavioural_Terms_Data(), dr);
+
+                    if (string.IsNullOrEmpty(itm.Account_No) && string.IsNullOrEmpty(itm.Contract_No) && itm.Snapshot_Date==null)
+                        continue;
 
                     worksheet.Cells[i + 2, 1].Value = itm.Customer_No ?? "";
                     worksheet.Cells[i + 2, 2].Value = itm.Account_No ?? "";
@@ -110,7 +126,6 @@ namespace IFRS9_ECL.Core.Calibration
 
                 Worksheet worksheet1 = theWorkbook.Sheets[1];
 
-
                 var Assumption_NonExpired = "";
                 try { Assumption_NonExpired = worksheet1.Cells[10, 3].Value.ToString(); } catch { }
 
@@ -134,6 +149,7 @@ namespace IFRS9_ECL.Core.Calibration
             }
             catch (Exception ex)
             {
+                Log4Net.Log.Error(ex);
                 theWorkbook.Save();
                 theWorkbook.Close(true);
                 excel.Quit();
@@ -155,10 +171,10 @@ namespace IFRS9_ECL.Core.Calibration
             }
             DataRow dr = dt.Rows[0];
             var itm = new CalibrationResult_EAD_Behavioural();
-            try { itm.Expired = double.Parse(dr["Expired"].ToString().Trim()); } catch { itm.Expired = 0; }
-            try { itm.FrequencyNonExpired = double.Parse(dr["FrequencyNonExpired"].ToString().Trim()); } catch { itm.FrequencyNonExpired = 0; }
-            try { itm.FrequencyExpired = double.Parse(dr["Expired"].ToString().Trim()); } catch { itm.FrequencyExpired = 0; }
-            try { itm.NonExpired = double.Parse(dr["NonExpired"].ToString().Trim()); } catch { itm.NonExpired = 0; }
+            try { itm.Expired = double.Parse(dr["Assumption_Expired"].ToString().Trim()); } catch { itm.Expired = 0; }
+            try { itm.FrequencyNonExpired = double.Parse(dr["Freq_NonExpired"].ToString().Trim()); } catch { itm.FrequencyNonExpired = 0; }
+            try { itm.FrequencyExpired = double.Parse(dr["Freq_Expired"].ToString().Trim()); } catch { itm.FrequencyExpired = 0; }
+            try { itm.NonExpired = double.Parse(dr["Assumption_NonExpired"].ToString().Trim()); } catch { itm.NonExpired = 0; }
             return itm;
         }
     }

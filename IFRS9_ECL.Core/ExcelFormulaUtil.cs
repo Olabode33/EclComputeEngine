@@ -11,20 +11,36 @@ namespace IFRS9_ECL.Core
     public static class ExcelFormulaUtil
     {
 
-        public static double YearFrac(DateTime startDate, DateTime endDate, DayCountBasis dayCountBasis = DayCountBasis.UsPsa30_360)
+        public static double YearFrac(DateTime startDate, DateTime? endDate, DayCountBasis dayCountBasis = DayCountBasis.UsPsa30_360)
         {
+            if (endDate == null)
+                return 0;
+
             if (startDate == endDate)
                 return 0;
             if (startDate < endDate)
-                return Financial.YearFrac(startDate, endDate, dayCountBasis);
+                return Financial.YearFrac(startDate, endDate.Value, dayCountBasis);
             else
-                return Financial.YearFrac(endDate, startDate, dayCountBasis);
+                return Financial.YearFrac(endDate.Value, startDate, dayCountBasis);
         }
 
-        public static DateTime EOMonth(DateTime? date, int months = 0)
+        public static DateTime? EOMonth(DateTime? date, int months = 0)
         {
-            DateTime eoMonth = new DateTime(date.Value.Year, date.Value.Month, DateTime.DaysInMonth(date.Value.Year, date.Value.Month));
-            return eoMonth.AddMonths(months);
+            try
+            {
+                var dt = date.Value;
+                if (date.Value.Month == 12)
+                {
+                    return new DateTime(date.Value.Year, 12, 31);
+                }
+                DateTime eoMonth = new DateTime(date.Value.Year, date.Value.Month + 1, 1);
+                return eoMonth.AddMonths(months).AddDays(-1);
+            }
+            catch (Exception ex)
+            {
+                var cc = ex;
+            }
+            return null;
         }
 
         public static double NormSDist(double p, bool cummulative = true)

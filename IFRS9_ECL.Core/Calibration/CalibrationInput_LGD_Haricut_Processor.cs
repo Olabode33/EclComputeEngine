@@ -27,17 +27,26 @@ namespace IFRS9_ECL.Core.Calibration
             {
                 Directory.CreateDirectory(baseAffPath);
             }
-            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "LGD_Haircut.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_LGD_Haircut.xlsx")}";
-
-            
-            if (File.Exists(path1))
-            {
-                File.Delete(path1);
-            }
 
             var qry = Queries.CalibrationInput_Haircut(calibrationId);
-            var dt=DataAccess.i.GetData(qry);
+            var _dt = DataAccess.i.GetData(qry);
+
+            //DataView dv = _dt.DefaultView;
+            //dv.Sort = "Account_No,Contract_No,Snapshot_Date";
+            var dt = _dt;// dv.ToTable();
+
+            if (dt.Rows.Count == 0)
+                return true;
+
+            var counter = Util.AppSettings.GetCounter(affiliateId);
+
+            var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "LGD_Haircut.xlsx")}";
+            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}LGD_Haircut.xlsx")}";
+
+            if (File.Exists(path1))
+            {
+                try { File.Delete(path1); } catch { };
+            }
 
 
             var outputDateList = new List<DateTime>();
@@ -63,6 +72,9 @@ namespace IFRS9_ECL.Core.Calibration
                 {
                     DataRow dr = dt.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new LGD_HairCut(), dr);
+
+                    if (string.IsNullOrEmpty(itm.Account_No) && string.IsNullOrEmpty(itm.Contract_No) && itm.Snapshot_Date == null)
+                        continue;
 
                     worksheet.Cells[i + 2, 1].Value = itm.Customer_No ?? "";
                     worksheet.Cells[i + 2, 2].Value = itm.Account_No ?? "";

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,8 @@ namespace IFRS9_ECL.Models.Framework
         public double GuaranteeLevel { get; set; }
         public int Stage { get; set; }
         public int Month { get; set; }
+        public ECL_Scenario Ecl_Scenerio { get; set; }
         public double Value { get; set; }
     }
+
 }

@@ -6,7 +6,9 @@ using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,6 +23,16 @@ namespace IFRS9_ECL.Core
             ProcessECLRunTask();
             return true;
         }
+        public bool ProcessCaliMacroTaskOnly()
+        {
+            ProcessCalibrationRunTask();
+            ProcessMacroRunTask();
+            //ProcessECLRunTask();
+            return true;
+        }
+
+      
+
         private bool ProcessECLRunTask()
         {
             var eclRegister = new EclRegister { EclType = -1 };
@@ -30,8 +42,6 @@ namespace IFRS9_ECL.Core
                 var retailEcls = Queries.EclsRegister(EclType.Retail.ToString());
                 var wholesaleEcls = Queries.EclsRegister(EclType.Wholesale.ToString());
                 var obeEcls = Queries.EclsRegister(EclType.Obe.ToString());
-
-
 
                 var dtR = DataAccess.i.GetData(retailEcls);
 
@@ -75,7 +85,7 @@ namespace IFRS9_ECL.Core
                     return true;
                 }
 
-                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
+                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
                 DataAccess.i.ExecuteQuery(qry);
                 var eclType = eclRegister.eclType;
                 Log4Net.Log.Info($"Found ECL with ID {eclRegister.Id} of Type [{eclType.ToString()}]. Running will commence if it has not been picked by another Job");
@@ -88,22 +98,36 @@ namespace IFRS9_ECL.Core
                 LifetimeEadWorkings lifetimeEadWorkings = new LifetimeEadWorkings(masterGuid, eclType);
                 var loanbook_data = lifetimeEadWorkings.GetLoanBookData();
 
-                Console.WriteLine($"Start Time {DateTime.Now}");
+                Log4Net.Log.Info($"Start Time {DateTime.Now}");
+
+
+                var _eclTask = new ECLTasks(masterGuid, eclType);
+                foreach (var itm in loanbook_data)
+                {
+                    itm.ContractId = _eclTask.GenerateContractId(itm);
+                }
 
 
                 var overrideExist = CheckOverrideDataExist(masterGuid, eclType);
+
+
 
                 if (!overrideExist)
                 {
                     // Process EAD
                     new ProcessECL_EAD(masterGuid, eclType).ProcessTask(loanbook_data);
+                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
+                    DataAccess.i.ExecuteQuery(qry);
 
                     //Process LGD
                     new ProcessECL_LGD(masterGuid, eclType).ProcessTask(loanbook_data);
+                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
+                    DataAccess.i.ExecuteQuery(qry);
 
                     //Process PD
                     new ProcessECL_PD(masterGuid, eclType).ProcessTask(loanbook_data);
-
+                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, ""); // should change to framekwork
+                    DataAccess.i.ExecuteQuery(qry);
                 }
 
                 //Process Framework
@@ -115,27 +139,36 @@ namespace IFRS9_ECL.Core
                 var cummulativeDiscountFactor = new IrFactorWorkings(masterGuid, eclType).ComputeCummulativeDiscountFactor();
                 var eadInput = new LifetimeEadWorkings(masterGuid, eclType).GetTempEadInputData(loanbook_data);
                 var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(loanbook_data);
+                
 
-               
+                var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data);
+
+                //var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+
                 var task1 = Task.Run(() =>
                 {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
                     Log4Net.Log.Info("************Processing Final Best");
-                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Best, eclType).ComputeLifetimeLGD(loanbook_data);
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
                 });
                 taskLst.Add(task1);
                 var task2 = Task.Run(() =>
                 {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
                     Log4Net.Log.Info("*************Processing Final Optimistic");
-                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Optimistic, eclType).ComputeLifetimeLGD(loanbook_data);
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
                 });
                 taskLst.Add(task2);
                 var task3 = Task.Run(() =>
                 {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
                     Log4Net.Log.Info("*************Processing Final Down turn");
-                    var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, ECL_Scenario.Downturn, eclType).ComputeLifetimeLGD(loanbook_data);
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
                 });
                 taskLst.Add(task3);
 
@@ -150,11 +183,23 @@ namespace IFRS9_ECL.Core
                     //Do Nothing
                 }
 
+                new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(loanbook_data);
+                
 
-                qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
-                DataAccess.i.ExecuteQuery(qry);
+                if (!overrideExist)
+                {
+                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
+                    DataAccess.i.ExecuteQuery(qry);
+                }
+                else
+                {
+                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "");
+                    DataAccess.i.ExecuteQuery(qry);
+                }
 
-                Console.WriteLine($"End Time {DateTime.Now}");
+
+
+                Log4Net.Log.Info($"End Time {DateTime.Now}");
                 return true;
             }
             catch (Exception ex)
@@ -167,7 +212,7 @@ namespace IFRS9_ECL.Core
 
         public bool CheckOverrideDataExist(Guid eclId, EclType eclType)
         {
-            var qry = Queries.EclOverridesFsv(eclId, eclType);
+            var qry = Queries.CheckOverrideDataExist(eclId, eclType);
             var cnt = DataAccess.i.getCount(qry);
             return cnt > 0;
         }
@@ -233,10 +278,8 @@ namespace IFRS9_ECL.Core
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadCcfSummary");
                         DataAccess.i.ExecuteQuery(qry);
 
-
                         var ead_ccf = new CalibrationInput_EAD_CCF_Summary_Processor();
                         ead_ccf.ProcessCalibration(caliId, affId);
-
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 5, "Completed", "CalibrationRunEadCcfSummary");
                         DataAccess.i.ExecuteQuery(qry);
@@ -339,7 +382,7 @@ namespace IFRS9_ECL.Core
 
                     }catch(Exception ex)
                     {
-                        Log4Net.Log.Error(ex.ToString());
+                        Log4Net.Log.Error(ex);
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, ex.ToString(), "CalibrationRunPdCrDrs");
                         DataAccess.i.ExecuteQuery(qry);
                     }
@@ -370,8 +413,12 @@ namespace IFRS9_ECL.Core
 
                 if (dt.Rows.Count == 0)
                 {
-                    Console.WriteLine($"No new pending Macro");
+                    Log4Net.Log.Info($"No new pending Macro");
                     return true;
+                }
+                else
+                {
+                    Log4Net.Log.Info($"Found Macro to RUN");
                 }
 
                 var affId = (long)dt.Rows[0]["AffiliateId"];
@@ -392,7 +439,9 @@ namespace IFRS9_ECL.Core
                 catch (Exception ex)
                 {
                     Log4Net.Log.Info("At Macro");
+                    Log4Net.Log.Error(ex);
                     Log4Net.Log.Error(ex.ToString());
+                    Log4Net.Log.Error(ex.StackTrace);
                     qry = Queries.MacroRegisterUpdate(macroId, 10, ex.ToString());
                     DataAccess.i.ExecuteQuery(qry);
                 }
@@ -400,12 +449,13 @@ namespace IFRS9_ECL.Core
             catch (Exception ex)
             {
                 Log4Net.Log.Info("At Macro");
-                Log4Net.Log.Error(ex.ToString());
+                Log4Net.Log.Error(ex);
                 var qry = Queries.MacroRegisterUpdate(macroId, 10, ex.ToString());
                 DataAccess.i.ExecuteQuery(qry);
             }
             return true;
         }
+
 
     }
 }

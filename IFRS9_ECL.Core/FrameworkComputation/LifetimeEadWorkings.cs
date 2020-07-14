@@ -31,12 +31,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         }
 
 
-        public void Run()
-        {
-            //var dataTable = ComputeLifetimeEad();
-            string stop = "Ma te";
-        }
-
+       
         public List<LifetimeEad> ComputeLifetimeEad(List<Loanbook_Data> loanbook)
         {
             var lifetimeEad = new List<LifetimeEad>();

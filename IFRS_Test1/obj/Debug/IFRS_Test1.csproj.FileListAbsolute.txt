@@ -85,7 +85,6 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\NPOI.OpenXml4Net
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\NPOI.OpenXmlFormats.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\ExcelFinancialFunctions.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\IFRS9_ECL.Data.dll
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\log4net.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\MathNet.Numerics.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\FSharp.Core.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\IFRS9_ECL.Core.pdb
@@ -99,7 +98,6 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\ICSharpCode.Shar
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\ExcelFinancialFunctions.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\ExcelFinancialFunctions.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\IFRS9_ECL.Data.pdb
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\MathNet.Numerics.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\FSharp.Core.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.csprojAssemblyReference.cache

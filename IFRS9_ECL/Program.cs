@@ -16,7 +16,7 @@ namespace IFRS9_ECL
             var lst = new List<int>();
 
             
-            Console.WriteLine($"Start Time {DateTime.Now}");
+            Log4Net.Log.Info($"Start Time {DateTime.Now}");
             //Process Wholesale
             var masterGuid = Guid.NewGuid();
             masterGuid = Guid.Parse("4140a69e-a729-4269-a078-91a01b5e0cd0");
@@ -37,12 +37,12 @@ namespace IFRS9_ECL
             //new ProcessECL_PD(masterGuid, EclType.Wholesale).ProcessTask();
 
             //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            //Console.WriteLine($"Best Time {DateTime.Now}");
+            //Log4Net.Log.Info($"Best Time {DateTime.Now}");
             //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            //Console.WriteLine($"Optimistic Time {DateTime.Now}");
+            //Log4Net.Log.Info($"Optimistic Time {DateTime.Now}");
             //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, EclType.Wholesale).ProcessTask(new List<Loanbook_Data>());
-            //Console.WriteLine($"Downturn Time {DateTime.Now}");
-            //Console.WriteLine($"End Time {DateTime.Now}");
+            //Log4Net.Log.Info($"Downturn Time {DateTime.Now}");
+            //Log4Net.Log.Info($"End Time {DateTime.Now}");
             //Log4Net.Log.Info("Done Done Done");
             ////Console.ReadKey();
             // return;

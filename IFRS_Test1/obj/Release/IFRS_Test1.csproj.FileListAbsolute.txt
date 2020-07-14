@@ -74,7 +74,6 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\NPOI.OpenXml4N
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\NPOI.OpenXmlFormats.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\ExcelFinancialFunctions.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\IFRS9_ECL.Data.dll
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\log4net.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\MathNet.Numerics.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\FSharp.Core.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\IFRS9_ECL.Core.pdb
@@ -88,10 +87,9 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\ICSharpCode.Sh
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\ExcelFinancialFunctions.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\ExcelFinancialFunctions.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\IFRS9_ECL.Data.pdb
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\MathNet.Numerics.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Release\FSharp.Core.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Release\IFRS_Test1.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Release\IFRS_Test1.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Release\IFRS_Test1.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Release\IFRS_Test1.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Release\IFRS_Test1.csprojAssemblyReference.cache

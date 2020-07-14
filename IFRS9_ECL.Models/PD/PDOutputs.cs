@@ -43,10 +43,6 @@ namespace IFRS9_ECL.Models.PD
     {
         public const string AssumptionsColumn = "Assumptions";
         public const string ValuesColumn = "Value";
-        public const string ReDefaultAdjustmentFactor = "ReDefaultAdjustmentFactor";
-        public const string SnpMapping = "SnpMapping";
-        public const string NonExpired = "NonExpired"; ///OD_PERFORMANCE_PAST_EXPIRY
-        public const string Expired = "Expired"; ///EXP_OD_PERFORMANCE_PAST_REPORTING
         public const string SnpMappingValueBestFit = "Best Fit";
         public const string SnpMappingValueEtiCreditPolicy = "ETI Credit Policy";
     }
