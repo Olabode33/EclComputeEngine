@@ -75,7 +75,6 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Releas
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\IFRS9_ECL.Data.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\MathNet.Numerics.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\bin\Release\FSharp.Core.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\obj\Release\Ecobank.IFRS9.ECL.Service2.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\obj\Release\Ecobank.IFRS9.ECL.Service2.ProjectInstaller.resources
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\obj\Release\Ecobank.IFRS9.ECL.Service2.csproj.GenerateResource.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service2\obj\Release\Ecobank.IFRS9.ECL.Service2.csproj.CopyComplete

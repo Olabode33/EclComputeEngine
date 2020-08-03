@@ -10,5 +10,6 @@ namespace IFRS9_ECL.Models.Framework
     {
         public string ContractId { get; set; }
         public int Stage { get; set; }
+        public double projectionMonth { get; set; }
     }
 }

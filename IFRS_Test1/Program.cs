@@ -93,10 +93,12 @@ namespace IFRS_Test1
         static void Main(string[] args)
         {
 
+            var cc = new Random().Next(10, 100) *0.01;// / 100;
+            Console.WriteLine(cc);
             //DeployServices();
 
             Core c = new Core();
-            c.ProcessRunTask();
+            c.ProcessRunTask(0);
             
             // Generate Macro Data
             //var affId = 6; //new Guid("4FE329C8-C57F-4EB2-8F7F-08D75BC1F14A");

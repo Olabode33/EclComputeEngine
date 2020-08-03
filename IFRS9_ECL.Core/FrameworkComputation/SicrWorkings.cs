@@ -39,7 +39,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var sicrInput = GetSicrInputResult();
             var assumption = GetImpairmentAssumptionsData();
-            var pdMapping = GetPdMappingResult();
+            var pdMapping = GetPdMappingResult(); //YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy
+
 
             var lbContractIds = loanbook.Select(o => o.ContractId).ToList();
             sicrInput = sicrInput.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
@@ -49,24 +50,32 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             foreach (var row in sicrInput)
             {
-                var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
-                var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
-                
-                var newRow = new StageClassification();
-                newRow.ContractId = row.ContractId;
-                newRow.Stage= ComputeStage(row, loanbookRecord, assumption, pdMappingRecord.PdGroup);
-
-                var overridestage = overrides.FirstOrDefault(o => o.ContractId == row.ContractId);
-                if(overridestage!=null)
+                try
                 {
-                    if(overridestage.Stage!=null)
-                    {
-                        newRow.Stage = overridestage.Stage.Value;
-                    }
-                }
-                stageClassification.Add(newRow);
-            }
+                    var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
+                    var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
 
+                    var newRow = new StageClassification();
+                    newRow.ContractId = row.ContractId;
+                    newRow.Stage = ComputeStage(row, loanbookRecord, assumption, pdMappingRecord.PdGroup);
+
+                    var overridestage = overrides.FirstOrDefault(o => o.ContractId == row.ContractId);
+                    if (overridestage != null)
+                    {
+                        if (overridestage.Stage != null)
+                        {
+                            newRow.Stage = overridestage.Stage ?? 1;
+                        }
+                    }
+                    newRow.projectionMonth = 0;
+                    try { newRow.projectionMonth = loanbookRecord.LIM_MONTH; } catch { }
+                    stageClassification.Add(newRow);
+                }catch(Exception ex)
+                {
+                    Log4Net.Log.Error(ex);
+                }
+            }
+            Console.WriteLine($"Got LGD_StatgeClassification");
             return stageClassification;
         }
 
@@ -124,8 +133,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         private int ComputeForwardScore(SicrInputs sicrInputRecord, Loanbook_Data loanBookRecord, List<EclAssumptions> assumption)
         {
 
-            int currentRating = loanBookRecord.CurrentRating??0;
-            double currentCreditRankRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()).Replace("-", "").Replace("+", ""));
+            var currentRating = loanBookRecord.CurrentRating??"";
+            double currentCreditRankRating = string.IsNullOrWhiteSpace(currentRating) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == currentRating).Key.Replace("CreditRatingRank", ""));// &&  Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()));
+
             double stage2to3creditRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingDefaultIndicator));
             double stage1to2Forward = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.ForwardTransitionStage1to1));
             double stage2to3Forward = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.ForwardTransitionStage2to3));
@@ -133,7 +143,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             if (currentCreditRankRating < stage2to3creditRating)
             {
-                return daysPastDue < stage1to2Forward ? 1 : (daysPastDue > stage2to3Forward ? 3 : 2);
+                return daysPastDue < stage1to2Forward ? 1 : (daysPastDue >= stage2to3Forward ? 3 : 2);
             }
             else
             {
@@ -170,15 +180,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private int ComputeCreditRatingScore(Loanbook_Data loanBookRecord, List<EclAssumptions> assumption)
         {
-            double stage2to3CreditRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.ForwardTransitionStage2to3));
+            double stage2to3CreditRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingDefaultIndicator));
             double lowHighRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowHighRisk));
             double normalRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowRisk));
             double highRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankHighRisk));
-            long? currentRating = loanBookRecord.CurrentRating;
-            long? originalRating = loanBookRecord.OriginalRating;
+            var currentRating = loanBookRecord.CurrentRating;
+            var originalRating = loanBookRecord.OriginalRating;
 
-            double currentCreditRankRating = string.IsNullOrWhiteSpace(currentRating.ToString()) ? 1 : Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()).Replace("-", "").Replace("+", ""));
-            double originalCreditRankRating = string.IsNullOrWhiteSpace(originalRating.ToString()) ? 1 : Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + originalRating.ToString()).Replace("-", "").Replace("+", ""));
+            double currentCreditRankRating = string.IsNullOrWhiteSpace(currentRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == currentRating).Key.Replace("CreditRatingRank",""));// &&  Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()));
+            double originalCreditRankRating = string.IsNullOrWhiteSpace(originalRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == originalRating).Key.Replace("CreditRatingRank", ""));
 
             if (currentCreditRankRating >= stage2to3CreditRating)
             {
@@ -257,6 +267,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var itm= assumptions.FirstOrDefault(x => x.Key == assumptionKey);
             return itm != null ? itm.Value : "0";
         }
+
+
         protected List<PdMappings> GetPdMappingResult()
         {
             return _pdMapping.GetPdMapping();
@@ -270,10 +282,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return scenarioLifetimeLGD.GetECLFrameworkAssumptions(); 
             //JsonUtil.DeserializeToDatatable(DbUtil.GetImpairmentAssumptionsData());
         }
-        protected List<Loanbook_Data> GetLoanBookData()
-        {
-            return _lifetimeEadWorkings.GetLoanBookData();
-        }
+
 
         protected List<EclOverrides> GetOverrideDataResult()
         {

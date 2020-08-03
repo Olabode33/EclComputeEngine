@@ -155,7 +155,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
             for (int rank = 1; rank <= _maxRatingRank; rank++)
             {
-                //********************************
+                //*****************************
                 var _12MonthAssumption = new PDI_Assumptions { Value = PdAssumptionsRowKey.SnpMappingValueBestFit };
                 if(snpMappingInput== PdAssumptionsRowKey.SnpMappingValueBestFit)
                 {

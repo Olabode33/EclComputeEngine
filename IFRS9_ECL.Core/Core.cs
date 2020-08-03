@@ -2,6 +2,8 @@
 using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
+using IFRS9_ECL.Models.Framework;
+using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -16,22 +18,22 @@ namespace IFRS9_ECL.Core
 {
     public class Core
     {
-        public bool ProcessRunTask()
+        int serviceId = 0;
+        public bool ProcessRunTask(int serviceId)
         {
+            this.serviceId = serviceId;
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
-            ProcessECLRunTask();
+           ProcessECLRunTask();
             return true;
         }
-        public bool ProcessCaliMacroTaskOnly()
+        public bool ProcessCaliMacroTaskOnly(int serviceId)
         {
+            this.serviceId = serviceId;
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
-            //ProcessECLRunTask();
             return true;
         }
-
-      
 
         private bool ProcessECLRunTask()
         {
@@ -85,7 +87,10 @@ namespace IFRS9_ECL.Core
                     return true;
                 }
 
-                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
+                var qry = Queries.UpdateGuidTableServiceId($"{eclRegister.eclType.ToString()}Ecls",this.serviceId, eclRegister.Id);
+                DataAccess.i.ExecuteQuery(qry);
+
+                qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
                 DataAccess.i.ExecuteQuery(qry);
                 var eclType = eclRegister.eclType;
                 Log4Net.Log.Info($"Found ECL with ID {eclRegister.Id} of Type [{eclType.ToString()}]. Running will commence if it has not been picked by another Job");
@@ -102,17 +107,28 @@ namespace IFRS9_ECL.Core
 
 
                 var _eclTask = new ECLTasks(masterGuid, eclType);
-                foreach (var itm in loanbook_data)
+
+                foreach(var itm in loanbook_data)
                 {
                     itm.ContractId = _eclTask.GenerateContractId(itm);
                 }
 
 
-                var overrideExist = CheckOverrideDataExist(masterGuid, eclType);
+                var overrideExist = false;
+                if (eclRegister.Status==12)
+                {
+                    overrideExist = CheckOverrideDataExist(masterGuid, eclType);
+                    if(!overrideExist)
+                    {
+                        qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "No Override data found");
+                        DataAccess.i.ExecuteQuery(qry);
+                    }
+                }
 
 
 
-                if (!overrideExist)
+
+                if (!overrideExist) //1!=1)//
                 {
                     // Process EAD
                     new ProcessECL_EAD(masterGuid, eclType).ProcessTask(loanbook_data);
@@ -137,38 +153,45 @@ namespace IFRS9_ECL.Core
                 //threads = 1;
 
                 var cummulativeDiscountFactor = new IrFactorWorkings(masterGuid, eclType).ComputeCummulativeDiscountFactor();
+
+                //loanbook_data = loanbook_data.Where(o => o.ContractId.Contains("001CMMA142020001")).ToList();
+
                 var eadInput = new LifetimeEadWorkings(masterGuid, eclType).GetTempEadInputData(loanbook_data);
-                var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(loanbook_data);
+                var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(loanbook_data, eadInput);
+
+                var stageClassification = GetStagingClassificationResult(loanbook_data,masterGuid, eclType);
+
+
                 
 
-                var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data);
+                var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data, lifetimeEad, eadInput, stageClassification);
 
                 //var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
                 //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
                 //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
 
                 var task1 = Task.Run(() =>
                 {
                     var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
                     Log4Net.Log.Info("************Processing Final Best");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
                 });
                 taskLst.Add(task1);
                 var task2 = Task.Run(() =>
                 {
                     var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
                     Log4Net.Log.Info("*************Processing Final Optimistic");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
                 });
                 taskLst.Add(task2);
                 var task3 = Task.Run(() =>
                 {
                     var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
                     Log4Net.Log.Info("*************Processing Final Down turn");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput);
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
                 });
                 taskLst.Add(task3);
 
@@ -184,7 +207,7 @@ namespace IFRS9_ECL.Core
                 }
 
                 new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(loanbook_data);
-                
+
 
                 if (!overrideExist)
                 {
@@ -204,7 +227,8 @@ namespace IFRS9_ECL.Core
             }
             catch (Exception ex)
             {
-                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 10, ex.ToString());
+                Log4Net.Log.Error(ex);
+                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 13, ex.ToString());
                 DataAccess.i.ExecuteQuery(qry);
             }
             return true;
@@ -217,6 +241,11 @@ namespace IFRS9_ECL.Core
             return cnt > 0;
         }
 
+        protected List<StageClassification> GetStagingClassificationResult(List<Loanbook_Data> loanbook,Guid eclId, EclType eclType)
+        {
+            SicrWorkings _sicrWorkings = new SicrWorkings(eclId, eclType);
+            return _sicrWorkings.ComputeStageClassification(loanbook);
+        }
 
         public bool ProcessCalibrationRunTask()
         {
@@ -236,6 +265,10 @@ namespace IFRS9_ECL.Core
                     {
                         var affId = (long)dt.Rows[0]["AffiliateId"];
                         caliId = (Guid)dt.Rows[0]["Id"];
+
+
+                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadBehaviouralTerms", this.serviceId, caliId);
+                        DataAccess.i.ExecuteQuery(qry);
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadBehaviouralTerms");
                         DataAccess.i.ExecuteQuery(qry);
@@ -275,6 +308,9 @@ namespace IFRS9_ECL.Core
                         var affId = (long)dt.Rows[0]["AffiliateId"];
                         caliId = (Guid)dt.Rows[0]["Id"];
 
+                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadCcfSummary", this.serviceId, caliId);
+                        DataAccess.i.ExecuteQuery(qry);
+
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadCcfSummary");
                         DataAccess.i.ExecuteQuery(qry);
 
@@ -306,6 +342,10 @@ namespace IFRS9_ECL.Core
                     {
                         var affId = (long)dt.Rows[0]["AffiliateId"];
                         caliId = (Guid)dt.Rows[0]["Id"];
+
+
+                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunLgdHairCut", this.serviceId, caliId);
+                        DataAccess.i.ExecuteQuery(qry);
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunLgdHairCut");
                         DataAccess.i.ExecuteQuery(qry);
@@ -339,6 +379,9 @@ namespace IFRS9_ECL.Core
                         var affId = (long)dt.Rows[0]["AffiliateId"];
                         caliId = (Guid)dt.Rows[0]["Id"];
 
+                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunLgdRecoveryRate", this.serviceId, caliId);
+                        DataAccess.i.ExecuteQuery(qry);
+
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunLgdRecoveryRate");
                         DataAccess.i.ExecuteQuery(qry);
 
@@ -369,6 +412,9 @@ namespace IFRS9_ECL.Core
                     {
                         var affId = (long)dt.Rows[0]["AffiliateId"];
                         caliId = (Guid)dt.Rows[0]["Id"];
+
+                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunPdCrDrs", this.serviceId, caliId);
+                        DataAccess.i.ExecuteQuery(qry);
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunPdCrDrs");
                         DataAccess.i.ExecuteQuery(qry);
@@ -424,7 +470,10 @@ namespace IFRS9_ECL.Core
                 var affId = (long)dt.Rows[0]["AffiliateId"];
                 macroId = (int)dt.Rows[0]["Id"];
 
-                var qry = Queries.MacroRegisterUpdate(macroId, 4, "Processing");
+                var qry = Queries.UpdateIntTableServiceId("CalibrationRunMacroAnalysis", this.serviceId, macroId);
+                DataAccess.i.ExecuteQuery(qry);
+
+                qry = Queries.MacroRegisterUpdate(macroId, 4, "Processing");
                 DataAccess.i.ExecuteQuery(qry);
 
                 try

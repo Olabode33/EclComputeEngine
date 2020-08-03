@@ -22,36 +22,56 @@ namespace IFRS9_ECL.Core
         Guid _eclId;
         ECL_Scenario _Scenario;
         EclType _eclType;
+        protected SicrWorkings _sicrWorkings;
         
         public ProcessECL_Framework(Guid eclId, ECL_Scenario scenario, EclType eclType)
         {
             this._eclId = eclId;
             this._Scenario = scenario;
             this._eclType = eclType;
-            
+            _sicrWorkings = new SicrWorkings(eclId, this._eclType);
+
         }
         public ProcessECL_Framework(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
             this._eclType = eclType;
+            _sicrWorkings = new SicrWorkings(eclId, this._eclType);
 
         }
 
-        public string ProcessTask(List<Loanbook_Data> loanbook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput)
+        public string ProcessTask(List<Loanbook_Data> loanbook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<StageClassification> stageClassifcation)
         {
+
+            var lifetimePds = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType).Get_LifetimePd_And_RedefaultLifetimePD_Result();
+
+            //var stageClassifcation = stageClassifcation;// GetStageClassification(loanbook);
+
+            if (1 != 1)// loanbook.Count <= 1000)
+            {
+                RunFrameWorkJob(lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput, lifetimePds, stageClassifcation);
+                return "";
+            }
+            //var checker = loanbook.Count / 60;
+
             var threads = loanbook.Count / 500;
+
             threads = threads + 1;
 
             var taskLst = new List<Task>(); 
-            var lifetimePds = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType).Get_LifetimePd_And_RedefaultLifetimePD_Result();
+            
             //threads = 1;
             for (int i = 0; i < threads; i++)
             {
                 var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
-
+                var contractNo = sub_LoanBook.Select(o => o.ContractId).ToList();
+                var sub_stageClassification = stageClassifcation.Where(o => contractNo.Contains(o.ContractId)).ToList();
+                var sub_lifetimeEad = lifetimeEad.Where(o => contractNo.Contains(o.ContractId)).ToList();
+                var sub_lifetimeLGD = lifetimeLGD.Where(o => contractNo.Contains(o.ContractId)).ToList();
+                var sub_eadInput = eadInput.Where(o => contractNo.Contains(o.Contract_no)).ToList();
                 var task = Task.Run(() =>
                 {
-                    RunFrameWorkJob(sub_LoanBook, lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput, lifetimePds);
+                    RunFrameWorkJob(sub_lifetimeEad, sub_lifetimeLGD, cummulativeDiscountFactor, sub_eadInput, lifetimePds, sub_stageClassification);
                 });
                 taskLst.Add(task);
             }
@@ -79,51 +99,23 @@ namespace IFRS9_ECL.Core
         public string ProcessResultDetails(List<Loanbook_Data> loanbook)
         {
 
+            var qry = Queries.ClearFrameworkReportTable(this._eclId, this._eclType);
+
+            DataAccess.i.ExecuteQuery(qry);
 
             // Gennerate Result Details
             var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook);
 
-            var c = new ResultDetailDataMore();
-
-            Type myObjOriginalType = c.GetType();
-            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
-
-            var dt = new DataTable();
-            for (int i = 0; i < myProps.Length; i++)
-            {
-                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
-            }
-
-            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
-
-
-
-            foreach (var _d in rd.ResultDetailDataMore)
-            {
-                var Id = Guid.NewGuid();
-                dt.Rows.Add(new object[]
-                    {
-                            Id, _d.Stage, _d.Outstanding_Balance, _d.ECL_Best_Estimate, _d.ECL_Optimistic, _d.ECL_Downturn, _d.Impairment_ModelOutput,
-                            _d.Overrides_Stage, _d.Overrides_TTR_Years, _d.Overrides_FSV, _d.Overrides_Overlay, _d.Overrides_ECL_Best_Estimate, _d.Overrides_ECL_Optimistic, _d.Overrides_ECL_Downturn, _d.Overrides_Impairment_Manual, _d.ContractNo, _d.AccountNo,
-                            _d.CustomerNo, _d.Segment, _d.ProductType, _d.Sector, this._eclId
-                    });
-            }
-
-            var qry = Queries.ClearFrameworkReportTable(this._eclId, this._eclType);
-            DataAccess.i.ExecuteQuery(qry);
-
-            //Save to Report Detail
-            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EclFramworkReportDetail(this._eclType));
-
+           
             return "";
         }
 
-        private void RunFrameWorkJob(List<Loanbook_Data> loanBook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<LifeTimeObject> lifetimePds)
+        private void RunFrameWorkJob(List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<LifeTimeObject> lifetimePds, List<StageClassification> stageClassification)
         {
 
             var obj = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType);
 
-            var d = obj.ComputeFinalEcl(loanBook, lifetimeEad, lifetimeLGD, eadInput, cummulativeDiscountFactor, lifetimePds);
+            var d = obj.ComputeFinalEcl(lifetimeEad, lifetimeLGD, eadInput, cummulativeDiscountFactor, lifetimePds, stageClassification);
 
             var c = new FinalEcl();
 
@@ -177,5 +169,7 @@ namespace IFRS9_ECL.Core
             
 
         }
+
+        
     }
 }

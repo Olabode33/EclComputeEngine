@@ -3,6 +3,7 @@ using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -21,7 +22,7 @@ namespace IFRS9_ECL.Data
             dt.Columns.Add("Id", typeof(Guid));
             dt.Columns.Add("EIR_Group");
             dt.Columns.Add("Month", typeof(int));
-            dt.Columns.Add("Value", typeof(float));
+            dt.Columns.Add("Value", typeof(double));
             dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
             foreach (var _d in d)
@@ -56,6 +57,7 @@ namespace IFRS9_ECL.Data
                 {
                     dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
                 }
+            dt.Columns.Remove("LIM_MONTHS");
                 dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
 
@@ -128,8 +130,8 @@ namespace IFRS9_ECL.Data
                 dt.Columns.Add("Id", typeof(Guid));
                 dt.Columns.Add("CIR_GROUP");
                 dt.Columns.Add("Month", typeof(int));
-                dt.Columns.Add("Value", typeof(float));
-                dt.Columns.Add("CIR_EFFECTIVE", typeof(float));
+                dt.Columns.Add("Value", typeof(double));
+                dt.Columns.Add("CIR_EFFECTIVE", typeof(double));
                 dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
                 foreach (var _d in d)
@@ -156,26 +158,35 @@ namespace IFRS9_ECL.Data
 
             //if (tR >= 0)
             //{
-                var dt = new DataTable();
-                dt.Columns.Add("Id", typeof(Guid));
-                dt.Columns.Add("Contract_no");
-                dt.Columns.Add("Eir_Group");
-                dt.Columns.Add("Cir_Group");
-                dt.Columns.Add("Month", typeof(int));
-                dt.Columns.Add("Value", typeof(float));
-                dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
+            var contractTracker = new List<LifeTimeProjections>();
 
-                foreach (var _d in d)
-                {
-                    var g = Guid.NewGuid();
-                    dt.Rows.Add(new object[]
-                        {
+            var dt = new DataTable();
+            dt.Columns.Add("Id", typeof(Guid));
+            dt.Columns.Add("Contract_no");
+            dt.Columns.Add("Eir_Group");
+            dt.Columns.Add("Cir_Group");
+            dt.Columns.Add("Month", typeof(int));
+            dt.Columns.Add("Value", typeof(double));
+            dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
+
+            d = d.Distinct().ToList();
+
+            foreach (var _d in d)
+            {
+                if (contractTracker.Any(o=>o.Contract_no==_d.Contract_no && o.Month==_d.Month))
+                    continue;
+
+                contractTracker.Add(new LifeTimeProjections { Contract_no=_d.Contract_no, Month=_d.Month });
+
+                var g = Guid.NewGuid();
+                dt.Rows.Add(new object[]
+                    {
                             g, _d.Contract_no,_d.Eir_Group,_d.Cir_Group, _d.Month, _d.Value, master_G.ToString()
-                        });
-                }
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EadLifetimeProjections_Table(eclType));
+                    });
+            }
+            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EadLifetimeProjections_Table(eclType));
 
-                return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}]";
+            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}]";
             //}
 
             //return $"Could not Truncate Table [{ECLStringConstants.i.EadLifetimeProjections_Table(eclType)}]";

@@ -38,7 +38,7 @@ namespace IFRS9_ECL.Core.Calibration
             if (dt.Rows.Count == 0)
                 return true;
 
-            var counter = Util.AppSettings.GetCounter(affiliateId);
+            var counter = Util.AppSettings.GetCounter(dt.Rows.Count);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "LGD_Recovery_Rate.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}LGD_Recovery_Rate.xlsx")}";
@@ -57,7 +57,7 @@ namespace IFRS9_ECL.Core.Calibration
 
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
-
+                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -135,32 +135,53 @@ namespace IFRS9_ECL.Core.Calibration
 
             r.Overall_Exposure_At_Default = 0;
             try { r.Overall_Exposure_At_Default = worksheet1.Cells[2, 28].Value; } catch { }
+            r.Overall_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_Exposure_At_Default) ? 0 : r.Overall_Exposure_At_Default;
+
             r.Overall_PvOfAmountReceived = 0;
             try { r.Overall_PvOfAmountReceived = worksheet1.Cells[3, 28].Value; } catch { }
+            r.Overall_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_PvOfAmountReceived) ? 0 : r.Overall_PvOfAmountReceived;
+
             r.Overall_Count = 0;
             try { r.Overall_Count = worksheet1.Cells[4, 28].Value; } catch { }
+            r.Overall_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_Count) ? 0 : r.Overall_Count;
+
             r.Overall_RecoveryRate = 0;
             try { r.Overall_RecoveryRate = worksheet1.Cells[5, 28].Value; } catch { }
+            r.Overall_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_RecoveryRate) ? 0 : r.Overall_RecoveryRate;
 
 
             r.Corporate_Exposure_At_Default = 0;
             try { r.Corporate_Exposure_At_Default = worksheet1.Cells[2, 29].Value; } catch { }
+            r.Corporate_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_Exposure_At_Default) ? 0 : r.Corporate_Exposure_At_Default;
+
             r.Corporate_PvOfAmountReceived = 0;
             try { r.Corporate_PvOfAmountReceived = worksheet1.Cells[3, 29].Value; } catch { }
+            r.Corporate_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_PvOfAmountReceived) ? 0 : r.Corporate_PvOfAmountReceived;
+
             r.Corporate_Count = 0;
             try { r.Corporate_Count = worksheet1.Cells[4, 29].Value; } catch { }
+            r.Corporate_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_Count) ? 0 : r.Corporate_Count;
+
             r.Corporate_RecoveryRate = 0;
             try { r.Corporate_RecoveryRate = worksheet1.Cells[5, 29].Value; } catch { }
+            r.Corporate_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_RecoveryRate) ? 0 : r.Corporate_RecoveryRate;
 
 
             r.Commercial_Exposure_At_Default = 0;
             try { r.Commercial_Exposure_At_Default = worksheet1.Cells[2, 30].Value; } catch { }
+            r.Commercial_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_Exposure_At_Default) ? 0 : r.Commercial_Exposure_At_Default;
+
             r.Commercial_PvOfAmountReceived = 0;
             try { r.Commercial_PvOfAmountReceived = worksheet1.Cells[3, 30].Value; } catch { }
+            r.Commercial_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_PvOfAmountReceived) ? 0 : r.Commercial_PvOfAmountReceived;
+
             r.Commercial_Count = 0;
             try { r.Commercial_Count = worksheet1.Cells[4, 30].Value; } catch { }
+            r.Commercial_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_Count) ? 0 : r.Commercial_Count;
+
             r.Commercial_RecoveryRate = 0;
             try { r.Commercial_RecoveryRate = worksheet1.Cells[5, 30].Value; } catch { }
+            r.Commercial_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_RecoveryRate) ? 0 : r.Commercial_RecoveryRate;
 
 
             r.Consumer_Exposure_At_Default = 0;
@@ -172,19 +193,28 @@ namespace IFRS9_ECL.Core.Calibration
             r.Consumer_RecoveryRate = 0;
             try { r.Consumer_RecoveryRate = worksheet1.Cells[5, 31].Value; } catch { }
 
-            if (r.Corporate_RecoveryRate == -2146826281)
+            if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_RecoveryRate))
             {
-                r.Corporate_RecoveryRate = 0;
+                r.Overall_RecoveryRate = 0;
+                //r.Corporate_RecoveryRate=new Random().Next(10, 100);
+                //if(r.Corporate_RecoveryRate== 0)
+                //    r.Corporate_RecoveryRate = r.Corporate_RecoveryRate * 0.01;
             }
-            if (r.Commercial_RecoveryRate == -2146826281)
+            if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_RecoveryRate))
             {
-                r.Commercial_RecoveryRate = 0;
+                r.Commercial_RecoveryRate = 0;// = new Random().Next(10, 100);
+               // r.Commercial_RecoveryRate = r.Commercial_RecoveryRate * 0.01;
             }
-            if (r.Consumer_RecoveryRate == -2146826281)
+            if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Consumer_RecoveryRate))
             {
-                r.Consumer_RecoveryRate = 0;
+                r.Consumer_RecoveryRate = 0;// = new Random().Next(10, 100);
+                //r.Consumer_RecoveryRate = r.Consumer_RecoveryRate * 0.01;
             }
-
+            if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_RecoveryRate))
+            {
+                r.Overall_RecoveryRate = 0;// = new Random().Next(10, 100);
+                //r.Consumer_RecoveryRate = r.Consumer_RecoveryRate * 0.01;
+            }
 
             theWorkbook.Save();
             theWorkbook.Close(true);
@@ -200,17 +230,24 @@ namespace IFRS9_ECL.Core.Calibration
 
 
 
-        public double GetLGDRecoveryRateData(Guid eclId, EclType eclType)
+        public CalibrationResult_LGD_RecoveryRate GetLGDRecoveryRateData(Guid eclId, EclType eclType)
         {
             string qry = Queries.GetLGDRecoveryRateData(eclId, eclType.ToString());
             var dt = DataAccess.i.GetData(qry);
             if (dt.Rows.Count == 0)
             {
-                return 0;
+                return new CalibrationResult_LGD_RecoveryRate { Corporate_RecoveryRate=1, Commercial_RecoveryRate=1, Consumer_RecoveryRate=1, Overall_RecoveryRate=1 };
             }
+
             DataRow dr = dt.Rows[0];
-            try { return double.Parse(dr["Overall_RecoveryRate"].ToString().Trim()); } catch { return 0; }
-           
+            var itm = new CalibrationResult_LGD_RecoveryRate();
+            try { itm.Corporate_RecoveryRate = double.Parse(dr["Corporate_RecoveryRate"].ToString().Trim()); } catch { itm.Corporate_RecoveryRate = 1; }
+            try { itm.Commercial_RecoveryRate = double.Parse(dr["Commercial_RecoveryRate"].ToString().Trim()); } catch { itm.Commercial_RecoveryRate = 1; }
+            try { itm.Consumer_RecoveryRate = double.Parse(dr["Consumer_RecoveryRate"].ToString().Trim()); } catch { itm.Consumer_RecoveryRate = 1; }
+            try { itm.Overall_RecoveryRate = double.Parse(dr["Overall_RecoveryRate"].ToString().Trim()); } catch { itm.Overall_RecoveryRate = 1; }
+
+            return itm;
+
         }
     }
 }

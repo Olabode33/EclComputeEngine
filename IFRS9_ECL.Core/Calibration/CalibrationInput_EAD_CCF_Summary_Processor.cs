@@ -39,7 +39,7 @@ namespace IFRS9_ECL.Core.Calibration
             if (dt.Rows.Count == 0)
                 return true;
 
-            var counter = Util.AppSettings.GetCounter(affiliateId);
+            var counter = Util.AppSettings.GetCounter(dt.Rows.Count);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "EAD_CCF.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}EAD_CCF.xlsx")}";
@@ -58,7 +58,7 @@ namespace IFRS9_ECL.Core.Calibration
 
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
-
+                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -157,17 +157,83 @@ namespace IFRS9_ECL.Core.Calibration
                 try{r.Overall_TotalConversation = double.Parse(worksheet1.Cells[5, 4].Value.ToString()); } catch { }
                 try{r.Overall_CCF = double.Parse(worksheet1.Cells[6, 4].Value.ToString()); } catch { }
 
-                if (r.OD_CCF== -2146826281)
+
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_TotalLimitOdDefaultedLoan))
                 {
-                    r.OD_CCF = 0;
+                    r.OD_TotalLimitOdDefaultedLoan = 0;// =0;
                 }
-                if (r.Card_CCF == -2146826281)
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_BalanceAtDefault))
                 {
-                    r.Card_CCF = 0;
+                    r.OD_BalanceAtDefault = 0;// =0;
                 }
-                if (r.Overall_CCF == -2146826281)
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_Balance12MonthBeforeDefault))
                 {
-                    r.Overall_CCF = 0;
+                    r.OD_Balance12MonthBeforeDefault = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_TotalConversation))
+                {
+                    r.OD_TotalConversation = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_CCF))
+                {
+                    r.OD_CCF = 0;// =0;
+                }
+
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_TotalLimitOdDefaultedLoan))
+                {
+                    r.Card_TotalLimitOdDefaultedLoan = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_BalanceAtDefault))
+                {
+                    r.Card_BalanceAtDefault = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_Balance12MonthBeforeDefault))
+                {
+                    r.Card_Balance12MonthBeforeDefault = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_TotalConversation))
+                {
+                    r.Card_TotalConversation = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_CCF))
+                {
+                    r.Card_CCF = 0;// =0;
+                }
+
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_TotalLimitOdDefaultedLoan))
+                {
+                    r.Overall_TotalLimitOdDefaultedLoan = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_BalanceAtDefault))
+                {
+                    r.Overall_BalanceAtDefault = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_Balance12MonthBeforeDefault))
+                {
+                    r.Overall_Balance12MonthBeforeDefault = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_TotalConversation))
+                {
+                    r.Overall_TotalConversation = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_CCF))
+                {
+                    r.Overall_CCF = 0;// =0;
+                }
+
+
+
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.OD_CCF))
+                {
+                    r.OD_CCF = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Card_CCF))
+                {
+                    r.Card_CCF = 0;// =0;
+                }
+                if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_CCF))
+                {
+                    r.Overall_CCF = 0;// =0;
                 }
 
                 theWorkbook.Save();

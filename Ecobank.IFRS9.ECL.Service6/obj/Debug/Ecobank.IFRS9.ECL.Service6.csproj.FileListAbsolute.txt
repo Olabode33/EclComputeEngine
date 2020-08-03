@@ -19,9 +19,9 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\bin\Debug\
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\bin\Debug\EPPlus.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\bin\Debug\IFRS9_ECL.Data.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\bin\Debug\MathNet.Numerics.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.ProjectInstaller.resources
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.csproj.GenerateResource.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service6\obj\Debug\Ecobank.IFRS9.ECL.Service6.csprojAssemblyReference.cache

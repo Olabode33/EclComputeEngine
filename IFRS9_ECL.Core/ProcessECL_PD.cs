@@ -29,62 +29,84 @@ namespace IFRS9_ECL.Core
             try
             {
 
-                var threads = loanbooks.Count / 500;
-                threads = threads + 1;
-
-                var taskLst = new List<Task>();
-
-                //threads = 1;
-                for (int i = 0; i < threads; i++)
-                {
-                    var sub_LoanBook = loanbooks.Skip(i * 500).Take(500).ToList();
-
-                    var task = Task.Run(() =>
-                    {
-                        RunPDJob(sub_LoanBook);
-                    });
-                    taskLst.Add(task);
-                }
-                Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
-
-                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-                Log4Net.Log.Info($"Task Completed: {completedTask}");
-
-                //while (!taskLst.Any(o => o.IsCompleted))
-                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
-                while (0 < 1)
-                {
-                    if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
-                    {
-                        break;
-                    }
-                    //Do Nothing
-                }
-
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log4Net.Log.Error(ex);
-                return true;
-            }
-        }
-
-
-
-        private void RunPDJob(List<Loanbook_Data> sub_LoanBook)
-        {
-            try
-            {
-
                 // Compute Credit Index
                 var crdIndx = new CreditIndex(this._eclId, this._eclType);
                 crdIndx.Run();
 
-                // Compute PD mapping
-                var pDMapping = new PDMapping(this._eclId, this._eclType);
-                pDMapping.Run(sub_LoanBook);
+
+
+                if (loanbooks.Count <= 1000) //1 !=1)//
+                {
+                    RunPDJob(loanbooks);
+                }
+                else
+                {
+                    //var checker = loanbooks.Count / 60;
+
+                    var groupedLoanBook = new List<List<Loanbook_Data>>();
+                    var threads = loanbooks.Count / 500;
+                    threads = threads + 1;
+
+                    for (int i = 0; i < threads; i++)
+                    {
+                        groupedLoanBook.Add(loanbooks.Skip(i * 500).Take(500).ToList());
+                    }
+
+                    var allAccountsGrouped = false;
+
+                    try
+                    {
+                        while (!allAccountsGrouped)
+                        {
+                            allAccountsGrouped = true;
+                            for (int i = 1; i < groupedLoanBook.Count; i++)
+                            {
+                                var lstfromPrev = groupedLoanBook[i - 1].LastOrDefault();
+                                var fstfromCurr = groupedLoanBook[i].FirstOrDefault();
+                                if (lstfromPrev.AccountNo == fstfromCurr.AccountNo)
+                                {
+                                    groupedLoanBook[i - 1].Add(fstfromCurr);
+                                    groupedLoanBook[i].RemoveAt(0);
+                                    allAccountsGrouped = false;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                    var taskLst = new List<Task>();
+
+                    //threads = 1;
+                    for (int i = 0; i < threads; i++)
+                    {
+                        var sub_LoanBook = groupedLoanBook[i];//.Skip(i * 500).Take(500).ToList();
+
+                        var task = Task.Run(() =>
+                        {
+                            RunPDJob(sub_LoanBook);
+                        });
+                        taskLst.Add(task);
+                    }
+                    Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
+
+                    var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+                    Log4Net.Log.Info($"Task Completed: {completedTask}");
+
+                    //while (!taskLst.Any(o => o.IsCompleted))
+                    var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+                    while (0 < 1)
+                    {
+                        if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                        {
+                            break;
+                        }
+                        //Do Nothing
+                    }
+                }
+                
 
                 // Compute Scenario Life time Pd -- best
                 var slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
@@ -111,10 +133,31 @@ namespace IFRS9_ECL.Core
                 // Compute Scenario Redefault Lifetime Pds  -- Downturn
                 var sRedefault_lt_pd_de = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Downturn, this._eclId, this._eclType);
                 sRedefault_lt_pd_de.Run();
+
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+                return true;
+            }
+        }
+
+
+
+        private void RunPDJob(List<Loanbook_Data> sub_LoanBook)
+        {
+            try
+            {
+                // Compute PD mapping
+                var pDMapping = new PDMapping(this._eclId, this._eclType);
+                pDMapping.Run(sub_LoanBook);
             }
             catch(Exception ex)
             {
                 var cc = ex;
+                Log4Net.Log.Error(ex);
             }
         }
 
@@ -173,6 +216,7 @@ namespace IFRS9_ECL.Core
                 itm.Date = GetPeriodDate(o.Period);
                 data.Add(itm);
             }
+            data = data.OrderBy(o => o.Date).ToList();
             return data;
         }
 

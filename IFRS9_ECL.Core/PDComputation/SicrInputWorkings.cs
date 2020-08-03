@@ -144,7 +144,7 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new SicrInputs(), dr));
             }
-
+            
             return lifeTimeProjections;
         }
 

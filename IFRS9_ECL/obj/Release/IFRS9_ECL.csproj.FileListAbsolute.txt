@@ -58,9 +58,9 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\FSharp.Core.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Models.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Util.dll
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\log4net.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\EPPlus.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Data.dll
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\log4net.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\MathNet.Numerics.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Core.dll.config
@@ -69,9 +69,9 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Util.
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\ExcelFinancialFunctions.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\ExcelFinancialFunctions.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\FSharp.Core.xml
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\EPPlus.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\IFRS9_ECL.Data.pdb
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Release\MathNet.Numerics.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Release\IFRS9_ECL.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Release\IFRS9_ECL.csproj.CopyComplete

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace IFRS9_ECL.Util
 {
@@ -114,16 +115,22 @@ namespace IFRS9_ECL.Util
     {
         public static readonly ECLNonStringConstants i = new ECLNonStringConstants();
 
-        public double virProjections { get { return 0.14; } } //GOTTEN FROM DB
+        
 
         //public double Corporate { get { return 1; } } ///It will be obtained from the DB
         //public double Commercial { get { return 1; } } ///It will be obtained from the DB
         //public double Consumer { get { return 1; } } ///It will be obtained from the DB
-        public double NGN_Currency { get { return 1; } }
-        public double Conversion_Factor_OBE { get { return 1; } } ///It will be obtained from the DB this is in percentage
-            //*********************************************************
+        public double Local_Currency { get { return 1; } }
+        
 
-        public double Rho = 0.21733359; //******************************
+        public List<double?> ExcelDefaultValue { get { return new List<double?> { -2146826281, -2146826246 }; } }
+
+        
+
+        ///It will be obtained from the DB this is in percentage
+        //*********************************************************
+
+        public double Rho = 0.00470275844438257;// 0.21733359; //******************************
 
 
 
@@ -167,9 +174,7 @@ namespace IFRS9_ECL.Util
     {
         public const string EIR = "EIR";
         public const string CIR = "CIR";
-        public const int MaxIrFactorProjectionMonths = 141;//242;***************************
-        public const int TempExcelVariable_LIM_MONTH = 105; //204**************************
-        public const int TempExcelVariable_MPD_DEFAULT_CRITERIA = 3;
+
         public const int ScenerioWorkingMaxMonth = 12;
         public const int ProjectionMonth = 106;
         public const int TempExcelVariable_LIM_CM = 60;
@@ -178,15 +183,6 @@ namespace IFRS9_ECL.Util
         public const string CreditQualityCriteria12MonthPd = "12-month PD";
         public const string CreditQualityCriteriaLifetimePd = "Lifetime PD";
 
-        //public const double CollateralHaircutApplied_Cash = 0.0;
-        //public const double CollateralHaircutApplied_CommercialProperty = 0.32;
-        //public const double CollateralHaircutApplied_Debenture = 0.26;
-        //public const double CollateralHaircutApplied_Invertory = 0.50;
-        //public const double CollateralHaircutApplied_PlantEquipment = 0.32;
-        //public const double CollateralHaircutApplied_Receivables = 0.28;
-        //public const double CollateralHaircutApplied_ResidentialProperty = 0.24;
-        //public const double CollateralHaircutApplied_Shares = 0.0;
-        //public const double CollateralHaircutApplied_Vehicle = 0.47;
     }
 
 

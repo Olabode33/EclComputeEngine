@@ -33,7 +33,7 @@ namespace IFRS9_ECL.Util
 
         public static string GetCounter(long cnt)
         {
-            return $"_{cnt.ToString()}";
+            //return $"_{cnt.ToString()}";
             var counter = 6000;
             if (cnt > 6000 && cnt <= 10000)
                 counter = 6000;

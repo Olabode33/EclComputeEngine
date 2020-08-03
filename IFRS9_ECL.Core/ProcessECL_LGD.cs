@@ -32,6 +32,13 @@ namespace IFRS9_ECL.Core
                 Log4Net.Log.Info($"Finished Extracting Raw Data - {DateTime.Now}");
 
 
+                if (1!=1)//loanbooks.Count <= 1000)
+                {
+                    RunLGDJob(loanbooks, _eclId, _eclType);
+                    return true;
+                }
+                //var checker = loanbooks.Count / 60;
+
                 var threads = loanbooks.Count / 500;
                 threads = threads + 1;
 
@@ -75,7 +82,7 @@ namespace IFRS9_ECL.Core
 
         private bool RunLGDJob(List<Loanbook_Data> lstRaw, Guid _eclId, EclType _eclType)
         {
-
+            //lstRaw = lstRaw.Where(o => o.ContractNo.Contains("182NIFC162940002") || o.ContractId.Contains("182NIFC162940002")).ToList();
             //Next Line to be removed
             //lstRaw = lstRaw.Where(o => o.ContractStartDate == null && o.ContractEndDate == null).Take(5).ToList();
             _eclTask = new ECLTasks(_eclId, _eclType);
@@ -114,10 +121,16 @@ namespace IFRS9_ECL.Core
 
             foreach (DataRow dr in dt.Rows)
             {
-                lgdAccountData.Add(DataAccess.i.ParseDataToObject(new LGDAccountData(), dr));
+                var lgdItm=DataAccess.i.ParseDataToObject(new LGDAccountData(), dr);
+                lgdAccountData.Add(lgdItm);
             }
             var contract_Ids = loanbook.Select(o => o.ContractId).ToList();
-            return lgdAccountData.Where(o=> contract_Ids.Contains(o.CONTRACT_NO)).ToList();
+            var filteredList = lgdAccountData.Where(o=> contract_Ids.Contains(o.CONTRACT_NO)).ToList();
+            foreach(var itm in filteredList)
+            {
+                try { itm.LIM_MONTHS = loanbook.FirstOrDefault(o => o.ContractId == itm.CONTRACT_NO).LIM_MONTH; } catch { }
+            }
+            return filteredList;
         }
 
         public List<LGDCollateralData> GetLGDCollateralData()

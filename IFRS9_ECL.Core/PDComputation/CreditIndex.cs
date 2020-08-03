@@ -62,14 +62,14 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
             }
+            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
 
             foreach (var _d in creditIndices)
             {
                 _d.Id = Guid.NewGuid();
-                _d.WholesaleEclId = _eclId;
                 dt.Rows.Add(new object[]
                     {
-                            _d.Id, _d.ProjectionMonth, _d.BestEstimate, _d.Optimistic, _d.Downturn, _d.WholesaleEclId
+                            _d.Id, _d.ProjectionMonth, _d.BestEstimate, _d.Optimistic, _d.Downturn, _eclId
                     });
             }
             var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PDCreditIndex_Table(this._eclType));
@@ -98,15 +98,17 @@ namespace IFRS9_ECL.Core.PDComputation
             var indexForecastBest = GetScenarioIndexForecasting(_indexForecastBest);
             var indexForecastOptimistic = GetScenarioIndexForecasting(_indexForecastOptimistics);
             var indexForecastDownturn = GetScenarioIndexForecasting(_indexForecastDownturn);
-
+            indexForecastBest = indexForecastBest.OrderBy(o => o.Date).Take(24).ToList();
+            indexForecastOptimistic = indexForecastOptimistic.OrderBy(o => o.Date).Take(24).ToList();
+            indexForecastDownturn = indexForecastDownturn.OrderBy(o => o.Date).Take(24).ToList();
 
             double vasicekIndexUsed = GetScenarioVasicekIndex();
-
+            var rpDate = GetReportingDate(_eclType, _eclId);
             for (int month = 0; month <= _maxCreditIndexMonth; month++)
             {
                 int monthOffset = Convert.ToInt32((month - 1) / 3) * 3 + 3;
                 
-                var eoMonth = ExcelFormulaUtil.EOMonth(GetReportingDate(_eclType, _eclId), monthOffset);
+                var eoMonth = ExcelFormulaUtil.EOMonth(rpDate, monthOffset);
                
                 var dr = new CreditIndex_Output();
                 dr.ProjectionMonth = month;
@@ -146,7 +148,7 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double GetScenarioVasicekIndex()
         {
-            try { return _vasicekWorkings.ComputeEtiNplIndex().FirstOrDefault(o => o.Date == GetReportingDate(_eclType, _eclId)).Index; } catch { return 0; }
+            try { return _vasicekWorkings.ComputeEtiNplIndex().Last().Index; } catch { return 0; }
         }
     }
 }

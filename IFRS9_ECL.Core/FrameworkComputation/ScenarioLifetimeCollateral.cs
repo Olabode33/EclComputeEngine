@@ -32,14 +32,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId, this._eclType);
             _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
-      
-        public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook)
+        //protected List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
+        //{
+        //    return this._lifetimeEad.GetTempEadInputData(loanbook);
+        //}
+        public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs)//, 
         {
             var lifetimeCollateral = new List<LifetimeCollateral>();
 
             var contractData = GetContractData(loanbook);
             var marginalDiscountFactor = GetMarginalDiscountFactor();
-            var eadInputs = GetTempEadInputData(loanbook);
+            //var eadInputs = GetTempEadInputData(loanbook);
             var collateralProjections = GetScenarioCollateralProjection();
             var updatedFsv = GetUpdatedFsvResult();
 
@@ -50,23 +53,49 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 string contractId = row.CONTRACT_NO;
                 string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
-                int eirIndex = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == eirGroup).Rank;
-                int ttrMonth = Convert.ToInt32(Math.Round(row.TTR_YEARS * 12, 0));
+                long eirIndex = 0;
+                try
+                {
+                    eirIndex = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == eirGroup).Rank;
+                }
+                catch { }
+                long ttrMonth = Convert.ToInt64(Math.Round(row.TTR_YEARS * 12, 0));
                 var tempFsv = updatedFsv.FirstOrDefault(x => x.ContractNo == contractId);
                 double[] fsvArray = new double[9];
-                fsvArray[0] = tempFsv.Cash;
-                fsvArray[1] = tempFsv.CommercialProperty;
-                fsvArray[2] = tempFsv.Debenture;
-                fsvArray[3] = tempFsv.Inventory;
-                fsvArray[4] = tempFsv.PlantAndEquipment;
-                fsvArray[5] = tempFsv.Receivables;
-                fsvArray[6] = tempFsv.ResidentialProperty;
-                fsvArray[7] = tempFsv.Shares;
-                fsvArray[8] = tempFsv.Vehicle;
-
-                for (int month = 0; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
+                if(tempFsv==null)
                 {
-                    double product = GetProductValue(marginalDiscountFactor, eirIndex, ttrMonth, month);
+                    fsvArray[0] = 0;
+                    fsvArray[1] = 0;
+                    fsvArray[2] = 0;
+                    fsvArray[3] = 0;
+                    fsvArray[4] = 0;
+                    fsvArray[5] = 0;
+                    fsvArray[6] = 0;
+                    fsvArray[7] = 0;
+                    fsvArray[8] = 0;
+                }
+                else
+                {
+                    fsvArray[0] = tempFsv.Cash;
+                    fsvArray[1] = tempFsv.CommercialProperty;
+                    fsvArray[2] = tempFsv.Debenture;
+                    fsvArray[3] = tempFsv.Inventory;
+                    fsvArray[4] = tempFsv.PlantAndEquipment;
+                    fsvArray[5] = tempFsv.Receivables;
+                    fsvArray[6] = tempFsv.ResidentialProperty;
+                    fsvArray[7] = tempFsv.Shares;
+                    fsvArray[8] = tempFsv.Vehicle;
+                }
+
+
+                var maxMonth = row.LIM_MONTHS + (row.LIM_MONTHS * 0.5);
+                for (int month = 0; month < maxMonth; month++)
+                {
+                    if(month==29)
+                    {
+
+                    }
+                    double product = GetProductValue(marginalDiscountFactor, eirGroup, ttrMonth, month);
                     double sumProduct = GetSumProductValue(collateralProjections, ttrMonth, fsvArray, month);
                     double value = product * sumProduct;
 
@@ -85,9 +114,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return lifetimeCollateral;
         }
 
-        private double GetSumProductValue(List<LgdCollateralProjection> collateralProjections, int ttrMonth, double[] fsvArray, int month)
+        private double GetSumProductValue(List<LgdCollateralProjection> collateralProjections, long ttrMonth, double[] fsvArray, long month)
         {
-            int minMonth = Math.Min(1 + month + ttrMonth, FrameworkConstants.TempExcelVariable_LIM_CM);
+            long minMonth = Math.Min(month + ttrMonth, FrameworkConstants.TempExcelVariable_LIM_CM);
             var projectionsDr = collateralProjections.FirstOrDefault(x => x.Month == minMonth);
             double[] projections = new double[9];
             projections[0] = projectionsDr.Cash;
@@ -104,10 +133,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return sumProduct;
         }
 
-        private double GetProductValue(List<IrFactor> marginalDiscountFactor, int eirIndex, int ttrMonth, int month)
+        private double GetProductValue(List<IrFactor> marginalDiscountFactor, string eirGroup, long ttrMonth, long month)
         {
-            double[] temp = marginalDiscountFactor.Where(x => x.Rank == eirIndex
-                                                                                && (x.ProjectionMonth >= 2 + month) && x.ProjectionMonth <= ttrMonth)
+            double[] temp = marginalDiscountFactor.Where(x => x.EirGroup == eirGroup
+                                                                                && (x.ProjectionMonth >= 1 + month) && x.ProjectionMonth <= ttrMonth)
                                                              .Select(x =>
                                                              {
                                                                  return x.ProjectionValue;
@@ -128,10 +157,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             return _irFactorWorkings.ComputeMarginalDiscountFactor();
         }
-        protected List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
-        {
-            return this._lifetimeEad.GetTempEadInputData(loanbook);
-        }
+
         protected List<LgdCollateralProjection> GetScenarioCollateralProjection()
         {
             var qry = "";
@@ -153,7 +179,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var _lstRaw = DataAccess.i.GetData(qry);
 
-            var lifetimePd = new LgdCollateralProjection
+            var collateralProjection_0 = new LgdCollateralProjection
             {
                 Cash = 1,
                 Vehicle = 1,
@@ -169,19 +195,19 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             };
             foreach (DataRow dr in _lstRaw.Rows)
             {
-                try { lifetimePd.Debenture = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Debenture"].ToString()); } catch { }
-                try { lifetimePd.Cash = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Cash"].ToString()); } catch { }
-                try { lifetimePd.Inventory = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Inventory"].ToString()); } catch { }
-                try { lifetimePd.Plant_And_Equipment = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}PlantEquipment"].ToString()); } catch { }
-                try { lifetimePd.Residential_Property = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}ResidentialProperty"].ToString()); } catch { }
-                try { lifetimePd.Commercial_Property = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}CommercialProperty"].ToString()); } catch { }
-                try { lifetimePd.Receivables = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Receivables"].ToString()); } catch { }
-                try { lifetimePd.Shares = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Shares"].ToString()); } catch { }
-                try { lifetimePd.Vehicle = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Vehicle"].ToString()); } catch { }
+                try { collateralProjection_0.Debenture = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Debenture"].ToString()); } catch { }
+                try { collateralProjection_0.Cash = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Cash"].ToString()); } catch { }
+                try { collateralProjection_0.Inventory = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Inventory"].ToString()); } catch { }
+                try { collateralProjection_0.Plant_And_Equipment = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}PlantEquipment"].ToString()); } catch { }
+                try { collateralProjection_0.Residential_Property = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}ResidentialProperty"].ToString()); } catch { }
+                try { collateralProjection_0.Commercial_Property = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}CommercialProperty"].ToString()); } catch { }
+                try { collateralProjection_0.Receivables = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Receivables"].ToString()); } catch { }
+                try { collateralProjection_0.Shares = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Shares"].ToString()); } catch { }
+                try { collateralProjection_0.Vehicle = double.Parse(dr[$"CollateralProjection{_scenario.ToString()}Vehicle"].ToString()); } catch { }
             }
 
 
-            var lifetimePd_Month0 = lifetimePd;//
+            var lifetimePd_Month0 = collateralProjection_0;//
             var assumptions = _scenarioLifetimeLGD.GetECLLgdAssumptions();
             if (_scenario == ECL_Scenario.Best)
             {
@@ -224,15 +250,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 var col = new LgdCollateralProjection();
 
                 col.Month = i;
-                col.Debenture = Math.Max(Math.Pow(itms[i - 1].Debenture * (1 + debenture), (1 / 12)), 0);
-                col.Cash = Math.Max(Math.Pow(itms[i - 1].Cash * (1 + cash), (1 / 12)), 0);
-                col.Commercial_Property = Math.Max(Math.Pow(itms[i - 1].Commercial_Property * (1 + commercialProperty), (1 / 12)), 0);
-                col.Inventory = Math.Max(Math.Pow(itms[i - 1].Inventory * (1 + inventory), (1 / 12)), 0);
-                col.Plant_And_Equipment = Math.Max(Math.Pow(itms[i - 1].Plant_And_Equipment * (1 + plantEquipment), (1 / 12)), 0);
-                col.Receivables = Math.Max(Math.Pow(itms[i - 1].Receivables * (1 + receivables), (1 / 12)), 0);
-                col.Residential_Property = Math.Max(Math.Pow(itms[i - 1].Residential_Property * (1 + residentialProperty), (1 / 12)), 0);
-                col.Shares = Math.Max(Math.Pow(itms[i - 1].Shares * (1 + shares), (1 / 12)), 0);
-                col.Vehicle = Math.Max(Math.Pow(itms[i - 1].Vehicle * (1 + vehicle), (1 / 12)), 0);
+                col.Debenture = Math.Max(itms[i - 1].Debenture * Math.Pow((1 + debenture), (1.0 / 12.0)), 0);
+                col.Cash = Math.Max(itms[i - 1].Cash * Math.Pow((1 + cash), (1.0 / 12.0)), 0);
+                col.Commercial_Property = Math.Max(itms[i - 1].Commercial_Property * Math.Pow((1 + commercialProperty), (1.0 / 12.0)), 0);
+                col.Inventory = Math.Max(itms[i - 1].Inventory * Math.Pow((1 + inventory), (1.0 / 12.0)), 0);
+                col.Plant_And_Equipment = Math.Max(itms[i - 1].Plant_And_Equipment * Math.Pow((1 + plantEquipment), (1.0 / 12.0)), 0);
+                col.Receivables = Math.Max(itms[i - 1].Receivables * Math.Pow( (1 + receivables), (1.0 / 12.0)), 0);
+                col.Residential_Property = Math.Max(itms[i - 1].Residential_Property * Math.Pow((1 + residentialProperty), (1.0 / 12.0)), 0);
+                col.Shares = Math.Max(itms[i - 1].Shares * Math.Pow((1 + shares), (1.0 / 12.0)), 0);
+                col.Vehicle = Math.Max(itms[i - 1].Vehicle * Math.Pow((1 + vehicle), (1.0 / 12.0)), 0);
 
                 itms.Add(col);
             }

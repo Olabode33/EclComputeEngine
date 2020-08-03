@@ -5,9 +5,9 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\bin\
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\bin\Debug\log4net.dll
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\bin\Debug\IFRS9_ECL.Util.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\bin\Debug\log4net.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.ProjectInstaller.resources
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.csproj.GenerateResource.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.ServiceWatcher\obj\Debug\Ecobank.IFRS9.ECL.ServiceWatcher.csprojAssemblyReference.cache

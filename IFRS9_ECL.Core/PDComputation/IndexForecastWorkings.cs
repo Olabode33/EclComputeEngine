@@ -98,7 +98,11 @@ namespace IFRS9_ECL.Core.PDComputation
 
 
             var groupedDate = standardisedData.GroupBy(x => x.Date).Select(x => new { Date = x.Key, Cnt = x.Count() }).ToList();
-            var macroEconomicCount= groupedDate.Max(r => r.Cnt);
+            var macroEconomicCount = 0;
+            if (groupedDate.Count > 0)
+            {
+                macroEconomicCount=groupedDate.Max(r => r.Cnt);
+            }
 
             foreach (var dt in groupedDate)
             {
@@ -114,7 +118,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 {
                     standardised[i] = date_standardisedData[i].MacroEconomicValue;
 
-                    if(principal1.Length-1>=i)
+                    if (principal1.Length - 1 >= i)
                     {
                         var p1 = macroeconomicPrincipal1.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal1[i] = p1 != null ? p1.MacroEconomicValue : 0;
@@ -130,23 +134,21 @@ namespace IFRS9_ECL.Core.PDComputation
                         var p3 = macroeconomicPrincipal3.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal3[i] = p3 != null ? p3.MacroEconomicValue : 0;
                     }
-                    if (principal2.Length - 1 >= i)
+                    if (principal4.Length - 1 >= i)
                     {
                         var p4 = macroeconomicPrincipal4.FirstOrDefault(o => o.MacroEconomicVariableId == date_standardisedData[i].MacroEconomicVariableId);
                         principal4[i] = p4 != null ? p4.MacroEconomicValue : 0;
                     }
                 }
 
-                foreach(var itm in standardisedData.Where(o=>o.Date== dt.Date).ToList())
-                {
-                    itm.Principal1 = ExcelFormulaUtil.SumProduct(standardised, principal1);
-                    itm.Principal2 = ExcelFormulaUtil.SumProduct(standardised, principal2);
-                    itm.Principal3 = ExcelFormulaUtil.SumProduct(standardised, principal3);
-                    itm.Principal4 = ExcelFormulaUtil.SumProduct(standardised, principal4);
+                var itm = standardisedData.FirstOrDefault(o => o.Date == dt.Date);
 
-                    principalData.Add(itm);
-                }
+                itm.Principal1 = ExcelFormulaUtil.SumProduct(standardised, principal1);
+                itm.Principal2 = ExcelFormulaUtil.SumProduct(standardised, principal2);
+                itm.Principal3 = ExcelFormulaUtil.SumProduct(standardised, principal3);
+                itm.Principal4 = ExcelFormulaUtil.SumProduct(standardised, principal4);
 
+                principalData.Add(itm);
             }
 
             return principalData;
@@ -210,9 +212,10 @@ namespace IFRS9_ECL.Core.PDComputation
                 MEVBackDate.Add(DataAccess.i.ParseDataToObject(new AffiliateMEVBackDateValues(), dr));
             }
 
+            var reportingDate= GetReportingDate(_eclType, _eclId);
             for (int i = 0; i < projections.Count; i++)
             {
-                if (projections[i].Date > GetReportingDate(_eclType, _eclId)) // && i > 3
+                if (projections[i].Date > reportingDate)// && i > 3
                 {
 
                     var itm = projections[i];
@@ -228,7 +231,10 @@ namespace IFRS9_ECL.Core.PDComputation
                     }
                     var _dt = itm.Date.AddMonths(-_bdate);
                     var _itm = projections.OrderBy(p => p.Date).FirstOrDefault(o => o.MacroEconomicVariableId==itm.MacroEconomicVariableId && o.Date.Month== _dt.Month && o.Date.Year== _dt.Year); // == GetLastDayOfMonth(itm.Date.AddMonths(-_bdate))
-
+                    if(_itm==null)
+                    {
+                        _itm = projections.Last();
+                    }
                     var dr = new IndexForecast();
                     dr.Date = itm.Date;
                     dr.MacroEconomicVariableId = itm.MacroEconomicVariableId;
@@ -254,7 +260,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
         protected double ComputeHistoricIndexStandardDeviation()
         {
-            return ExcelFormulaUtil.CalculateStdDev(new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex().Select(o=>o.Actual));
+            return Util.Computation.GetStandardDeviationS(new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex().Select(o=>o.Actual).ToList());
         }
         protected double ComputeHistoricIndexMean()
         {

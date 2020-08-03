@@ -46,7 +46,7 @@ namespace Ecobank.IFRS9.ECL.Service9
             Log4Net.Log.Info("Timer Disabled");
             var core = new Core();
             Log4Net.Log.Info("Entering Core");
-            core.ProcessRunTask();
+            core.ProcessRunTask(9);
 
             Log4Net.Log.Info("Task Completed!");
 

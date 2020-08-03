@@ -75,7 +75,7 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Debug\log4net.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Debug\EPPlus.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Debug\IFRS9_ECL.Data.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\bin\Debug\MathNet.Numerics.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Debug\IFRS9_ECL.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Debug\IFRS9_ECL.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Debug\IFRS9_ECL.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Debug\IFRS9_ECL.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS9_ECL\obj\Debug\IFRS9_ECL.csprojAssemblyReference.cache

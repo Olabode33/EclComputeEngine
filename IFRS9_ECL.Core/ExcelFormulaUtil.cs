@@ -1,4 +1,5 @@
 ﻿using Excel.FinancialFunctions;
+using IFRS9_ECL.Util;
 using MathNet.Numerics;
 using System;
 using System.Collections.Generic;
@@ -29,15 +30,17 @@ namespace IFRS9_ECL.Core
             try
             {
                 var dt = date.Value;
-                if (date.Value.Month == 12)
+                dt=dt.AddMonths(months);
+                if (dt.Month == 12)
                 {
-                    return new DateTime(date.Value.Year, 12, 31);
+                    return new DateTime(dt.Year, 12, 31);
                 }
-                DateTime eoMonth = new DateTime(date.Value.Year, date.Value.Month + 1, 1);
-                return eoMonth.AddMonths(months).AddDays(-1);
+                DateTime eoMonth = new DateTime(dt.Year, dt.Month + 1, 1).AddDays(-1);
+                return eoMonth;//.AddMonths(months);
             }
             catch (Exception ex)
             {
+                //Log4Net.Log.Error(ex);
                 var cc = ex;
             }
             return null;
@@ -65,7 +68,7 @@ namespace IFRS9_ECL.Core
             double result = 0;
             for (int i = 0; i < arg1.Length; i++)
             {
-                var _arg2 = 0.0;
+                var _arg2 = 1.0; //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 if (arg2.Length-1 >= i)
                     _arg2 = arg2[i];
 

@@ -40,7 +40,7 @@ namespace IFRS9_ECL.Core.Calibration
             if (dt.Rows.Count == 0)
                 return true;
 
-            var counter=Util.AppSettings.GetCounter(affiliateId);
+            var counter=Util.AppSettings.GetCounter(dt.Rows.Count+48);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "EAD_Behavioural_Term.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_Behavioural_Term.xlsx")}";
@@ -51,18 +51,27 @@ namespace IFRS9_ECL.Core.Calibration
                 try { File.Delete(path1); } catch { };
             }
 
+            Log4Net.Log.Info($"Output File Path - {path1}");
+
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             using (var package = new ExcelPackage(new FileInfo(path)))
             {
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[2];//.FirstOrDefault();
 
+                Log4Net.Log.Info("Read Base File");
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
+                                                     //for (int i = 0; i < dt.Rows.Count - 48; i++)
+                                                     //{
+                                                     //    worksheet.InsertRow(1, 1, 2);
+                                                     //}
 
-
+                //1 is for header
+                //48 is for computation done on the excel
+                worksheet.DeleteRow(dt.Rows.Count + 1+48, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
-                
+
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
 
@@ -94,9 +103,10 @@ namespace IFRS9_ECL.Core.Calibration
                     worksheet.Cells[i + 2, 14].Value = itm.Restructure_Start_Date == null ? "" : itm.Restructure_Start_Date.ToString();
                     worksheet.Cells[i + 2, 15].Value = itm.Restructure_End_Date == null ? "" : itm.Restructure_End_Date.ToString();
                 }
-
+                Log4Net.Log.Info("Writing Output File");
                 var fi = new FileInfo(path1);
                 package.SaveAs(fi);
+                Log4Net.Log.Info("Done Writing Output File");
             }
 
             string txtLocation = Path.GetFullPath(path1);
@@ -123,17 +133,29 @@ namespace IFRS9_ECL.Core.Calibration
                 //refresh and calculate to modify
                 theWorkbook.RefreshAll();
                 excel.Calculate();
-
+                Log4Net.Log.Info("Reading Output File");
                 Worksheet worksheet1 = theWorkbook.Sheets[1];
-
+                Log4Net.Log.Info("Read Sheet 1 of File");
                 var Assumption_NonExpired = "";
                 try { Assumption_NonExpired = worksheet1.Cells[10, 3].Value.ToString(); } catch { }
+
+                if(Assumption_NonExpired.ToLower().Contains("data"))
+                {
+                    //Assumption_NonExpired = "0";
+                    Assumption_NonExpired = "0";// new Random().Next(2, 25).ToString();
+                }
 
                 var Freq_NonExpired = "";
                 try { Freq_NonExpired = worksheet1.Cells[10, 4].Value.ToString(); } catch { }
 
                 var Assumption_Expired = "";
                 try { Assumption_Expired = worksheet1.Cells[11, 3].Value.ToString(); } catch { }
+
+                if (Assumption_Expired.ToLower().Contains("data"))
+                {
+                    //Assumption_Expired = "0";
+                    Assumption_Expired = "0";// new Random().Next(2, 45).ToString();
+                }
 
                 var Freq_Expired = "";
                 try { Freq_Expired = worksheet1.Cells[11, 4].Value.ToString(); } catch { }

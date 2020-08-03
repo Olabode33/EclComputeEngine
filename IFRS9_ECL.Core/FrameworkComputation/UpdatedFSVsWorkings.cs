@@ -82,8 +82,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                                                             row.vehicle_fsv,
                                                             row.vehicle_omv, overrideItem.FSV_Vehicle,
                                                             cali.Vehicle);
-
-                newRow.Override_TTR_Year = overrideItem.TtrYears;
+                //overrideItem.TtrYears = overrideItem.TtrYears ?? 0;
+                if(overrideItem.TtrYears!=null)
+                    newRow.Override_TTR_Year = int.Parse(Math.Round(overrideItem.TtrYears.Value,0).ToString());
 
                 updatedFSV.Add(newRow);
             }

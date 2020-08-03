@@ -27,6 +27,7 @@ namespace IFRS9_ECL.Models.Framework
     public class EclAssumptions
     {
         public string Key { get; set; }
+        public string InputName { get; set; }
         public string Value { get; set; }
         public int AssumptionGroup { get; set; }
     }

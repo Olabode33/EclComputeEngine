@@ -50,9 +50,9 @@ namespace IFRS9_ECL.Models.Raw
 
         public string RatingModel { get; set; }
 
-        public int? OriginalRating { get; set; }
+        public string OriginalRating { get; set; }
 
-        public int? CurrentRating { get; set; }
+        public string CurrentRating { get; set; }
 
         public double? LifetimePD { get; set; }
 
@@ -169,6 +169,9 @@ namespace IFRS9_ECL.Models.Raw
         public Guid WholesaleEclUploadId { get; set; }
 
         public long OrganizationUnitId { get; set; }
+
+        //Not Mapped
+        public double LIM_MONTH { get; set; }
 
     }
   

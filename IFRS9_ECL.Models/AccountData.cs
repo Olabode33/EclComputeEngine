@@ -16,6 +16,7 @@ namespace IFRS9_ECL.Models
         public double GUARANTOR_LGD { get; set; }
         public double GUARANTEE_VALUE { get; set; }
         public double GUARANTEE_LEVEL { get; set; }
+        public double LIM_MONTHS { get; set; }
 
     }
 }

@@ -104,6 +104,7 @@
     <Compile Include="Calibration\Entities\LGD_HairCut.cs" />
     <Compile Include="Calibration\Entities\EAD_CCF_Summary.cs" />
     <Compile Include="Calibration\Entities\CalibrationInput_LGD_RecoveryRate.cs" />
+    <Compile Include="Calibration\Entities\ParameterEstimate.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="ECLTasks.cs" />
     <Compile Include="ExcelFormulaUtil.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Macro\Entities\MacroResult_Statistics.cs" />
     <Compile Include="Macro\Macro_Processor.cs" />
     <Compile Include="Macro\Entities\MacroData.cs" />
+    <Compile Include="PDComputation\AffiliateRho.cs" />
     <Compile Include="PDComputation\cmPD\IndexForecast.cs" />
     <Compile Include="PDComputation\cmPD\LogOddRatioColumns.cs" />
     <Compile Include="PDComputation\cmPD\MonthlyLogOddsRatio.cs" />

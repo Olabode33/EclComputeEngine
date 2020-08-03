@@ -77,15 +77,18 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double ComputeVasicekAverageFitted()
         {
+            var rptDate = GetReportingDate(_eclType, _eclId);
+            rptDate = rptDate.AddMonths(-42);
             var fitted = ComputeEtiNplIndex();
-            return fitted.Where(m => m.Date >= new DateTime(GetReportingDate(_eclType, _eclId).Year - 3, GetReportingDate(_eclType, _eclId).Month, GetReportingDate(_eclType, _eclId).Day))
-                    .Average(o => o.Fitted);
+            return fitted.Where(m => m.Date >= rptDate) //
+                .Average(o => o.Fitted);
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()
         {
             var etiNpl = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_ETI_NPL();
             var historicIndex = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex();
-            double pdTtc = ComputePdTtc();
+            historicIndex = historicIndex.OrderBy(o => o.Date).ToList();
+            double pdTtc = etiNpl.Average(o => o.Series);// ComputePdTtc();
 
             var vasicekEtiNplIndex = new List<VasicekEtiNplIndex>();
 
@@ -103,7 +106,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
                 vasicekEtiNplIndex.Add(newRecord);
             }
-
+            vasicekEtiNplIndex = vasicekEtiNplIndex.OrderBy(o => o.Date).ToList();
             return vasicekEtiNplIndex;
         }
         protected double ComputeVasicekIndex(double index, double pd_ttc, double rho)

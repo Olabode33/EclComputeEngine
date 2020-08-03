@@ -38,7 +38,7 @@ namespace IFRS9_ECL.Core.Calibration
             if (dt.Rows.Count == 0)
                 return true;
 
-            var counter = Util.AppSettings.GetCounter(affiliateId);
+            var counter = Util.AppSettings.GetCounter(dt.Rows.Count);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "PD_CR_RD.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}PD_CR_RD.xlsx")}";
@@ -58,7 +58,13 @@ namespace IFRS9_ECL.Core.Calibration
 
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
+                //for(int i=0; i< dt.Rows.Count-48; i++)
+                //{
+                //    worksheet.InsertRow(1, 1, 2);
+                //}
 
+                //1 is for header
+                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -141,22 +147,41 @@ namespace IFRS9_ECL.Core.Calibration
             var rs = new CalibrationResult_PD_12Months_Summary();
 
             rs.Normal_12_Months_PD = worksheet1.Cells[14,6].Value;
+            rs.Normal_12_Months_PD = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Normal_12_Months_PD) ?0 : rs.Normal_12_Months_PD;
+
+
             rs.DefaultedLoansA = worksheet1.Cells[17, 3].Value;
+            rs.DefaultedLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.DefaultedLoansA) ?0 : rs.DefaultedLoansA;
+
             rs.DefaultedLoansB = worksheet1.Cells[17, 4].Value;
+            rs.DefaultedLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.DefaultedLoansB) ?0 : rs.DefaultedLoansB;
+
             rs.CuredLoansA = worksheet1.Cells[18, 3].Value;
+            rs.CuredLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredLoansA) ?0 : rs.CuredLoansA;
+
             rs.CuredLoansB = worksheet1.Cells[18, 4].Value;
+            rs.CuredLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredLoansB) ?0 : rs.CuredLoansB;
 
             rs.Cure_Rate = worksheet1.Cells[19, 5].Value;
+            rs.Cure_Rate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Cure_Rate) ?0 : rs.Cure_Rate;
 
             rs.CuredPopulationA = worksheet1.Cells[21, 3].Value;
+            rs.CuredPopulationA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredPopulationA) ?0 : rs.CuredPopulationA;
+
             rs.CuredPopulationB = worksheet1.Cells[21, 4].Value;
+            rs.CuredPopulationB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredPopulationB) ?0 : rs.CuredPopulationB;
 
             rs.RedefaultedLoansA = worksheet1.Cells[22, 3].Value;
+            rs.RedefaultedLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.RedefaultedLoansA) ?0 : rs.RedefaultedLoansA;
+
             rs.RedefaultedLoansB = worksheet1.Cells[22, 4].Value;
+            rs.RedefaultedLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.RedefaultedLoansB) ?0 : rs.RedefaultedLoansB;
 
             rs.Redefault_Rate = worksheet1.Cells[23, 5].Value;
+            rs.Redefault_Rate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Redefault_Rate) ?0 : rs.Redefault_Rate;
 
             rs.Redefault_Factor = worksheet1.Cells[25, 5].Value;
+            rs.Redefault_Factor = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Redefault_Factor) ?0 : rs.Redefault_Factor;
 
             Log4Net.Log.Info("Got SUmmary");
 

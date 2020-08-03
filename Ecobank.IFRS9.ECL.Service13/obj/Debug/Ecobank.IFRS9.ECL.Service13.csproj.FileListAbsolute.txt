@@ -24,3 +24,4 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service13\obj\Debug
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service13\obj\Debug\Ecobank.IFRS9.ECL.Service13.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service13\obj\Debug\Ecobank.IFRS9.ECL.Service13.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service13\obj\Debug\Ecobank.IFRS9.ECL.Service13.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\Ecobank.IFRS9.ECL.Service13\obj\Debug\Ecobank.IFRS9.ECL.Service13.csprojAssemblyReference.cache

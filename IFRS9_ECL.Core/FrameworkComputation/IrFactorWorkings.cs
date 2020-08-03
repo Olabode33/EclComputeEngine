@@ -31,13 +31,56 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return dataTable;
         }
 
+        List<IrFactor> cummulativeDiscountFactor = new List<IrFactor>();
+        List<IrFactor> marginalDiscountFactor = new List<IrFactor>();
         public List<IrFactor> ComputeCummulativeDiscountFactor()
         {
-            var cummulativeDiscountFactor = new List<IrFactor>();
+            
 
-            var marginalDiscountFactor = ComputeMarginalDiscountFactor();
+            marginalDiscountFactor = ComputeMarginalDiscountFactor();
 
-            foreach (var row in marginalDiscountFactor)
+
+
+
+            var threads = marginalDiscountFactor.Count / 500;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+            for (int i = 0; i < threads; i++)
+            {
+                var marg = marginalDiscountFactor.Skip(i * 500).Take(500).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunMarginalDiscountJob(marg);
+                });
+                taskLst.Add(task);
+            }
+            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
+
+            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+            
+
+
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+            Log4Net.Log.Info($"Marginal Discount Task Completed: {completedTask}");
+
+            return cummulativeDiscountFactor;
+        }
+
+        private void RunMarginalDiscountJob(List<IrFactor> sub_marginalDiscountFactor)
+        {
+
+            var itms = new List<IrFactor>();
+            foreach (var row in sub_marginalDiscountFactor)
             {
                 var dataRow = new IrFactor();
                 dataRow.EirGroup = row.EirGroup;
@@ -45,10 +88,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 dataRow.ProjectionMonth = row.ProjectionMonth;
                 dataRow.ProjectionValue = ComputeCummulativeProjectionValue(marginalDiscountFactor, row.EirGroup, row.ProjectionMonth);
 
-                cummulativeDiscountFactor.Add(dataRow);
+                itms.Add(dataRow);
             }
 
-            return cummulativeDiscountFactor;
+            cummulativeDiscountFactor.AddRange(itms);
         }
 
         public List<IrFactor> ComputeMarginalDiscountFactor()
@@ -59,6 +102,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 
 
                 var eirProjection = GetEirProjectionData();
+
 
                 var groups = eirProjection.Select(o => o.eir_group).Distinct();
 
@@ -77,8 +121,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     marginalDiscountFactor.Add(month0Record);
 
                     var _eirProjection = eirProjection.Where(o => o.eir_group == grp).OrderBy(p => p.months).ToList();
-
-                    for (int month = 1; month < FrameworkConstants.MaxIrFactorProjectionMonths; month++)
+                    var maxMonth= _eirProjection.Count + (_eirProjection.Count*0.5);
+                    for (int month = 1; month < maxMonth; month++)
                     {
                         var row = new EIRProjections();
                         if (_eirProjection.Count >= month)
@@ -99,7 +143,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                         month0Record.EirGroup = row.eir_group;
                         month0Record.Rank = rank;
                         month0Record.ProjectionMonth = month;
-                        month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE);
+                        month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE, _eirProjection.Count);
                         marginalDiscountFactor.Add(month0Record);
 
                         rank += 1;
@@ -109,6 +153,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             }
             catch(Exception ex)
             {
+                Log4Net.Log.Error(ex);
                 var cc = ex;
             }
 
@@ -142,9 +187,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return eIRProjections;
         }
 
-        public double ComputeProjectionValue(double projectionValue, int month, double prevValue, string type = CIR_TYPE)
+        public double ComputeProjectionValue(double projectionValue, int month, double prevValue, string type = CIR_TYPE, double lim_months=1)
         {
-            if (month > FrameworkConstants.TempExcelVariable_LIM_MONTH)
+            if (month > lim_months)
             {
                 return prevValue;
             }

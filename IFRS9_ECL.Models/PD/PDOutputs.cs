@@ -13,7 +13,6 @@ namespace IFRS9_ECL.Models.PD
         public double BestEstimate { get; set; }
         public double Optimistic { get; set; }
         public double Downturn { get; set; }
-        public Guid WholesaleEclId { get; set; }
     }
 
     public class PdMappings
@@ -36,7 +35,6 @@ namespace IFRS9_ECL.Models.PD
         public string Segment { get; set; }
         public int RatingUsed { get; set; }
         public int ClassificationScore { get; set; }
-        public Guid WholesaleEclId { get; set; }
     }
 
     public static class PdAssumptionsRowKey
@@ -78,7 +76,6 @@ namespace IFRS9_ECL.Models.PD
         public string PdGroup { get; set; }
         public int Month { get; set; }
         public double Value { get; set; }
-        public Guid WholesaleEclId { get; set; }
 
     }
 

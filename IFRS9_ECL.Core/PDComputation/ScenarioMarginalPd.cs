@@ -27,11 +27,6 @@ namespace IFRS9_ECL.Core.PDComputation
             _vasicekWorkings = new VasicekWorkings(_scenario, this._eclId, this._eclType);
         }
 
-        public void Run()
-        {
-            var dataTable = ComputeMaginalPd();
-            string stop = "Stop";
-        }
 
         public List<LifeTimeObject> ComputeMaginalPd()
         {
@@ -39,18 +34,32 @@ namespace IFRS9_ECL.Core.PDComputation
 
             var logOddsRatio = GetMonthlyLogOddsRatio();
             var varsicekIndex = GetVasicekScenario();
-
+            varsicekIndex=varsicekIndex.OrderBy(o => o.Date).ToList();
             var lstVarsicekIndex = new List<VasicekEtiNplIndex>();
-            int i = 0;
-            int j = 1;
-            while(lstVarsicekIndex.Count<24)
-            {
-                varsicekIndex[i].Month = j;
-                lstVarsicekIndex.Add(varsicekIndex[i]);
-                i = i + 3;
-                j = j + 1;
-            }
-            
+            lstVarsicekIndex = varsicekIndex.Take(24).ToList();
+
+            //int i = 0;
+            //int j = 1;
+
+            //while (lstVarsicekIndex.Count < 24)
+            //{
+            //    if (varsicekIndex.Count > i)
+            //    {
+            //        varsicekIndex[i].Month = j;
+            //        lstVarsicekIndex.Add(varsicekIndex[i]);
+            //    }
+            //    else
+            //    {
+            //        var adhoc = lstVarsicekIndex.Last();
+            //        var itm = new VasicekEtiNplIndex { Month = j, Date = EndOfMonth(adhoc.Date, 3), EtiNpl = adhoc.EtiNpl, Fitted = adhoc.Fitted, Index = adhoc.Fitted, Residuals = adhoc.Residuals, ScenarioFactor = adhoc.ScenarioFactor, ScenarioIndex = adhoc.ScenarioIndex, ScenarioPd = adhoc.ScenarioPd };
+            //        //adhocvarsicekIndex.Month = j;
+            //        lstVarsicekIndex.Add(itm);
+            //    }
+
+            //    i = i + 3;
+            //    j = j + 1;
+            //}
+
 
             var nonInternalModelInput = GetNonInternalModelInputsData();
 
@@ -157,5 +166,26 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             return new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_NonInternalModelInputs();
         }
+
+        private DateTime EndOfMonth(DateTime myDate, int numberOfMonths)
+        {
+            //Update Value ************************************************
+            //Update Value ************************************************
+            try
+            {
+                DateTime startOfMonth = new DateTime(myDate.Year, myDate.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(numberOfMonths).AddMonths(1).AddDays(-1);
+                return endOfMonth;
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+                myDate = DateTime.Today;
+                DateTime startOfMonth = new DateTime(myDate.Year, myDate.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(numberOfMonths).AddMonths(1).AddDays(-1);
+                return endOfMonth;
+            }
+        }
     }
+
 }

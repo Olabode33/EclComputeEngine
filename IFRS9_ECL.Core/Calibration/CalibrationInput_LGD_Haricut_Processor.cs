@@ -38,7 +38,7 @@ namespace IFRS9_ECL.Core.Calibration
             if (dt.Rows.Count == 0)
                 return true;
 
-            var counter = Util.AppSettings.GetCounter(affiliateId);
+            var counter = Util.AppSettings.GetCounter(dt.Rows.Count);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "LGD_Haircut.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}LGD_Haircut.xlsx")}";
@@ -59,7 +59,7 @@ namespace IFRS9_ECL.Core.Calibration
 
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
-
+                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -215,46 +215,83 @@ namespace IFRS9_ECL.Core.Calibration
                 try
                 {
                     Debenture = worksheet1.Cells[10, 23 - i].Value;
+                    Debenture = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Debenture)? 0: Debenture;
+
+                    Debenture = 0;// = new Random().Next(100, 1000);
+                    Debenture = Debenture * 0.01;
                 }
                 catch { }
                 double? Cash = 0;
                 try{
                     Cash=worksheet1.Cells[11, 23 - i].Value;
+                    Cash = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Cash) ?0: Cash;
+
+                    Cash = 0;// = new Random().Next(100, 1000);
+                    Cash = Cash * 0.01;
                 }
                 catch { }
                 double? Inventory = 0;
                 try{
                     Inventory=worksheet1.Cells[12, 23 - i].Value;
+                    Inventory = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Inventory) ?0: Inventory;
+
+                    Inventory = 0;// = new Random().Next(100, 1000);
+                    Inventory = Inventory * 0.01;
                 }
                 catch { }
                 double? Plant_And_Equipment = 0;
                 try{
                     Plant_And_Equipment=worksheet1.Cells[13, 23 - i].Value;
+                    Plant_And_Equipment = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Plant_And_Equipment) ?0: Plant_And_Equipment;
+
+                    Plant_And_Equipment = 0;// = new Random().Next(100, 1000);
+                    Plant_And_Equipment = Plant_And_Equipment*0.01;
                 }
                 catch { }
                 double? Residential_Property = 0;
                 try{
                     Residential_Property=worksheet1.Cells[14, 23 - i].Value;
+                    Residential_Property = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Residential_Property) ?0: Residential_Property;
+
+                    Residential_Property = 0;// = new Random().Next(100, 1000);
+                    Residential_Property = Residential_Property*0.01;
+
                 }
                 catch { }
                 double? Commercial_Property = 0;
                 try{
                     Commercial_Property=worksheet1.Cells[15, 23 - i].Value;
+                    Commercial_Property = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Commercial_Property) ?0: Commercial_Property;
+
+                    Commercial_Property = 0;// = new Random().Next(100, 1000);
+                    Commercial_Property = Commercial_Property*0.01;
                 }
                 catch { }
                 double? Receivables = 0;
                 try{
                     Receivables=worksheet1.Cells[16, 23 - i].Value;
+                    Receivables = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Receivables) ?0: Receivables;
+
+                    Receivables = 0;// = new Random().Next(100, 1000);
+                    Receivables = Receivables*0.01;
                 }
                 catch { }
                 double? Shares = 0;
                 try{
                     Shares=worksheet1.Cells[17, 23 - i].Value;
+                    Shares = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Shares) ?0: Shares;
+
+                    Shares = 0;// = new Random().Next(100, 1000);
+                    Shares = Shares*0.01;
                 }
                 catch { }
                 double? Vehicle = 0;
                 try{
                     Vehicle=worksheet1.Cells[18, 23 - i].Value;
+                    Vehicle = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Vehicle) ?0: Vehicle;
+
+                    Vehicle = 0;// = new Random().Next(100, 1000);
+                    Vehicle = Vehicle*0.01;
                 }
                 catch { }
 
@@ -268,54 +305,63 @@ namespace IFRS9_ECL.Core.Calibration
             try
             {
                 Debenture_ = worksheet1.Cells[10, 25].Value;
+                Debenture_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Debenture_)?0: Debenture_;
             }
             catch { }
             double? Cash_ = 0;
             try
             {
                 Cash_ = worksheet1.Cells[11, 25].Value;
+                Cash_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Cash_) ?0: Cash_;
             }
             catch { }
             double? Inventory_ = 0;
             try
             {
                 Inventory_ = worksheet1.Cells[12, 25].Value;
+                Inventory_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Inventory_) ?0: Inventory_; //new Random().Next(1, 100) * 0.01
             }
             catch { }
             double? Plant_And_Equipment_ = 0;
             try
             {
                 Plant_And_Equipment_ = worksheet1.Cells[13, 25].Value;
+                Plant_And_Equipment_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Plant_And_Equipment_) ?0: Plant_And_Equipment_;
             }
             catch { }
             double? Residential_Property_ = 0;
             try
             {
                 Residential_Property_ = worksheet1.Cells[14, 25].Value;
+                Residential_Property_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Residential_Property_) ?0: Residential_Property_;
             }
             catch { }
             double? Commercial_Property_ = 0;
             try
             {
                 Commercial_Property_ = worksheet1.Cells[15, 25].Value;
+                Commercial_Property_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Commercial_Property_) ?0: Commercial_Property_;
             }
             catch { }
             double? Receivables_ = 0;
             try
             {
                 Receivables_ = worksheet1.Cells[16, 25].Value;
+                Receivables_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Receivables_) ?0: Receivables_;
             }
             catch { }
             double? Shares_ = 0;
             try
             {
                 Shares_ = worksheet1.Cells[17, 25].Value;
+                Shares_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Shares_) ?0: Shares_;
             }
             catch { }
             double? Vehicle_ = 0;
             try
             {
                 Vehicle_ = worksheet1.Cells[18, 25].Value;
+                Vehicle_ = ECLNonStringConstants.i.ExcelDefaultValue.Contains(Vehicle_) ?0: Vehicle_;
             }
             catch { }
 

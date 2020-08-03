@@ -26,7 +26,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public int? Stage { get; set; }
 
-        public int? TtrYears { get; set; }
+        public double? TtrYears { get; set; }
 
         public double? FSV_Cash { get; set; }
 
@@ -49,6 +49,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         public double? OverlaysPercentage { get; set; }
 
         public string Reason { get; set; }
+        public string OverrideType { get; set; }
 
         public string ContractId { get; set; }
 

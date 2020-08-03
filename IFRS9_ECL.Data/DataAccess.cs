@@ -19,21 +19,22 @@ namespace IFRS9_ECL.Data
             }
             public int ExecuteQuery(string qry)
             {
-                try
-                {
+            try
+            {
 
-                    var con = new SqlConnection(sqlConnection);
-                    var com = new SqlCommand(qry, con);
+                var con = new SqlConnection(sqlConnection);
+                var com = new SqlCommand(qry, con);
 
-                    con.Open();
-                    var i = com.ExecuteNonQuery();
-                    con.Close();
-                    return 0;
-                }
-                catch (Exception ex)
-                {
-                    return -1;
-                }
+                con.Open();
+                var i = com.ExecuteNonQuery();
+                con.Close();
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+                return -1;
+            }
 
             }
 
@@ -77,25 +78,26 @@ namespace IFRS9_ECL.Data
 
         public int getCount(string qry)
             {
+            try
+            {
+
+                var con = new SqlConnection(sqlConnection);
+                var com = new SqlCommand(qry, con);
+
+                con.Open();
+                var i = com.ExecuteScalar();
+                con.Close();
                 try
                 {
-
-                    var con = new SqlConnection(sqlConnection);
-                    var com = new SqlCommand(qry, con);
-
-                    con.Open();
-                    var i = com.ExecuteScalar();
-                    con.Close();
-                    try
-                    {
-                        return int.Parse(i.ToString());
-                    }
-                    catch { return 0; }
+                    return int.Parse(i.ToString());
                 }
-                catch (Exception ex)
-                {
-                    return -1;
-                }
+                catch { return 0; }
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+                return -1;
+            }
 
             }
             public DataTable GetData(string qry)
@@ -113,7 +115,7 @@ namespace IFRS9_ECL.Data
             }
             catch (Exception ex)
             {
-                Log4Net.Log.Error(ex.ToString());
+                Log4Net.Log.Error(ex);
                 Log4Net.Log.Info(qry);
                 ////Console.ReadKey();
             }

@@ -9,8 +9,8 @@ namespace IFRS9_ECL.Models
         public string contract_no{get; set;}
             public string segment{get; set;}
             public string credit_limit_lcy{get; set;}
-            public string start_date{get; set;}
-            public string end_date{get; set;}
+            public DateTime? start_date{get; set;}
+            public DateTime? end_date{get; set;}
             public string remaining_ip{get; set;}
             public string revised_base{get; set;}
             public string cir_premium{get; set;}
@@ -22,6 +22,7 @@ namespace IFRS9_ECL.Models
             public string mths_to_expiry{get; set;}
             public string interest_divisor{get; set;}
             public string first_interest_month{get; set;}
+            public double LIM_MONTH { get; set;}
     }
 
 

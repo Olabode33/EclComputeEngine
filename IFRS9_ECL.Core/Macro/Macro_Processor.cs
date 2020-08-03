@@ -99,7 +99,8 @@ namespace IFRS9_ECL.Core.Calibration
                     varTitle = varTitle.Replace(" ", "").Replace("\"", "");
                     var indexAndBackLag = varTitle.Replace("Var", "").Split('-');
 
-                    var aff = affM[int.Parse(indexAndBackLag[0])-1];
+                    var aff = affM.FirstOrDefault(); //**************************************
+                    try { aff = affM[int.Parse(indexAndBackLag[0]) - 1]; } catch { };
                     aff.varTitle = varTitle.Split('-')[0].Trim();
                     aff.BackwardOffset = 0;
                     if (indexAndBackLag.Length>1)
@@ -168,17 +169,17 @@ namespace IFRS9_ECL.Core.Calibration
                 {
                     try
                     {
-                        if (double.Parse(npl.Trim()) > 0)
-                        {
+                        //if (double.Parse(npl.Trim()) > 0)
+                        //{
 
                             if (firstPick)
                             {
-                                actual_filtered_lineData.AddRange(allLineData.Skip(i - maxBackLag-1).Take(maxBackLag+1).ToList());
+                                actual_filtered_lineData.AddRange(allLineData.Skip(i - maxBackLag-1).Take(maxBackLag).ToList());
                                 firstPick = false;
                             }
                             actual_filtered_lineData.Add(lineData);
 
-                        }
+                        //}
                     }
                     catch { }
                 }
@@ -208,11 +209,13 @@ namespace IFRS9_ECL.Core.Calibration
             for (int i = 1; i <all_score.Count(); i++)
             {
                 var _singleLine = all_score[i].Split(',');
-                allDataStartPeriod=GetNextPeriod(allDataStartPeriod, i);
+
                 if (allDataStartPeriod == startPeriod)
                 {
                     started = true;
                 }
+                allDataStartPeriod =GetNextPeriod(allDataStartPeriod, i);
+
 
                 if (started)
                 {
@@ -270,7 +273,7 @@ namespace IFRS9_ECL.Core.Calibration
                     sum.Value = groupMacroData.Average(o => o.MacroValue4);
                     sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue4));
                 }
-
+                
                 lstPrinSummary.Add(sum);
                 lstPrinSummary.Add(sum1);
 
@@ -313,11 +316,14 @@ namespace IFRS9_ECL.Core.Calibration
                 var mcp = mcPrincipalComponent[i];
 
                 var indx = new MacroResult_IndexData();
-                indx.MacroId = macroId;
-                indx.Period = groupMacroData[i+maxBackLag].period;
-                indx.BfNpl = groupMacroData[i + maxBackLag].NPL;
-                indx.Index = (mcPrincipalComponent[i].PrincipalComponent1 ?? 0 * statistics.IndexWeight1 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent2 ?? 0 * statistics.IndexWeight2 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent3 ?? 0 * statistics.IndexWeight3 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent4 ?? 0 * statistics.IndexWeight4 ?? 0);
-                indxData.Add(indx);
+                if(groupMacroData.Count>(i + maxBackLag))
+                {
+                    indx.MacroId = macroId;
+                    indx.Period = groupMacroData[i + maxBackLag].period;
+                    indx.BfNpl = groupMacroData[i + maxBackLag].NPL;
+                    indx.Index = (mcPrincipalComponent[i].PrincipalComponent1 ?? 0 * statistics.IndexWeight1 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent2 ?? 0 * statistics.IndexWeight2 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent3 ?? 0 * statistics.IndexWeight3 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent4 ?? 0 * statistics.IndexWeight4 ?? 0);
+                    indxData.Add(indx);
+                }
             }
 
             statistics.StandardDev = 0;
@@ -398,6 +404,7 @@ namespace IFRS9_ECL.Core.Calibration
             }
             //MacroResult_SelectedMacroEconomicVariables
             qry = Queries.MacroResult_BatchInsert(macroId, sb.ToString(), affiliateId);
+            qry = qry.Replace("NaN", "0");
             DataAccess.i.ExecuteQuery(qry);
 
             return true;
@@ -513,6 +520,7 @@ namespace IFRS9_ECL.Core.Calibration
                 prs = System.Diagnostics.Process.Start(rscript, aff_macro);
             }catch(Exception ex)
             {
+                Log4Net.Log.Error(ex);
                 throw ex;
             }
             while (!File.Exists(loading_initial))
@@ -530,7 +538,7 @@ namespace IFRS9_ECL.Core.Calibration
                 }
             }
             catch(Exception ex) {
-                Log4Net.Log.Error(ex.Message);
+                Log4Net.Log.Error(ex);
             }
 
 

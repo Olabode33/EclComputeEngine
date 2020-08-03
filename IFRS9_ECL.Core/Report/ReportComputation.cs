@@ -11,6 +11,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -1311,9 +1312,13 @@ namespace IFRS9_ECL.Core.Report
         List<TempEadInput> lstTWEI = new List<TempEadInput>();
         List<EclOverrides> ovrde = new List<EclOverrides>();
         ResultDetail rd = new ResultDetail();
+        EclType _eclType;
+        Guid _eclId;
         public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook)
         {
-            
+            this._eclType = eclType;
+            this._eclId = eclId;
+
             var _eclId = eclId.ToString();
             var _eclType = eclType.ToString();
             var _eclTypeTable = eclType.ToString();
@@ -1350,7 +1355,7 @@ namespace IFRS9_ECL.Core.Report
             
             temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
 
-            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=1";
+            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
             dt = DataAccess.i.GetData(qry);
 
             foreach(DataRow dr in dt.Rows)
@@ -1359,7 +1364,7 @@ namespace IFRS9_ECL.Core.Report
                 lstTfer.Add(DataAccess.i.ParseDataToObject(tfer, dr));
             }
 
-            qry = $"select Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";
+            qry = $"select distinct Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";
             dt = DataAccess.i.GetData(qry);
 
             foreach (DataRow dr in dt.Rows)
@@ -1373,40 +1378,52 @@ namespace IFRS9_ECL.Core.Report
             ovrde = GetOverrideDataResult(eclId, eclType);
 
 
-            var threads = loanbook.Count / 500;
-            threads = threads + 1;
 
-            var taskLst = new List<Task>();
-
-            //threads = 1;
-            for (int i = 0; i < threads; i++)
+            if (1!=1)//loanbook.Count <= 1000)
             {
-                var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
-
-                var task = Task.Run(() =>
-                {
-                    RunFrameWorkReportJob(sub_LoanBook);
-                });
-                taskLst.Add(task);
+                RunFrameWorkReportJob(loanbook);
+                
             }
-            Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
-
-            var completedTask = taskLst.Where(o => o.IsCompleted).Count();
-            Log4Net.Log.Info($"Task Completed: {completedTask}");
-
-            //while (!taskLst.Any(o => o.IsCompleted))
-            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
-            while (0 < 1)
+            else
             {
-                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                //var checker = loanbook.Count / 60;
+
+                var threads = loanbook.Count / 500;
+                threads = threads + 1;
+
+                var taskLst = new List<Task>();
+
+                //threads = 1;
+                for (int i = 0; i < threads; i++)
                 {
-                    break;
+                    var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
+
+                    var task = Task.Run(() =>
+                    {
+                        RunFrameWorkReportJob(sub_LoanBook);
+                    });
+                    taskLst.Add(task);
                 }
-                //Do Nothing
+                Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
+
+                var completedTask = taskLst.Where(o => o.IsCompleted).Count();
+                Log4Net.Log.Info($"Task Completed: {completedTask}");
+
+                //while (!taskLst.Any(o => o.IsCompleted))
+                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+                while (0 < 1)
+                {
+                    if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                    {
+                        break;
+                    }
+                    //Do Nothing
+                }
+
+
             }
 
-
-
+            rd.ResultDetailDataMore = rd.ResultDetailDataMore.Where(o => o != null).ToList();
             rd.NumberOfContracts = rd.ResultDetailDataMore.Count();
             rd.OutStandingBalance = rd.ResultDetailDataMore.Sum(o=>o.Outstanding_Balance);
             rd.Pre_ECL_Best_Estimate = rd.ResultDetailDataMore.Sum(o => o.ECL_Best_Estimate);
@@ -1425,10 +1442,11 @@ namespace IFRS9_ECL.Core.Report
 
         private void RunFrameWorkReportJob(List<Loanbook_Data> loanbook)
         {
-
-
-            foreach (var itm in loanbook)
+            var itms = new List<ResultDetailDataMore>();
+            foreach(var itm in loanbook)
             {
+                // if (rd.ResultDetailDataMore.Any(o => o.ContractNo == itm.ContractNo))
+                //   continue;
 
                 var _lstTfer = lstTfer.Where(o => o.ContractId == itm.ContractNo).ToList();
 
@@ -1488,14 +1506,134 @@ namespace IFRS9_ECL.Core.Report
                     rddm.Overrides_FSV = ovrd.FSV_Cash ?? 0 + ovrd.FSV_CommercialProperty ?? 0 + ovrd.FSV_Debenture ?? 0 + ovrd.FSV_Inventory ?? 0 + ovrd.FSV_PlantAndEquipment ?? 0 + ovrd.FSV_Receivables ?? 0 + ovrd.FSV_ResidentialProperty ?? 0 + ovrd.FSV_Shares ?? 0 + ovrd.FSV_Vehicle ?? 0;
                     rddm.Overrides_TTR_Years = ovrd.TtrYears ?? 0;
                     rddm.Overrides_Stage = ovrd.Stage ?? 0;
+                    rddm.Overrides_Overlay = ovrd.OverlaysPercentage ?? 0;
                 }
 
                 rddm.Impairment_ModelOutput = (rddm.ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.ECL_Downturn * temp_header.UserInput_EclD);
                 rddm.Overrides_Impairment_Manual = (rddm.Overrides_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.Overrides_ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.Overrides_ECL_Downturn * temp_header.UserInput_EclD);
 
-                rd.ResultDetailDataMore.Add(rddm);
+                if (rddm != null)
+                {
+                    itms.Add(rddm);
+                }
+
+            }
+            //foreach (var itm in loanbook)
+            //{
+
+            //    // if (rd.ResultDetailDataMore.Any(o => o.ContractNo == itm.ContractNo))
+            //    //   continue;
+
+            //    var _lstTfer = lstTfer.Where(o => o.ContractId == itm.ContractNo).ToList();
+
+            //    var stage = 1;
+            //    try { stage = _lstTfer.FirstOrDefault(o => o.Scenario == 1).Stage; } catch { }
+
+            //    var BE_Value = 0.0;
+            //    try { BE_Value = _lstTfer.FirstOrDefault(o => o.Scenario == 1).FinalEclValue; } catch { }
+
+            //    var O_Value = 0.0;
+            //    try { O_Value = _lstTfer.FirstOrDefault(o => o.Scenario == 2).FinalEclValue; } catch { }
+
+            //    var D_Value = 0.0;
+            //    try { D_Value = _lstTfer.FirstOrDefault(o => o.Scenario == 3).FinalEclValue; } catch { }
+
+            //    var stage_Override = 1;
+            //    try { stage_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 1).StageOverride; } catch { }
+
+            //    var BE_Value_Override = 0.0;
+            //    try { BE_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 1).FinalEclValueOverride; } catch { BE_Value_Override = 0; }
+
+            //    var O_Value_Override = 0.0;
+            //    try { O_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 2).FinalEclValueOverride; } catch { O_Value_Override = 0; }
+
+            //    var D_Value_Override = 0.0;
+            //    try { D_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 3).FinalEclValueOverride; } catch { D_Value_Override = 0; }
+
+            //    var outStandingBal = 0.0;
+            //    try { outStandingBal = lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractNo).Value; } catch { }
+
+            //    var rddm = new ResultDetailDataMore
+            //    {
+            //        AccountNo = itm.AccountNo,
+            //        ContractNo = itm.ContractNo,
+            //        CustomerNo = itm.CustomerNo,
+            //        ProductType = itm.ProductType,
+            //        Sector = itm.Sector,
+            //        Stage = stage,
+            //        Overrides_Stage = stage_Override,
+            //        ECL_Best_Estimate = BE_Value,
+            //        ECL_Downturn = D_Value,
+            //        ECL_Optimistic = O_Value,
+            //        Overrides_ECL_Best_Estimate = BE_Value_Override * (1 + overrides_overlay),
+            //        Overrides_ECL_Downturn = D_Value_Override * (1 + overrides_overlay),
+            //        Overrides_ECL_Optimistic = O_Value_Override * (1 + overrides_overlay),
+            //        Segment = itm.Segment,
+            //        Overrides_FSV = 0,
+            //        Outstanding_Balance = outStandingBal,
+            //        Overrides_TTR_Years = 0,
+            //        Overrides_Overlay = 0,
+            //        Impairment_ModelOutput = 0,
+            //        Overrides_Impairment_Manual = 0
+            //    };
+            //    var ovrd = ovrde.FirstOrDefault(o => o.ContractId == rddm.ContractNo);
+            //    if (ovrd != null)
+            //    {
+            //        rddm.Overrides_FSV = ovrd.FSV_Cash ?? 0 + ovrd.FSV_CommercialProperty ?? 0 + ovrd.FSV_Debenture ?? 0 + ovrd.FSV_Inventory ?? 0 + ovrd.FSV_PlantAndEquipment ?? 0 + ovrd.FSV_Receivables ?? 0 + ovrd.FSV_ResidentialProperty ?? 0 + ovrd.FSV_Shares ?? 0 + ovrd.FSV_Vehicle ?? 0;
+            //        rddm.Overrides_TTR_Years = ovrd.TtrYears ?? 0;
+            //        rddm.Overrides_Stage = ovrd.Stage ?? 0;
+            //        rddm.Overrides_Overlay = ovrd.OverlaysPercentage ?? 0;
+            //    }
+
+            //    rddm.Impairment_ModelOutput = (rddm.ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.ECL_Downturn * temp_header.UserInput_EclD);
+            //    rddm.Overrides_Impairment_Manual = (rddm.Overrides_ECL_Best_Estimate * temp_header.UserInput_EclBE) + (rddm.Overrides_ECL_Optimistic * temp_header.UserInput_EclO) + (rddm.Overrides_ECL_Downturn * temp_header.UserInput_EclD);
+
+            //    if(rddm!=null)
+            //    {
+            //        itms.Add(rddm);
+            //    }
+
+            //}
+
+
+            var c = new ResultDetailDataMore();
+
+            Type myObjOriginalType = c.GetType();
+            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
+
+            var dt = new DataTable();
+            for (int i = 0; i < myProps.Length; i++)
+            {
+                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
             }
 
+            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
+
+
+            var lstContractNoLog = new List<string>();
+
+            foreach (var _d in itms)
+            {
+                if (lstContractNoLog.Any(o => o == _d.ContractNo))
+                    continue;
+
+                lstContractNoLog.Add(_d.ContractNo);
+
+                var Id = Guid.NewGuid();
+                dt.Rows.Add(new object[]
+                    {
+                            Id, _d.Stage, _d.Outstanding_Balance, _d.ECL_Best_Estimate, _d.ECL_Optimistic, _d.ECL_Downturn, _d.Impairment_ModelOutput,
+                            _d.Overrides_Stage, _d.Overrides_TTR_Years, _d.Overrides_FSV, _d.Overrides_Overlay, _d.Overrides_ECL_Best_Estimate, _d.Overrides_ECL_Optimistic, _d.Overrides_ECL_Downturn, _d.Overrides_Impairment_Manual, _d.ContractNo, _d.AccountNo,
+                            _d.CustomerNo, _d.Segment, _d.ProductType, _d.Sector, this._eclId
+                    });
+            }
+
+
+
+            //Save to Report Detail
+            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EclFramworkReportDetail(this._eclType));
+
+            //rd.ResultDetailDataMore.AddRange(itms);
         }
 
         protected List<EclOverrides> GetOverrideDataResult(Guid eclId, EclType eclType)

@@ -28,5 +28,6 @@ namespace IFRS9_ECL.Models
             public string POST_IP_CONTRACTUAL_INTEREST_RATE {get; set;}
             public string CURRENT_CONTRACTUAL_INTEREST_RATE {get; set;}
             public string EIR {get; set;}
+            public double LIM_MONTH { get; set; }
     }
 }

@@ -14,10 +14,13 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_EAD_Behavioural_Terms(Guid calibrationId)
         {
-            return $"select Id=-1, Customer_No,Account_No,Contract_No,Customer_Name,Snapshot_Date,Classification,Original_Balance_Lcy,Outstanding_Balance_Lcy,Outstanding_Balance_Acy,Contract_Start_Date,Contract_End_Date,Restructure_Indicator,Restructure_Type,Restructure_Start_Date,Restructure_End_Date from CalibrationInput_EAD_Behavioural_Terms where CalibrationID = '{calibrationId}' union select Id, Customer_No,Account_No,Contract_No,Customer_Name,Snapshot_Date,Classification,Original_Balance_Lcy,Outstanding_Balance_Lcy,Outstanding_Balance_Acy,Contract_Start_Date,Contract_End_Date,Restructure_Indicator,Restructure_Type,Restructure_Start_Date,Restructure_End_Date from CalibrationHistory_EAD_Behavioural_Terms where AffiliateId = (select OrganizationUnitId from CalibrationRunEadBehaviouralTerms where Id = '{calibrationId}') Order by Id ";// order by Snapshot_Date desc";
+            return $"select Id=-1, Customer_No,Account_No,Contract_No,Customer_Name,Snapshot_Date,Classification,Original_Balance_Lcy,Outstanding_Balance_Lcy,Outstanding_Balance_Acy,Contract_Start_Date,Contract_End_Date,Restructure_Indicator,Restructure_Type,Restructure_Start_Date,Restructure_End_Date from CalibrationInput_EAD_Behavioural_Terms where CalibrationID = '{calibrationId}' union select Id, Customer_No,Account_No,Contract_No,Customer_Name,Snapshot_Date,Classification,Original_Balance_Lcy,Outstanding_Balance_Lcy,Outstanding_Balance_Acy,Contract_Start_Date,Contract_End_Date,Restructure_Indicator,Restructure_Type,Restructure_Start_Date,Restructure_End_Date from CalibrationHistory_EAD_Behavioural_Terms where AffiliateId = (select OrganizationUnitId from CalibrationRunEadBehaviouralTerms where Id = '{calibrationId}') Order by Account_No, Contract_No, Snapshot_Date";// order by Snapshot_Date desc";
         }
 
-        
+        public static string VariableInterestRate(string eclType, string eclId)
+        {
+            return $"select Value, InputName from {eclType}EclEadInputAssumptions where {eclType}EclId ='{eclId}' and [Key] like '%VariableInterestRateProjection%'";
+        }
 
         public static string CalibrationResult_EAD_Behavioural_Terms_Update(Guid calibrationId, string assumption_nonExpired, string freq_nonExpired, string assumption_Expired, string freq_Expired)
         {
@@ -26,11 +29,11 @@ namespace IFRS9_ECL.Data
 
         public static string GetEADBehaviouralData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}')  and Status=7)";
         }
         public static string GetEADCCFData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationInput_EAD_CCF_Summary where CalibrationID=(select Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_CCF_Summary where CalibrationID=(select Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetLGDHaircutSummaryData(Guid eclId, string eclType)
         {
@@ -39,7 +42,7 @@ namespace IFRS9_ECL.Data
 
         public static string GetLGDRecoveryRateData(Guid eclId, string eclType)
         {
-            return $"select top 1 Overall_RecoveryRate from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetPD12MonthsPD(Guid eclId, string eclType)
         {
@@ -95,7 +98,7 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_Haircut(Guid calibrationId)
         {
-            return $" select Id=-1, Customer_No,Account_No,Contract_No,Snapshot_Date,Outstanding_Balance_Lcy,Debenture_OMV,Debenture_FSV,Cash_OMV,Cash_FSV,Inventory_OMV,Inventory_FSV,Plant_And_Equipment_OMV,Plant_And_Equipment_FSV,Residential_Property_OMV,Residential_Property_FSV,Commercial_Property_OMV,Commercial_Property_FSV,Receivables_OMV,Receivables_FSV,Shares_OMV,Shares_FSV,Vehicle_OMV,Vehicle_FSV,Guarantee_Value  from CalibrationInput_LGD_HairCut where CalibrationID = '{calibrationId}' union  select Id, Customer_No,Account_No,Contract_No,Snapshot_Date,Outstanding_Balance_Lcy,Debenture_OMV,Debenture_FSV,Cash_OMV,Cash_FSV,Inventory_OMV,Inventory_FSV,Plant_And_Equipment_OMV,Plant_And_Equipment_FSV,Residential_Property_OMV,Residential_Property_FSV,Commercial_Property_OMV,Commercial_Property_FSV,Receivables_OMV,Receivables_FSV,Shares_OMV,Shares_FSV,Vehicle_OMV,Vehicle_FSV,Guarantee_Value  from CalibrationHistory_LGD_HairCut where AffiliateId = (select OrganizationUnitId from CalibrationRunLgdHairCut where Id = '{calibrationId}')  order by Id"; //Snapshot_Date desc
+            return $" select Id=-1, Customer_No,Account_No,Contract_No,Snapshot_Date,Outstanding_Balance_Lcy,Debenture_OMV,Debenture_FSV,Cash_OMV,Cash_FSV,Inventory_OMV,Inventory_FSV,Plant_And_Equipment_OMV,Plant_And_Equipment_FSV,Residential_Property_OMV,Residential_Property_FSV,Commercial_Property_OMV,Commercial_Property_FSV,Receivables_OMV,Receivables_FSV,Shares_OMV,Shares_FSV,Vehicle_OMV,Vehicle_FSV,Guarantee_Value  from CalibrationInput_LGD_HairCut where CalibrationID = '{calibrationId}' union  select Id, Customer_No,Account_No,Contract_No,Snapshot_Date,Outstanding_Balance_Lcy,Debenture_OMV,Debenture_FSV,Cash_OMV,Cash_FSV,Inventory_OMV,Inventory_FSV,Plant_And_Equipment_OMV,Plant_And_Equipment_FSV,Residential_Property_OMV,Residential_Property_FSV,Commercial_Property_OMV,Commercial_Property_FSV,Receivables_OMV,Receivables_FSV,Shares_OMV,Shares_FSV,Vehicle_OMV,Vehicle_FSV,Guarantee_Value  from CalibrationHistory_LGD_HairCut where AffiliateId = (select OrganizationUnitId from CalibrationRunLgdHairCut where Id = '{calibrationId}')  order by Account_No, Contract_No, Snapshot_Date"; //Snapshot_Date desc
         }
 
 
@@ -121,12 +124,12 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_RecoveryRate(Guid calibrationId)
         {
-            return $"select Id=-1, Customer_No,Account_No,Account_Name,Contract_No,Segment,Days_Past_Due,Classification,Default_Date,Outstanding_Balance_Lcy,Contractual_Interest_Rate,Amount_Recovered,Date_Of_Recovery,Type_Of_Recovery,Product_Type from CalibrationInput_LGD_RecoveryRate where CalibrationID ='{calibrationId}' union select Id, Customer_No,Account_No,Account_Name,Contract_No,Segment,Days_Past_Due,Classification,Default_Date,Outstanding_Balance_Lcy,Contractual_Interest_Rate,Amount_Recovered,Date_Of_Recovery,Type_Of_Recovery,Product_Type from CalibrationHistory_LGD_RecoveryRate  where AffiliateId = (select OrganizationUnitId from CalibrationRunLgdRecoveryRate where Id = '{calibrationId}')  order by Id"; //Date_Of_Recovery desc
+            return $"select Id=-1, Customer_No,Account_No,Account_Name,Contract_No,Segment,Days_Past_Due,Classification,Default_Date,Outstanding_Balance_Lcy,Contractual_Interest_Rate,Amount_Recovered,Date_Of_Recovery,Type_Of_Recovery,Product_Type from CalibrationInput_LGD_RecoveryRate where CalibrationID ='{calibrationId}' union select Id, Customer_No,Account_No,Account_Name,Contract_No,Segment,Days_Past_Due,Classification,Default_Date,Outstanding_Balance_Lcy,Contractual_Interest_Rate,Amount_Recovered,Date_Of_Recovery,Type_Of_Recovery,Product_Type from CalibrationHistory_LGD_RecoveryRate  where AffiliateId = (select OrganizationUnitId from CalibrationRunLgdRecoveryRate where Id = '{calibrationId}')  order by Account_No,Contract_No,Date_Of_Recovery"; //Date_Of_Recovery desc
         }
 
         public static string CalibrationInput_PD_CR_DR(Guid calibrationId)
         {
-            return $"select Id=-1, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationInput_PD_CR_DR where CalibrationID ='{calibrationId}' union select Id, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationHistory_PD_CR_DR where AffiliateId =(select OrganizationUnitId from CalibrationRunPdCrDrs where Id='{calibrationId}')  order by Id"; //RAPP_Date desc
+            return $"select Id=-1, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationInput_PD_CR_DR where CalibrationID ='{calibrationId}' union select Id, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationHistory_PD_CR_DR where AffiliateId =(select OrganizationUnitId from CalibrationRunPdCrDrs where Id='{calibrationId}')  order by Account_No,Contract_No,RAPP_Date"; //RAPP_Date desc
         }
 
         public static string CalibrationResult_LGD_RecoveryRate_Update(Guid calibrationId, double? overall_Exposure_At_Default, double? overall_PvOfAmountReceived, double? overall_Count, double? overall_RecoveryRate, double? corporate_Exposure_At_Default, double? corporate_PvOfAmountReceived, double? corporate_Count, double? corporate_RecoveryRate, double? commercial_Exposure_At_Default, double? commercial_PvOfAmountReceived, double? commercial_Count, double? commercial_RecoveryRate, double? consumer_Exposure_At_Default, double? consumer_PvOfAmountReceived, double? consumer_Count, double? consumer_RecoveryRate)
@@ -174,6 +177,14 @@ namespace IFRS9_ECL.Data
         public static string EclsRegister(string eclType, string eclId)
         {
             return $"select top 1 Id, ReportingDate, IsApproved, Status, EclType=-1 from {eclType.ToString()}Ecls where Id='{eclId}'";
+        }
+        public static string UpdateIntTableServiceId(string TableName, int serviceId, int recordId)
+        {
+            return $"update {TableName} set ServiceId={serviceId} where Id ={recordId}";
+        }
+        public static string UpdateGuidTableServiceId(string TableName, int serviceId, Guid recordId)
+        {
+            return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}'";
         }
         public static string EclsRegisterUpdate(string eclType, string eclId, int status, string exception)
         {
@@ -246,7 +257,7 @@ namespace IFRS9_ECL.Data
         {
             //******************************************************
             //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            return $"select top 400 from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and AccountNo='0010113000021101' ";
+            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and ContractNo like '%001CMMA142020001% '";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
         }
 
 
@@ -325,7 +336,7 @@ namespace IFRS9_ECL.Data
 
         public static string PdMapping(Guid eclId, EclType eclType)
         {
-            return $"select p.Id, p.ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePD, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (p.ContractId=l.contractno) where p.{eclType.ToString()}EclId ='{eclId}' and l.{eclType.ToString()}EclUploadId ='{eclId}' and l.ContractNo not like '%EXP%'";
+            return $"select p.Id, p.ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePd, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (p.ContractId=l.contractno) where p.{eclType.ToString()}EclId ='{eclId}' and l.{eclType.ToString()}EclUploadId ='{eclId}' and l.ContractNo not like '%EXP%'";
         }
 
         public static string LGD_InputAssumptions_UnsecuredRecovery(Guid eclId, EclType eclType)

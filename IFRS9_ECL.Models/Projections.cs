@@ -27,4 +27,6 @@ namespace IFRS9_ECL.Models
         public int Month { get; set; }
         public double Value { get; set; }
     }
+
+
 }

@@ -100,7 +100,8 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\ExcelFinancialFu
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\IFRS9_ECL.Data.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\MathNet.Numerics.xml
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\FSharp.Core.xml
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.csprojAssemblyReference.cache
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.csproj.CopyComplete
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.pdb
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.csprojAssemblyReference.cache
+C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\log4net.xml

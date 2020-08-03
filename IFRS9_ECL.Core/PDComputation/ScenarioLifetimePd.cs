@@ -40,14 +40,14 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
             }
+            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
 
             foreach (var _d in output)
             {
                 _d.Id = Guid.NewGuid();
-                _d.WholesaleEclId = _eclId;
                 dt.Rows.Add(new object[]
                     {
-                            _d.Id, _d.PdGroup, _d.Month, _d.Value, _d.WholesaleEclId
+                            _d.Id, _d.PdGroup, _d.Month, _d.Value, _eclId
                     });
             }
             var tableName = "";
