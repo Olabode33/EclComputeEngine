@@ -96,8 +96,8 @@ namespace IFRS9_ECL.Core
                 var refined = new Refined_Raw_Retail_Wholesale();
                 refined.contract_no = rr.ContractId;// GenerateContractId(rr);
 
-                var filtLstRaw = lstRaw.FirstOrDefault(o => o.ContractNo == refined.contract_no);
-                var filtLstRawLst = lstRaw.Where(o => o.ContractNo == refined.contract_no).ToList();
+                var filtLstRaw = lstRaw.FirstOrDefault(o => o.ContractId == refined.contract_no);
+                var filtLstRawLst = lstRaw.Where(o => o.ContractId == refined.contract_no).ToList();
 
                 var subContractNo = refined.contract_no;
 
@@ -813,13 +813,14 @@ namespace IFRS9_ECL.Core
                     try { CCF_OBE = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "ConversionFactorOBE").Value); } catch { }
 
                     double value = projection_Calulcation_lifetimeEAD_0(obj.outstanding_balance_lcy, obj.product_type);
-                    if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i.CARDS && obj.product_type != ECLStringConstants.i._productType_lease & obj.product_type != ECLStringConstants.i._productType_mortgage)
+                    var product_type = obj.product_type.ToLower();
+                    if (product_type.Contains(ECLStringConstants.i._productType_loan.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_od.ToLower()) || product_type.Contains(ECLStringConstants.i.CARDS.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_lease.ToLower()) ||  product_type.Contains(ECLStringConstants.i._productType_mortgage.ToLower()))
                     {
-                        value = value * CCF_OBE;
+                        //do nothing
                     }
                     else
                     {
-                        //continue;
+                        value = value * CCF_OBE;
                     }
                     //if(contract.Contains("0010123600327101"))// for account with amortise in sheet, but not in payment schedule on EAD input (contract.Contains("1CRLO172640022"))
                     //{
@@ -837,15 +838,23 @@ namespace IFRS9_ECL.Core
                     var ps_proj = paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract);
                     var cirgroup_cirProjections = cirProjections.Where(o => o.cir_group == cir_group_value).ToList();
                     var contract_paymentScheduleProjection = paymentScheduleProjection.Where(o => o.ContractId == contract).ToList();
+                    contract_paymentScheduleProjection.OrderBy(o => o.NoOfSchedules).ToList();
 
                     var PrePaymentFactor = 0.0;
                     try { PrePaymentFactor = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "PrePaymentFactor)").Value); } catch { }
 
+                    var outstandingBalance = 0.0;
+                    try
+                    {
+                        outstandingBalance = double.Parse(refined_query.OUTSTANDING_BALANCE_LCY);
+                    }
+                    catch { }
 
                     for (int monthIndex = 1; monthIndex <= lifetime_query.LIM_MONTH; monthIndex++)
                     {
                         double value1 = 0, value2 = 0;
                         overallvalue = 0;
+
                         try
                         {
                             if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_lease && obj.product_type != ECLStringConstants.i._productType_mortgage)
@@ -898,6 +907,11 @@ namespace IFRS9_ECL.Core
 
                                     double f_value = 0;
                                     try { f_value = contract_paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value; } catch { };
+
+                                    outstandingBalance = outstandingBalance - f_value;
+                                    if (outstandingBalance <= 0)
+                                        continue;
+
                                     f_value = f_value * ECLNonStringConstants.i.Local_Currency;
 
 

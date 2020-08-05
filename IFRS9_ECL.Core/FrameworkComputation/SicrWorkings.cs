@@ -42,7 +42,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var pdMapping = GetPdMappingResult(); //YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy
 
 
-            var lbContractIds = loanbook.Select(o => o.ContractId).ToList();
+            var lbContractIds = loanbook.Select(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "")).ToList();
+
             sicrInput = sicrInput.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
             pdMapping= pdMapping.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
 
@@ -52,7 +53,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 try
                 {
-                    var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
+                    var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId.ToUpper().Replace("EXPLOAN|", "") == row.ContractId);
                     var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
 
                     var newRow = new StageClassification();
@@ -69,6 +70,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     }
                     newRow.projectionMonth = 0;
                     try { newRow.projectionMonth = loanbookRecord.LIM_MONTH; } catch { }
+                    newRow.ContractId = newRow.ContractId.ToUpper().Replace("EXPLOAN|", "");
                     stageClassification.Add(newRow);
                 }catch(Exception ex)
                 {
@@ -180,32 +182,38 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private int ComputeCreditRatingScore(Loanbook_Data loanBookRecord, List<EclAssumptions> assumption)
         {
-            double stage2to3CreditRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingDefaultIndicator));
-            double lowHighRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowHighRisk));
-            double normalRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowRisk));
-            double highRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankHighRisk));
-            var currentRating = loanBookRecord.CurrentRating;
-            var originalRating = loanBookRecord.OriginalRating;
-
-            double currentCreditRankRating = string.IsNullOrWhiteSpace(currentRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == currentRating).Key.Replace("CreditRatingRank",""));// &&  Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()));
-            double originalCreditRankRating = string.IsNullOrWhiteSpace(originalRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == originalRating).Key.Replace("CreditRatingRank", ""));
-
-            if (currentCreditRankRating >= stage2to3CreditRating)
+            try
             {
-                return 3;
-            }
-            else
-            {
-                if (currentCreditRankRating <= lowHighRiskThreshold)
+                double stage2to3CreditRating = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingDefaultIndicator));
+                double lowHighRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowHighRisk));
+                double normalRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankLowRisk));
+                double highRiskThreshold = Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRankHighRisk));
+                var currentRating = loanBookRecord.CurrentRating;
+                var originalRating = loanBookRecord.OriginalRating;
+
+                double currentCreditRankRating = string.IsNullOrWhiteSpace(currentRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == currentRating).Key.Replace("CreditRatingRank", ""));// &&  Convert.ToDouble(GetImpairmentAssumptionValue(assumption, ImpairmentRowKeys.CreditRatingRank + currentRating.ToString()));
+                double originalCreditRankRating = string.IsNullOrWhiteSpace(originalRating.ToString()) ? 1 : Convert.ToDouble(assumption.FirstOrDefault(o => o.AssumptionGroup == 6 && o.Value == originalRating).Key.Replace("CreditRatingRank", ""));
+
+                if (currentCreditRankRating >= stage2to3CreditRating)
                 {
-                    return currentCreditRankRating - originalCreditRankRating > normalRiskThreshold ? 2 : 1;
+                    return 3;
                 }
                 else
                 {
-                    return currentCreditRankRating - originalCreditRankRating > highRiskThreshold ? 2 : 1;
+                    if (currentCreditRankRating <= lowHighRiskThreshold)
+                    {
+                        return currentCreditRankRating - originalCreditRankRating > normalRiskThreshold ? 2 : 1;
+                    }
+                    else
+                    {
+                        return currentCreditRankRating - originalCreditRankRating > highRiskThreshold ? 2 : 1;
+                    }
                 }
+            }catch(Exception ex)
+            {
+                var cc = ex;
+                return 1;
             }
-
 
         }
 

@@ -76,7 +76,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             Console.WriteLine($"Got marginalAccumulationFactor");
             refined_Raw_Data = GetRefinedLoanBookData(loanbook);
             Console.WriteLine($"Got refined_Raw_Data");
-            var contractData = _processECL_LGD.GetLgdContractData(loanbook);
+            //var contractData = _processECL_LGD.GetLgdContractData(loanbook);
             var loanbook_contractNo = refined_Raw_Data.Select(o => o.contract_no).ToList();
 
             var contract_nos = eadInputs.Where(n=>loanbook_contractNo.Contains(n.Contract_no)).Select(o => o.Contract_no).Distinct().ToList();
@@ -140,23 +140,23 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var sub_lifetimeEad = new List<LifetimeEad>();
             foreach (var contract_no in contractNo)
             {
-                if(contract_no.Contains("9CRLA142680001"))//005IELA143560002
+                //if(contract_no.Contains("9CRLA142680001"))//005IELA143560002
 
-                {
-                    var cc = 0;
-                }
+                //{
+                //    var cc = 0;
+                //}
 
                 Console.WriteLine($"FEAD - {contract_no}");
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).OrderBy(o=>o.Month).ToList();
 
-                string contractId = contract_no;
+                string contractId = contract_no.Replace("EXPLoan|", "");
 
                 int cirIndex = 1;
                 try { cirIndex = marginalAccumulationFactor.FirstOrDefault(o => o.EirGroup == c_eadInputs[0].Cir_Group).Rank; } catch { };
 
-                var loanRec = refined_Raw_Data.FirstOrDefault(x => x.contract_no == contractId);
+                var loanRec = refined_Raw_Data.FirstOrDefault(x => x.contract_no == contract_no);
                 string productType = loanRec.product_type;
-                var sirc = sircInputs.FirstOrDefault(x => x.ContractId == contractId);
+                var sirc = sircInputs.FirstOrDefault(x => x.ContractId == contract_no);
                 long? daysPastDue = sirc == null ? 0 : sirc.DaysPastDue;
 
                 var month0Record = new LifetimeEad();
@@ -339,7 +339,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);
 
-            return refined_lstRaw.Where(o=>!o.contract_no.Contains("EXP")).ToList();
+            return refined_lstRaw;//.Where(o=>!o.contract_no.Contains("EXP")).ToList();
         }
 
         private DateTime EndOfMonth(DateTime myDate, int numberOfMonths)

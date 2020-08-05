@@ -78,7 +78,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
 
             lifetimeEAD = _lifetimeEAD;//GetLifetimeEadResult(loanbook);
-            
+
+            //lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
 
             contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
             var taskLst = new List<Task>();
@@ -188,6 +189,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var threads = contractData.Count / 500;
             threads = threads + 1;
 
+            contractData = contractData.OrderBy(o => o.CONTRACT_NO).ToList();
+            //pdMapping = pdMapping.OrderBy(o => o.ContractId).ToList();
+            //sicrInput = sicrInput.OrderBy(o => o.ContractId).ToList();
+            //stageClassification = stageClassification.OrderBy(o => o.ContractId).ToList();
             var taskLst_ = new List<Task>();
             for (int i = 0; i < threads; i++)
             {
@@ -267,20 +272,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxx
                     //try { loanStage= stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage; } catch { };
                     int loanStage = 1;
-                    try
-                    {
+
                         loanStage = substageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
-                    }
-                    catch { }
+
 
 
                     var pdMappingRow = subpdMapping.FirstOrDefault(x => x.ContractId == contractId);
 
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                    //if (pdMappingRow==null)
-                    //{
-                    //    pdMappingRow = pdMapping.FirstOrDefault();
-                    //}
+                   
                     string pdGroup = pdMappingRow.PdGroup;
                     string segment = pdMappingRow.Segment;
                     string productType = pdMappingRow.ProductType;

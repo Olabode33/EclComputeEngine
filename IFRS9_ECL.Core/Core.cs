@@ -161,9 +161,6 @@ namespace IFRS9_ECL.Core
 
                 var stageClassification = GetStagingClassificationResult(loanbook_data,masterGuid, eclType);
 
-
-                
-
                 var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data, lifetimeEad, eadInput, stageClassification);
 
                 //var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();

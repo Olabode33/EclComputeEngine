@@ -104,4 +104,3 @@ C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.cspro
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.exe
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.pdb
 C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\obj\Debug\IFRS_Test1.csprojAssemblyReference.cache
-C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\log4net.xml

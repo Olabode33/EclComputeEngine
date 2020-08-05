@@ -142,7 +142,9 @@ namespace IFRS9_ECL.Core.PDComputation
 
             foreach (DataRow dr in dt.Rows)
             {
-                lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new SicrInputs(), dr));
+                var itm = DataAccess.i.ParseDataToObject(new SicrInputs(), dr);
+                itm.ContractId = itm.ContractId.Replace("EXPLoan|", "");
+                lifeTimeProjections.Add(itm);
             }
             
             return lifeTimeProjections;

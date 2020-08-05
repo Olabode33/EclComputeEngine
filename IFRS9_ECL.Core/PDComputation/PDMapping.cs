@@ -69,7 +69,7 @@ namespace IFRS9_ECL.Core.PDComputation
             //var qry = Queries.Raw_Data(this._eclId,this._eclType);
             //var _lstRaw = DataAccess.i.GetData(qry);
 
-            var _NonExpLoanbook_data = loanbook_Data.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
+            var _NonExpLoanbook_data = loanbook_Data;//.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
 
 
             var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
@@ -349,6 +349,7 @@ namespace IFRS9_ECL.Core.PDComputation
             foreach (DataRow dr in _PdMapping.Rows)
             {
                 var itm = DataAccess.i.ParseDataToObject(new PdMappings(), dr);
+                itm.ContractId = itm.ContractId.Replace("EXPLoan|", "");
                 pdMapping.Add(itm);
             }
             Console.WriteLine($"Got LGD GetPdMapping");

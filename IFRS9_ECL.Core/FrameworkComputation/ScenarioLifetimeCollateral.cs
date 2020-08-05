@@ -46,13 +46,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var collateralProjections = GetScenarioCollateralProjection();
             var updatedFsv = GetUpdatedFsvResult();
 
-            var eadInputContractData = eadInputs.Select(o => o.Contract_no).ToList();
+            var eadInputContractData = eadInputs.Select(o => o.Contract_no.Replace("EXPLoan|", "")).ToList();
+
             contractData = contractData.Where(o => eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
 
             foreach (var row in contractData)
             {
                 string contractId = row.CONTRACT_NO;
-                string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
+                string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no.Replace("EXPLoan|", "") == contractId).Eir_Group;
                 long eirIndex = 0;
                 try
                 {
@@ -89,12 +90,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
                 var maxMonth = row.LIM_MONTHS + (row.LIM_MONTHS * 0.5);
+
+                if(eirGroup==ECLStringConstants.i.ExpiredContractsPrefix)
+                {
+                    maxMonth = 161;
+                }
                 for (int month = 0; month < maxMonth; month++)
                 {
-                    if(month==29)
-                    {
 
-                    }
                     double product = GetProductValue(marginalDiscountFactor, eirGroup, ttrMonth, month);
                     double sumProduct = GetSumProductValue(collateralProjections, ttrMonth, fsvArray, month);
                     double value = product * sumProduct;

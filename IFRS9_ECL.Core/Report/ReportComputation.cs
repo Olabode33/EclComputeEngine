@@ -1475,7 +1475,7 @@ namespace IFRS9_ECL.Core.Report
                 try { D_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 3).FinalEclValueOverride; } catch { D_Value_Override = 0; }
 
                 var outStandingBal = 0.0;
-                try { outStandingBal = lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractNo).Value; } catch { }
+                try { outStandingBal = lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractId).Value; } catch { }
 
                 var rddm = new ResultDetailDataMore
                 {

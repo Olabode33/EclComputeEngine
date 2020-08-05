@@ -128,7 +128,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRow.ContractId = contractId;
                     newRow.Stage = stage;
                     newRow.FinalEclValue = finalEclValue;
-                    var mntECL = monthlyEcl.Where(o => o.ContractId == rowStage.ContractId).ToList();
+                    var mntECL = monthlyEcl.Where(o => o.ContractId == rowStage.ContractId.Replace("EXPLoan|", "")).ToList();
 
                     foreach (var itm in mntECL)
                     {
@@ -150,11 +150,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             //xxxxxxxxxxxxxxxxxxx
             double lifetimeLgdMonth0Value = 0;
-            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId == contractId && o.Month == 0).Value; } catch { }
+            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId == contractId.Replace("EXPLoan|", "") && o.Month == 0).Value; } catch { }
             double lifetimeEadMonth0Value = 0;
             try
             {
-                lifetimeEadMonth0Value = lifetimeEad.FirstOrDefault(o => o.ContractId == contractId && o.ProjectionMonth == 0).ProjectionValue;
+                lifetimeEadMonth0Value = lifetimeEad.FirstOrDefault(o => o.ContractId == contractId.Replace("EXPLoan|", "") && o.ProjectionMonth == 0).ProjectionValue;
             }
             catch { }
 
@@ -243,6 +243,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //{
             //    var cc = 0;
             //}
+
+            if(pdGroup==ECLStringConstants.i.ExpiredContractsPrefix)
+            {
+                pdValue = 1;
+            }
             double monthlyEclValue = pdValue * lgdValue * eadValue;
             return monthlyEclValue;
         }

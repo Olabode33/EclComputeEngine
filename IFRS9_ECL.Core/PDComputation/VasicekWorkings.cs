@@ -78,9 +78,9 @@ namespace IFRS9_ECL.Core.PDComputation
         protected double ComputeVasicekAverageFitted()
         {
             var rptDate = GetReportingDate(_eclType, _eclId);
-            rptDate = rptDate.AddMonths(-42);
+            rptDate = rptDate.AddMonths(-69);
             var fitted = ComputeEtiNplIndex();
-            return fitted.Where(m => m.Date >= rptDate) //
+            return fitted.Where(m => m.Date >= rptDate)// new DateTime(2013, 09,01)) //
                 .Average(o => o.Fitted);
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()
