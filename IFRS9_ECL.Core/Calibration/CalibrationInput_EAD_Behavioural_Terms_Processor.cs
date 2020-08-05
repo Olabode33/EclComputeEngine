@@ -36,6 +36,7 @@ namespace IFRS9_ECL.Core.Calibration
             //DataView dv = _dt.DefaultView;
             //dv.Sort = "Account_No,Contract_No,Snapshot_Date";
             var dt = _dt;// dv.ToTable();
+            var rowCount = dt.Rows.Count + 1;
 
             if (dt.Rows.Count == 0)
                 return true;
@@ -130,6 +131,14 @@ namespace IFRS9_ECL.Core.Calibration
 
             try
             {
+
+                //Sort
+                Worksheet calculationSheet = theWorkbook.Sheets[3];
+                Range sortRange = calculationSheet.Range["A2", "O" + rowCount.ToString()];
+                //sortRange.Sort(sortRange.Columns[9], DataOption1: XlSortDataOption.xlSortTextAsNumbers);
+                sortRange.Sort(sortRange.Columns[5], DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Snapshot date
+                sortRange.Sort(sortRange.Columns[3], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Contract No: 3; Account No: 2;
+
                 //refresh and calculate to modify
                 theWorkbook.RefreshAll();
                 excel.Calculate();

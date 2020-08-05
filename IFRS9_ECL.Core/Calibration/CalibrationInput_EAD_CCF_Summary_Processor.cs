@@ -35,6 +35,7 @@ namespace IFRS9_ECL.Core.Calibration
             //DataView dv = _dt.DefaultView;
             //dv.Sort = "Account_No,Snapshot_Date";
             var dt = _dt;// dv.ToTable();
+            var rowCount = dt.Rows.Count + 1;
 
             if (dt.Rows.Count == 0)
                 return true;
@@ -127,6 +128,13 @@ namespace IFRS9_ECL.Core.Calibration
 
             try
             {
+                //Sort
+                Worksheet calculationSheet = theWorkbook.Sheets[2];
+                Range sortRange = calculationSheet.Range["A2", "J" + rowCount.ToString()];
+                sortRange.Sort(sortRange.Columns[9], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Outstanding balance
+                sortRange.Sort(sortRange.Columns[5], XlSortOrder.xlAscending);  //Snapshot date
+                sortRange.Sort(sortRange.Columns[2], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers);  // Account no
+
 
 
                 //refresh and calculate to modify

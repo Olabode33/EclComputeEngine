@@ -34,6 +34,7 @@ namespace IFRS9_ECL.Core.Calibration
             //DataView dv = _dt.DefaultView;
             //dv.Sort = "Account_No,Contract_No,Date_Of_Recovery";
             var dt = _dt;// dv.ToTable();
+            var rowCount = dt.Rows.Count + 1;
 
             if (dt.Rows.Count == 0)
                 return true;
@@ -57,7 +58,7 @@ namespace IFRS9_ECL.Core.Calibration
 
                 // get number of rows in the sheet
                 int rows = worksheet.Dimension.Rows; // 10
-                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
+                worksheet.DeleteRow(dt.Rows.Count + 2, rows - (dt.Rows.Count + 2));
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -123,6 +124,16 @@ namespace IFRS9_ECL.Core.Calibration
                                                                     _missingValue);
 
 
+            //Sort
+            Worksheet calculationSheet = theWorkbook.Sheets[2];
+            Range sortRange = calculationSheet.Range["A2", "N" + rowCount.ToString()];
+            sortRange.Sort(sortRange.Columns[10], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Outstanding balance
+            //sortRange.Sort(sortRange.Columns[9], DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Default date
+            sortRange.Sort(sortRange.Columns[4], DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
+
+            //Temp fix for #REF error after deleting rows
+            Range tempRange = calculationSheet.Range["A" + (rowCount + 1).ToString(), "N" + (rowCount + 1).ToString()];
+            tempRange.EntireRow.Delete();
 
             //refresh and calculate to modify
             theWorkbook.RefreshAll();
@@ -134,64 +145,65 @@ namespace IFRS9_ECL.Core.Calibration
 
 
             r.Overall_Exposure_At_Default = 0;
-            try { r.Overall_Exposure_At_Default = worksheet1.Cells[2, 28].Value; } catch { }
+            try { r.Overall_Exposure_At_Default = worksheet1.Cells[2, 2].Value; } catch { }
             r.Overall_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_Exposure_At_Default) ? 0 : r.Overall_Exposure_At_Default;
 
             r.Overall_PvOfAmountReceived = 0;
-            try { r.Overall_PvOfAmountReceived = worksheet1.Cells[3, 28].Value; } catch { }
+            try { r.Overall_PvOfAmountReceived = worksheet1.Cells[3, 2].Value; } catch { }
             r.Overall_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_PvOfAmountReceived) ? 0 : r.Overall_PvOfAmountReceived;
 
             r.Overall_Count = 0;
-            try { r.Overall_Count = worksheet1.Cells[4, 28].Value; } catch { }
+            try { r.Overall_Count = worksheet1.Cells[4, 2].Value; } catch { }
             r.Overall_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_Count) ? 0 : r.Overall_Count;
 
             r.Overall_RecoveryRate = 0;
-            try { r.Overall_RecoveryRate = worksheet1.Cells[5, 28].Value; } catch { }
+            try { r.Overall_RecoveryRate = worksheet1.Cells[5, 2].Value; } catch { }
             r.Overall_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Overall_RecoveryRate) ? 0 : r.Overall_RecoveryRate;
 
 
             r.Corporate_Exposure_At_Default = 0;
-            try { r.Corporate_Exposure_At_Default = worksheet1.Cells[2, 29].Value; } catch { }
+            try { r.Corporate_Exposure_At_Default = worksheet1.Cells[2, 3].Value; } catch { }
             r.Corporate_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_Exposure_At_Default) ? 0 : r.Corporate_Exposure_At_Default;
 
             r.Corporate_PvOfAmountReceived = 0;
-            try { r.Corporate_PvOfAmountReceived = worksheet1.Cells[3, 29].Value; } catch { }
+            try { r.Corporate_PvOfAmountReceived = worksheet1.Cells[3, 3].Value; } catch { }
             r.Corporate_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_PvOfAmountReceived) ? 0 : r.Corporate_PvOfAmountReceived;
 
             r.Corporate_Count = 0;
-            try { r.Corporate_Count = worksheet1.Cells[4, 29].Value; } catch { }
+            try { r.Corporate_Count = worksheet1.Cells[4, 3].Value; } catch { }
             r.Corporate_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_Count) ? 0 : r.Corporate_Count;
 
             r.Corporate_RecoveryRate = 0;
-            try { r.Corporate_RecoveryRate = worksheet1.Cells[5, 29].Value; } catch { }
+            try { r.Corporate_RecoveryRate = worksheet1.Cells[5, 3].Value; } catch { }
             r.Corporate_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_RecoveryRate) ? 0 : r.Corporate_RecoveryRate;
 
 
             r.Commercial_Exposure_At_Default = 0;
-            try { r.Commercial_Exposure_At_Default = worksheet1.Cells[2, 30].Value; } catch { }
+            try { r.Commercial_Exposure_At_Default = worksheet1.Cells[2, 4].Value; } catch { }
             r.Commercial_Exposure_At_Default = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_Exposure_At_Default) ? 0 : r.Commercial_Exposure_At_Default;
 
             r.Commercial_PvOfAmountReceived = 0;
-            try { r.Commercial_PvOfAmountReceived = worksheet1.Cells[3, 30].Value; } catch { }
+            try { r.Commercial_PvOfAmountReceived = worksheet1.Cells[3, 4].Value; } catch { }
             r.Commercial_PvOfAmountReceived = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_PvOfAmountReceived) ? 0 : r.Commercial_PvOfAmountReceived;
 
             r.Commercial_Count = 0;
-            try { r.Commercial_Count = worksheet1.Cells[4, 30].Value; } catch { }
+            try { r.Commercial_Count = worksheet1.Cells[4, 4].Value; } catch { }
             r.Commercial_Count = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_Count) ? 0 : r.Commercial_Count;
 
             r.Commercial_RecoveryRate = 0;
-            try { r.Commercial_RecoveryRate = worksheet1.Cells[5, 30].Value; } catch { }
+            try { r.Commercial_RecoveryRate = worksheet1.Cells[5, 4].Value; } catch { }
             r.Commercial_RecoveryRate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Commercial_RecoveryRate) ? 0 : r.Commercial_RecoveryRate;
 
 
             r.Consumer_Exposure_At_Default = 0;
-            try { r.Consumer_Exposure_At_Default = worksheet1.Cells[2, 31].Value; } catch { }
+            try { r.Consumer_Exposure_At_Default = worksheet1.Cells[2, 5].Value; } catch { }
             r.Consumer_PvOfAmountReceived = 0;
-            try { r.Consumer_PvOfAmountReceived = worksheet1.Cells[3, 31].Value; } catch { }
+            try { r.Consumer_PvOfAmountReceived = worksheet1.Cells[3, 5].Value; } catch { }
             r.Consumer_Count = 0;
-            try { r.Consumer_Count = worksheet1.Cells[4, 31].Value; } catch { }
+            try { r.Consumer_Count = worksheet1.Cells[4, 5].Value; } catch { }
             r.Consumer_RecoveryRate = 0;
-            try { r.Consumer_RecoveryRate = worksheet1.Cells[5, 31].Value; } catch { }
+            try { r.Consumer_RecoveryRate = worksheet1.Cells[5, 5].Value; } catch { }
+
 
             if (ECLNonStringConstants.i.ExcelDefaultValue.Contains(r.Corporate_RecoveryRate))
             {
