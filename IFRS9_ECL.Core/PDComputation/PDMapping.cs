@@ -69,23 +69,23 @@ namespace IFRS9_ECL.Core.PDComputation
             //var qry = Queries.Raw_Data(this._eclId,this._eclType);
             //var _lstRaw = DataAccess.i.GetData(qry);
 
-            var _NonExpLoanbook_data = loanbook_Data;//.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
+            var _NonEXPLOANbook_data = loanbook_Data;//.Where(o => o.ContractId.Substring(0, 3) != ECLStringConstants.i.ExpiredContractsPrefix).ToList();
 
 
             var lifetimePds = _scenarioLifetimePd.ComputeLifetimePd();
             var redefaultLifetimePds = _scenarioRedefaultLifetimePd.ComputeRedefaultLifetimePd();
 
 
-            RunPDMappingJob(_NonExpLoanbook_data, _eclId, _eclType, lifetimePds, redefaultLifetimePds, expOdPerformacePastRepoting, odPerformancePastExpiry);
+            RunPDMappingJob(_NonEXPLOANbook_data, _eclId, _eclType, lifetimePds, redefaultLifetimePds, expOdPerformacePastRepoting, odPerformancePastExpiry);
 
-            //var threads = _NonExpLoanbook_data.Count / 500;
+            //var threads = _NonEXPLOANbook_data.Count / 500;
             //threads = threads + 1;
 
             //var taskLst = new List<Task>();
 
             //for (int i = 0; i < threads; i++)
             //{
-            //    var sub_LoanBook = _NonExpLoanbook_data.Skip(i * 500).Take(500).ToList();
+            //    var sub_LoanBook = _NonEXPLOANbook_data.Skip(i * 500).Take(500).ToList();
 
             //    var task = Task.Run(() => {
             //        RunPDMappingJob(sub_LoanBook, _eclId, _eclType, lifetimePds, redefaultLifetimePds, expOdPerformacePastRepoting, odPerformancePastExpiry);
@@ -283,7 +283,8 @@ namespace IFRS9_ECL.Core.PDComputation
                         prod = endDate < rptDate ? maxx : odPerformancePastExpiry;
                     }
                 }
-                yValue = loanbookRecord.ProductType == ECLStringConstants.i._productType_card || loanbookRecord.ProductType == ECLStringConstants.i._productType_od ? prod : 0;
+                loanbookRecord.ProductType = loanbookRecord.ProductType ?? "";
+                yValue = loanbookRecord.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower() || loanbookRecord.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() ? prod : 0;
 
                 //Financial.YearFrac()
                 return xValue + yValue;
@@ -349,7 +350,7 @@ namespace IFRS9_ECL.Core.PDComputation
             foreach (DataRow dr in _PdMapping.Rows)
             {
                 var itm = DataAccess.i.ParseDataToObject(new PdMappings(), dr);
-                itm.ContractId = itm.ContractId.Replace("EXPLoan|", "");
+                itm.ContractId = itm.ContractId.Replace("EXPLOAN|", "");
                 pdMapping.Add(itm);
             }
             Console.WriteLine($"Got LGD GetPdMapping");

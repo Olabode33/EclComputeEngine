@@ -128,7 +128,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRow.ContractId = contractId;
                     newRow.Stage = stage;
                     newRow.FinalEclValue = finalEclValue;
-                    var mntECL = monthlyEcl.Where(o => o.ContractId == rowStage.ContractId.Replace("EXPLoan|", "")).ToList();
+                    var mntECL = monthlyEcl.Where(o => o.ContractId.ToUpper() == rowStage.ContractId.ToUpper().Replace("EXPLOAN|", "")).ToList();
 
                     foreach (var itm in mntECL)
                     {
@@ -150,11 +150,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             //xxxxxxxxxxxxxxxxxxx
             double lifetimeLgdMonth0Value = 0;
-            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId == contractId.Replace("EXPLoan|", "") && o.Month == 0).Value; } catch { }
+            try { lifetimeLgdMonth0Value = lifetimeLGD.FirstOrDefault(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId.Replace("EXPLOAN|", "") && o.Month == 0).Value; } catch { }
             double lifetimeEadMonth0Value = 0;
             try
             {
-                lifetimeEadMonth0Value = lifetimeEad.FirstOrDefault(o => o.ContractId == contractId.Replace("EXPLoan|", "") && o.ProjectionMonth == 0).ProjectionValue;
+                lifetimeEadMonth0Value = lifetimeEad.FirstOrDefault(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId.Replace("EXPLOAN|", "") && o.ProjectionMonth == 0).ProjectionValue;
             }
             catch { }
 
@@ -163,13 +163,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             switch (stage.Stage)
             {
                 case 1:
-                    double[] monthEclArray = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1 && o.EclMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).Select(n => n.MonthlyEclValue).ToArray();
+                    double[] monthEclArray = monthlyEcl.Where(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId.ToUpper().Replace("EXPLOAN|", "") && o.EclMonth >= 1 && o.EclMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).Select(n => n.MonthlyEclValue).ToArray();
                     double[] monthCdfArray = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1 && o.ProjectionMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).Select(n => n.ProjectionValue).ToArray();
 
                     finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray, monthCdfArray);
                     break;
                 case 2:
-                    double[] monthEclArray2 = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1).Select(n => n.MonthlyEclValue).ToArray();// && o.EclMonth <= FrameworkConstants.ProjectionMonth).Select(n => n.MonthlyEclValue).ToArray();
+                    double[] monthEclArray2 = monthlyEcl.Where(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId.ToUpper().Replace("EXPLOAN|", "") && o.EclMonth >= 1).Select(n => n.MonthlyEclValue).ToArray();// && o.EclMonth <= FrameworkConstants.ProjectionMonth).Select(n => n.MonthlyEclValue).ToArray();
                     double[] monthCdfArray2 = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1).Select(n => n.ProjectionValue).ToArray();// && o.ProjectionMonth < FrameworkConstants.ProjectionMonth).Select(n => n.ProjectionValue).ToArray(); //FrameworkConstants.ProjectionMonth
                     finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray2, monthCdfArray2);
                     break;
@@ -255,7 +255,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         private double GetLifetimeEadValueFromTable(List<LifetimeEad> lifetimeEads, string contractId, int month)
         {
             //xxxxxxxxxxxxxxxxxxxxx
-            try { return lifetimeEads.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue; }
+            try { return lifetimeEads.FirstOrDefault(x => x.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId && x.ProjectionMonth == month).ProjectionValue; }
             catch { return 0; }
         }
 

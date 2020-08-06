@@ -92,7 +92,7 @@ namespace IFRS_Test1
         }
         static void Main(string[] args)
         {
-
+           
             var cc = new Random().Next(10, 100) *0.01;// / 100;
             Console.WriteLine(cc);
             //DeployServices();

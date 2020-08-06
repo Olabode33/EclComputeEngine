@@ -792,7 +792,7 @@ namespace IFRS9_ECL.Core
                     lifetime_query.mths_in_force = !string.IsNullOrEmpty(lifetime_query.mths_in_force) ? lifetime_query.mths_in_force : "0";
                     lifetime_query.mths_to_expiry = !string.IsNullOrEmpty(lifetime_query.mths_to_expiry) ? lifetime_query.mths_to_expiry : "0";
                     lifetime_query.first_interest_month = !string.IsNullOrEmpty(lifetime_query.first_interest_month) ? lifetime_query.first_interest_month : "0";
-                    lifetime_query.rem_interest_moritorium = !string.IsNullOrEmpty(lifetime_query.rem_interest_moritorium) ? lifetime_query.first_interest_month : "0";
+                    lifetime_query.rem_interest_moritorium = !string.IsNullOrEmpty(lifetime_query.rem_interest_moritorium) ? lifetime_query.rem_interest_moritorium : "0";
                     EAD_Inputs obj = new EAD_Inputs()
                     {
                         outstanding_balance_lcy = double.Parse(refined_query.OUTSTANDING_BALANCE_LCY),// Convert.ToDouble(refinedRawData.Rows[contractIndex][ColumnNames.outstanding_bal_lcy]),
@@ -854,14 +854,14 @@ namespace IFRS9_ECL.Core
                     {
                         double value1 = 0, value2 = 0;
                         overallvalue = 0;
-
+                        obj.product_type = obj.product_type ?? "";
                         try
                         {
-                            if (obj.product_type != ECLStringConstants.i._productType_loan && obj.product_type != ECLStringConstants.i._productType_lease && obj.product_type != ECLStringConstants.i._productType_mortgage)
+                            if (obj.product_type.ToLower() != ECLStringConstants.i._productType_loan.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_lease.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_mortgage.ToLower())
                             {
                                 value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
 
-                                if (obj.product_type != ECLStringConstants.i._productType_od && obj.product_type != ECLStringConstants.i._productType_card)
+                                if (obj.product_type.ToLower() != ECLStringConstants.i._productType_od.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_card.ToLower())
                                 {
                                     value2 = CCF_OBE;
                                 }
@@ -889,8 +889,8 @@ namespace IFRS9_ECL.Core
                                     //component = ps_proj.PaymentType;
 
                                     double c_value = cirgroup_cirProjections.FirstOrDefault(o => o.cir_group == cir_group_value && o.months == monthIndex-1).cir_effective;
-
-                                    if (component != ECLStringConstants.i._amortise)
+                                    component = component ?? "";
+                                    if (component.ToLower() != ECLStringConstants.i._amortise.ToLower())
                                     {
                                         int a_value = (monthIndex > obj.rem_interest_moritorium || obj.rem_interest_moritorium == 0) ? 1 : 0;
                                         int b_value = (obj.interest_divisor != "1") ? 1 : 0;
@@ -916,7 +916,8 @@ namespace IFRS9_ECL.Core
 
 
                                     double g_value = 0;
-                                    if (obj.interest_divisor == ECLStringConstants.i._interestDivisior)
+                                obj.interest_divisor = obj.interest_divisor ?? "";
+                                    if (obj.interest_divisor.ToLower() == ECLStringConstants.i._interestDivisior.ToLower())
                                     {
                                         //x = ($H4=T$3)*SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*($H4+$G4)/T$3
                                         //if (obj.months_to_expiry == monthIndex)
@@ -1051,7 +1052,8 @@ namespace IFRS9_ECL.Core
         private double projection_Calulcation_lifetimeEAD_0(double outstanding_bal_lcy, string product_type)
         {
             double value=0;
-            if (product_type != ECLStringConstants.i._productType_loan && product_type != ECLStringConstants.i._productType_lease && product_type != ECLStringConstants.i._productType_mortgage && product_type != ECLStringConstants.i._productType_od && product_type != ECLStringConstants.i._productType_card)
+            product_type = product_type ?? "";
+            if (product_type.ToLower() != ECLStringConstants.i._productType_loan.ToLower() && product_type.ToLower() != ECLStringConstants.i._productType_lease.ToLower() && product_type.ToLower() != ECLStringConstants.i._productType_mortgage.ToLower() && product_type.ToLower() != ECLStringConstants.i._productType_od.ToLower() && product_type.ToLower() != ECLStringConstants.i._productType_card.ToLower())
             {
                 try { value = double.Parse(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "CreditConversionFactorObe").Value); } catch { }
             }
@@ -1298,7 +1300,8 @@ namespace IFRS9_ECL.Core
         private string Revised_Base(string interest_rate_type, string base_rate)
         {
             string value = string.Empty;
-            if (interest_rate_type != ECLStringConstants.i.FLOATING)
+            interest_rate_type = interest_rate_type ?? "";
+            if (interest_rate_type.ToLower() != ECLStringConstants.i.FLOATING.ToLower())
             {
                 value = ECLStringConstants.i._fixed;
             }
@@ -1482,8 +1485,9 @@ namespace IFRS9_ECL.Core
 
         private double Months_To_Expiry(DateTime reportingDate, DateTime endDate, string productType, double expired)
         {
+            productType = productType ?? "";
             double value = 0;
-            if (endDate < reportingDate || productType == "OD" || productType == "CARD")
+            if (endDate < reportingDate || productType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || productType.ToLower() == ECLStringConstants.i._productType_card.ToLower())
             {
                 DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(expired));
                 if (reportingDate > EOM)
@@ -1499,7 +1503,7 @@ namespace IFRS9_ECL.Core
             else
             {
                 DateTime EOM = EndOfMonth(endDate, Convert.ToInt32(expired));
-                if (productType == ECLStringConstants.i.ID || productType == ECLStringConstants.i.CARDS)
+                if (productType.ToLower() == ECLStringConstants.i.ID.ToLower() || productType.ToLower() == ECLStringConstants.i.CARDS.ToLower())
                 {
                     value = Math.Max(Math.Round(Financial.YearFrac(reportingDate, EOM, DayCountBasis.ActualActual) * 12), 0);
                 }
@@ -1776,7 +1780,9 @@ namespace IFRS9_ECL.Core
         private string PD_Mapping(LGD_Inputs input, double ttm_months)
         {
             string pd_mapping;
-            if (input.new_contract_no.Contains(ECLStringConstants.i.ExpiredContractsPrefix) || ((input.product_type == ECLStringConstants.i.CARDS || input.product_type == ECLStringConstants.i.CARDS || input.product_type == ECLStringConstants.i._productType_od) && ttm_months == 0))
+            input.product_type = input.product_type ?? "";
+            input.new_contract_no = input.new_contract_no ?? "";
+            if (input.new_contract_no.ToLower().Contains(ECLStringConstants.i.ExpiredContractsPrefix.ToLower()) || ((input.product_type.ToLower() == ECLStringConstants.i.CARDS.ToLower() || input.product_type.ToLower() == ECLStringConstants.i.CARDS.ToLower() || input.product_type.ToLower() == ECLStringConstants.i._productType_od.ToLower()) && ttm_months == 0))
             {
                 pd_mapping = ECLStringConstants.i.ExpiredContractsPrefix;
             }

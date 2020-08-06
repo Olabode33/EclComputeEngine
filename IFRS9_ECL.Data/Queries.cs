@@ -257,9 +257,8 @@ namespace IFRS9_ECL.Data
         {
             //******************************************************
             //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and ContractNo like '%7012371406695901%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
+            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' and customerNo like '%14002509%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
         }
-
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
         {
@@ -281,7 +280,7 @@ namespace IFRS9_ECL.Data
 
         public static string PD_GetSIRCInputResult(Guid eclId, EclType eclType)
         {
-            return $"select REPLACE(ContractId,'EXPLoan|','') ContractId, Pd12Month, LifetimePd, RedefaultLifetimePd, Stage1Transition, Stage2Transition, DaysPastDue from {eclType.ToString()}PdMappings where {eclType.ToString()}EclId ='{eclId.ToString()}' order by ContractId";
+            return $"select REPLACE(ContractId,'EXPLOAN|','') ContractId, Pd12Month, LifetimePd, RedefaultLifetimePd, Stage1Transition, Stage2Transition, DaysPastDue from {eclType.ToString()}PdMappings where {eclType.ToString()}EclId ='{eclId.ToString()}' order by ContractId";
         }
 
         public static string LGD_LgdAccountDatas(Guid eclId, EclType eclType)
@@ -336,7 +335,7 @@ namespace IFRS9_ECL.Data
 
         public static string PdMapping(Guid eclId, EclType eclType)
         {
-            return $"select p.Id, REPLACE(p.ContractId,'EXPLoan|','') ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePd, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (REPLACE(p.ContractId,'EXPLoan|','')=l.contractno) where p.{eclType.ToString()}EclId ='{eclId}' and l.{eclType.ToString()}EclUploadId ='{eclId}'";// and l.ContractNo not like '%EXP%'";
+            return $"select p.Id, REPLACE(p.ContractId,'EXPLOAN|','') ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePd, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (REPLACE(p.ContractId,'EXPLOAN|','')=l.contractno) where p.{eclType.ToString()}EclId ='{eclId}' and l.{eclType.ToString()}EclUploadId ='{eclId}'";// and l.ContractNo not like '%EXP%'";
         }
 
         public static string LGD_InputAssumptions_UnsecuredRecovery(Guid eclId, EclType eclType)

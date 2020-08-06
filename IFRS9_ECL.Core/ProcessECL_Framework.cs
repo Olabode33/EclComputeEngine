@@ -64,11 +64,11 @@ namespace IFRS9_ECL.Core
             for (int i = 0; i < threads; i++)
             {
                 var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
-                var contractNo = sub_LoanBook.Select(o => o.ContractId.Replace("EXPLoan|", "")).ToList();
-                var sub_stageClassification = stageClassifcation.Where(o => contractNo.Contains(o.ContractId.Replace("EXPLoan|", ""))).ToList();
-                var sub_lifetimeEad = lifetimeEad.Where(o => contractNo.Contains(o.ContractId.Replace("EXPLoan|", ""))).ToList();
-                var sub_lifetimeLGD = lifetimeLGD.Where(o => contractNo.Contains(o.ContractId.Replace("EXPLoan|", ""))).ToList();
-                var sub_eadInput = eadInput.Where(o => contractNo.Contains(o.Contract_no.Replace("EXPLoan|", ""))).ToList();
+                var contractNo = sub_LoanBook.Select(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "")).ToList();
+                var sub_stageClassification = stageClassifcation.Where(o => contractNo.Contains(o.ContractId.ToUpper().Replace("EXPLOAN|", ""))).ToList();
+                var sub_lifetimeEad = lifetimeEad.Where(o => contractNo.Contains(o.ContractId.ToUpper().Replace("EXPLOAN|", ""))).ToList();
+                var sub_lifetimeLGD = lifetimeLGD.Where(o => contractNo.Contains(o.ContractId.ToUpper().Replace("EXPLOAN|", ""))).ToList();
+                var sub_eadInput = eadInput.Where(o => contractNo.Contains(o.Contract_no.ToUpper().Replace("EXPLOAN|", ""))).ToList();
                 var task = Task.Run(() =>
                 {
                     RunFrameWorkJob(sub_lifetimeEad, sub_lifetimeLGD, cummulativeDiscountFactor, sub_eadInput, lifetimePds, sub_stageClassification);

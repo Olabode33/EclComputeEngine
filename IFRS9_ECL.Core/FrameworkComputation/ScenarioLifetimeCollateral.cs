@@ -46,14 +46,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var collateralProjections = GetScenarioCollateralProjection();
             var updatedFsv = GetUpdatedFsvResult();
 
-            var eadInputContractData = eadInputs.Select(o => o.Contract_no.Replace("EXPLoan|", "")).ToList();
+            var eadInputContractData = eadInputs.Select(o => o.Contract_no.Replace("EXPLOAN|", "")).ToList();
 
             contractData = contractData.Where(o => eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
 
             foreach (var row in contractData)
             {
                 string contractId = row.CONTRACT_NO;
-                string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no.Replace("EXPLoan|", "") == contractId).Eir_Group;
+                string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no.Replace("EXPLOAN|", "") == contractId).Eir_Group;
                 long eirIndex = 0;
                 try
                 {

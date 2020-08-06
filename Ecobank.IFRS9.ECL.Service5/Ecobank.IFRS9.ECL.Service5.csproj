@@ -73,19 +73,19 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IFRS9_ECL.Core\IFRS9_ECL.Core.csproj">
-      <Project>{D403EC2B-8541-479B-A384-F7524441F654}</Project>
-      <Name>IFRS9_ECL.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IFRS9_ECL.Util\IFRS9_ECL.Util.csproj">
-      <Project>{8435EE6B-A9B5-4F93-B846-ACDCABF2CE4C}</Project>
-      <Name>IFRS9_ECL.Util</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="ProjectInstaller.resx">
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IFRS9_ECL.Core\IFRS9_ECL.Core.csproj">
+      <Project>{d403ec2b-8541-479b-a384-f7524441f654}</Project>
+      <Name>IFRS9_ECL.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IFRS9_ECL.Util\IFRS9_ECL.Util.csproj">
+      <Project>{8435ee6b-a9b5-4f93-b846-acdcabf2ce4c}</Project>
+      <Name>IFRS9_ECL.Util</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

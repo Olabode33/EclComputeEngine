@@ -163,34 +163,34 @@ namespace IFRS9_ECL.Core
 
                 var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data, lifetimeEad, eadInput, stageClassification);
 
-                //var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
-                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+                new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+                new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+                new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
 
-                var task1 = Task.Run(() =>
-                {
-                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
-                    Log4Net.Log.Info("************Processing Final Best");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                });
-                taskLst.Add(task1);
-                var task2 = Task.Run(() =>
-                {
-                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
-                    Log4Net.Log.Info("*************Processing Final Optimistic");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                });
-                taskLst.Add(task2);
-                var task3 = Task.Run(() =>
-                {
-                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
-                    Log4Net.Log.Info("*************Processing Final Down turn");
-                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                });
-                taskLst.Add(task3);
+                //var task1 = Task.Run(() =>
+                //{
+                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+                //    Log4Net.Log.Info("************Processing Final Best");
+                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                //});
+                //taskLst.Add(task1);
+                //var task2 = Task.Run(() =>
+                //{
+                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+                //    Log4Net.Log.Info("*************Processing Final Optimistic");
+                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                //});
+                //taskLst.Add(task2);
+                //var task3 = Task.Run(() =>
+                //{
+                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+                //    Log4Net.Log.Info("*************Processing Final Down turn");
+                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                //});
+                //taskLst.Add(task3);
 
                 //while (!taskLst.Any(o => o.IsCompleted))
                 var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };

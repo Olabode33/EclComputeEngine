@@ -122,13 +122,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //Do Nothing
             }
 
-            //StringBuilder sb = new StringBuilder();
-            //sb.Append($"COntractID,Month,Value,{Environment.NewLine}");
-            //foreach (var itm in lifetimeEad)
-            //{
-            //    sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
-            //}
-            //File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "EADOutput.csv"), sb.ToString());
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"COntractID,Month,Value,{Environment.NewLine}");
+            foreach (var itm in lifetimeEad)
+            {
+                sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
+            }
+            File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "EADOutput.csv"), sb.ToString());
 
             Log4Net.Log.Info("Completed ComputeLifetimeEad");
             return lifetimeEad;//.Where(o=> contractIds.Contains(o.ContractId)).ToList();
@@ -149,7 +149,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 Console.WriteLine($"FEAD - {contract_no}");
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).OrderBy(o=>o.Month).ToList();
 
-                string contractId = contract_no.Replace("EXPLoan|", "");
+                string contractId = contract_no.Replace("EXPLOAN|", "");
 
                 int cirIndex = 1;
                 try { cirIndex = marginalAccumulationFactor.FirstOrDefault(o => o.EirGroup == c_eadInputs[0].Cir_Group).Rank; } catch { };
@@ -392,7 +392,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                         var EOMWithExpiryCalibration = EndOfMonth(tmpEndMonth.Value, int.Parse(Math.Ceiling(bt_ead_data.NonExpired).ToString()));
 
                         var EOM = EndOfMonth(tmpEndMonth.Value, 0);
-                        if (loanRec.ContractEndDate < reportingDate && (loanRec.ProductType == ECLStringConstants.i._productType_od || loanRec.ProductType == ECLStringConstants.i._productType_card))
+                        loanRec.ProductType = loanRec.ProductType ?? "";
+                        if (loanRec.ContractEndDate < reportingDate && (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower()))
                         {
                             if (reportingDate == _EXP_EOMWithExpiryCalibration)
                             {
@@ -408,7 +409,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                         }
                         else
                         {
-                            if (loanRec.ProductType == ECLStringConstants.i._productType_od || loanRec.ProductType == ECLStringConstants.i._productType_card)
+                            if (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower())
                             {
                                 if (reportingDate == EOMWithExpiryCalibration)
                                     noOfMonths = 1;

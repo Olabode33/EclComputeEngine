@@ -80,7 +80,7 @@ namespace IFRS9_ECL.Core.PDComputation
             var rptDate = GetReportingDate(_eclType, _eclId);
             rptDate = rptDate.AddMonths(-69);
             var fitted = ComputeEtiNplIndex();
-            return fitted.Where(m => m.Date >= rptDate)// new DateTime(2013, 09,01)) //
+            return fitted.Where(m => m.Date >=new DateTime(2013, 12,30)) // rptDate)// 
                 .Average(o => o.Fitted);
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()
