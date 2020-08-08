@@ -139,7 +139,7 @@ namespace IFRS9_ECL.Core.Calibration
             theWorkbook.RefreshAll();
             excel.Calculate();
 
-            Worksheet worksheet1 = theWorkbook.Sheets[2];
+            Worksheet worksheet1 = theWorkbook.Sheets[1];
 
             var r = new CalibrationResult_LGD_RecoveryRate();
 
