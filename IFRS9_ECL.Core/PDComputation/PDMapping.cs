@@ -350,7 +350,7 @@ namespace IFRS9_ECL.Core.PDComputation
             foreach (DataRow dr in _PdMapping.Rows)
             {
                 var itm = DataAccess.i.ParseDataToObject(new PdMappings(), dr);
-                itm.ContractId = itm.ContractId.Replace("EXPLOAN|", "");
+                itm.ContractId = itm.ContractId;
                 pdMapping.Add(itm);
             }
             Console.WriteLine($"Got LGD GetPdMapping");

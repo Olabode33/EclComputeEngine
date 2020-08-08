@@ -18,17 +18,19 @@ namespace IFRS9_ECL.Core
         EclType _eclType;
         Guid _eclId;
 
-        List<bool> tasks = new List<bool>();
+        
         List<LifeTimeEADs> lifetimeEADs = new List<LifeTimeEADs>();
         List<Refined_Raw_Retail_Wholesale> refined_lstRaws = new List<Refined_Raw_Retail_Wholesale>();
-        List<LifeTimeProjections> lifeTimeProjections = new List<LifeTimeProjections>();
+        
         List<PaymentSchedule> paymentScheduleProjections = new List<PaymentSchedule>();
         DateTime reportingDate = new DateTime();
         public ProcessECL_EAD(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
             this._eclType = eclType;
+            paymentScheduleProjections = new List<PaymentSchedule>();
             reportingDate = GetReportingDate(eclType, eclId);
+            
         }
 
         private DateTime GetReportingDate(EclType _eclType, Guid eclId)
@@ -47,6 +49,7 @@ namespace IFRS9_ECL.Core
         {
             try
             {
+                paymentScheduleProjections = new List<PaymentSchedule>();
                 var qry = Queries.PaymentSchedule(this._eclId, this._eclType);
                 var _payment_schedule = DataAccess.i.GetData(qry);
                 Log4Net.Log.Info("Completed Getting Payment Schedule");
@@ -55,6 +58,9 @@ namespace IFRS9_ECL.Core
                 foreach (DataRow dr in _payment_schedule.Rows)
                 {
                     var itm = DataAccess.i.ParseDataToObject(new TempPaymentSchedule(), dr);
+                    itm.ContractRefNo = itm.ContractRefNo.ToUpper();
+                    itm.Component = itm.Component.ToUpper();
+
                     payment_schedule.Add(new PaymentSchedule { Amount = itm.Amount, Component = itm.Component, ContractRefNo = itm.ContractRefNo, StartDate = itm.StartDate, Frequency = itm.Frequency, NoOfSchedules = itm.NoOfSchedules });
                 }
                 //var ps_contract_nos = payment_schedule.Select(o => o.ContractRefNo).ToList();
@@ -124,19 +130,22 @@ namespace IFRS9_ECL.Core
 
                 Log4Net.Log.Info("Completed Parsing Payment Schedule to object");
 
-
-
+                //if (item.ContractRefNo != "701SMGA132120001")
+                //{
+                //    // continue;
+                //}
+                //payment_schedule = payment_schedule.Where(o => o.ContractRefNo == "701SMGA132120001").ToList();
                 if (1!=1)//payment_schedule.Count <= 1000)
                 {
-                    
-                    var ps_contract_ref_nos = payment_schedule.Select(o => o.ContractRefNo).Distinct().OrderBy(o => o).ToList();
-                    PaymentSchedule_Projection(payment_schedule, ps_contract_ref_nos, 1);
+                    PaymentSchedule_Projection(payment_schedule, 1);
                 }
                 else
                 {
                     //var checker = loanbooks.Count / 30;
 
-                    var threads = loanbooks.Count / 500;
+                    //payment_schedule = payment_schedule.Where(o => o.ContractRefNo == "701SMGA132120001").ToList();
+
+                    var threads = payment_schedule.Count / 500;
                     threads = threads + 1;
 
                     var taskLst = new List<Task>();
@@ -147,8 +156,7 @@ namespace IFRS9_ECL.Core
 
                         var task = Task.Run(() =>
                         {
-                            var ps_contract_ref_nos = sub_payment_schedule.Select(o => o.ContractRefNo).Distinct().OrderBy(o => o).ToList();
-                            PaymentSchedule_Projection(sub_payment_schedule, ps_contract_ref_nos, i);
+                            PaymentSchedule_Projection(sub_payment_schedule, i);
                         });
 
                         taskLst.Add(task);
@@ -185,7 +193,7 @@ namespace IFRS9_ECL.Core
 
                 //refined_lstRaws = refined_lstRaws.Where(o => o.contract_no == "001SFLN172790002").ToList();
 
-                if (loanbooks.Count <= 1000) //1 != 1) //
+                if (1!=1)//loanbooks.Count <= 1000) //1 != 1) //
                 {
 
                     //var _lifetimeProjections = 
@@ -196,7 +204,7 @@ namespace IFRS9_ECL.Core
                 {
                     //var checker = loanbooks.Count / 60;
 
-                    var threads = loanbooks.Count / 500;
+                    var threads = refined_lstRaws.Count / 500;
                     threads = threads + 1;
 
                     var taskLst = new List<Task>();
@@ -207,18 +215,21 @@ namespace IFRS9_ECL.Core
 
                         var contractnos = sub_refined_lstRaws.Select(o => o.contract_no).ToList();
                         var sub_lifetimeEADs = lifetimeEADs.Where(o => contractnos.Contains(o.contract_no)).ToList();
-                        var sub_PaymentScheduleProjection = paymentScheduleProjections.Where(o => contractnos.Contains(o.ContractId)).ToList();
+                        var actualContract = contractnos.Select(o => Computation.GetActualContractId(o)).ToList();
+
+                        paymentScheduleProjections = paymentScheduleProjections.Where(a => a!=null).ToList();
+                        var sub_PaymentScheduleProjection = paymentScheduleProjections.Where(o => actualContract.Contains(o.ContractId)).ToList();
                         var task = Task.Run(() =>
                         {
 
-                        //populate for LifeTime  projections
-                        //var _lifetimeProjections = 
+                            //populate for LifeTime  projections
+                            //var _lifetimeProjections = 
                             new ECLTasks(this._eclId, this._eclType).EAD_LifeTimeProjections(sub_refined_lstRaws, sub_lifetimeEADs, cirProjections, sub_PaymentScheduleProjection, ccfData);
 
-                           // lifeTimeProjections.AddRange(_lifetimeProjections);
-                        ////Console.ReadKey();
-                        ///
-                    });
+                            // lifeTimeProjections.AddRange(_lifetimeProjections);
+                            ////Console.ReadKey();
+                            ///
+                        });
 
                         taskLst.Add(task);
                     }
@@ -279,12 +290,12 @@ namespace IFRS9_ECL.Core
             Log4Net.Log.Info("Completed SaveEIRProjections");
         }
 
-        public void PaymentSchedule_Projection(List<PaymentSchedule> ps, List<string> ps_contract_ref_no, int counter)
+        public void PaymentSchedule_Projection(List<PaymentSchedule> ps,int counter)
         {
             var _ps = new List<PaymentSchedule>();
 
-            int wholeIndex = 0;
-            foreach(var item in ps)
+            //ps = ps.Where(o => o.ContractRefNo == "701CMLN173630102").ToList();
+            foreach (var item in ps)
             { 
 
                 bool start_month_adjustment = false;
@@ -299,6 +310,10 @@ namespace IFRS9_ECL.Core
                 //Determine frequency factor
                 //foreach (var item in contractblock)
                 //{
+                //if(item.ContractRefNo== "701CMLN173630102")
+                //{
+
+                //}
                 if (string.IsNullOrEmpty(item.Frequency))
                 {
                     item.Frequency = "M";
@@ -380,8 +395,8 @@ namespace IFRS9_ECL.Core
 
                     if (frequency_factor != 0)
                     {
-                        var w = (-start_month + 1) / frequency_factor;
-                        start_schedule = Math.Ceiling(w);
+                        var w = (-start_month) / frequency_factor;
+                        start_schedule = Math.Ceiling(w) + 1;
                     }
                     else
                     {
@@ -395,9 +410,15 @@ namespace IFRS9_ECL.Core
                 var hasItm = 0;
                 //'Check whether the last schedule in this entry is more months from the reporting date than the max_ttm derived from the loan book snapshot.
                 var contact_ps = _ps.Where(o => o.ContractId == item.ContractRefNo).ToList();
-                for (double schedule = start_schedule; schedule < no_schedules; schedule++)
+                monthIndex =  Convert.ToInt32(start_schedule);
+                if(frequency_factor==1)
+                {
+                    monthIndex = 1;
+                }
+                for (double schedule = start_schedule; schedule <= no_schedules; schedule++)
                 {
                     hasItm = hasItm + 1;
+
                     var __Item = contact_ps.FirstOrDefault(o => o.Months == monthIndex.ToString());
                     if (__Item != null)
                     {
@@ -407,15 +428,18 @@ namespace IFRS9_ECL.Core
                     }
                     else
                     {
+                        item.ContractRefNo = string.IsNullOrEmpty(item.ContractRefNo) ? "" : item.ContractRefNo;
                         _ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = monthIndex.ToString(), Value = amount });
                     }
 
-                    wholeIndex++;
-                    monthIndex++;
+                    
+                    monthIndex += frequency_factor;
                 }
 
                 if (hasItm == 0)
                 {
+                    //item.Months = string.IsNullOrEmpty(item.Months) ? "0": item.Months;
+                    item.ContractRefNo = string.IsNullOrEmpty(item.ContractRefNo) ? "" : item.ContractRefNo;
                     _ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = item.Months, StartDate=item.StartDate, Value = 0 });
                 }
             }

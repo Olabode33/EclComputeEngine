@@ -67,13 +67,38 @@ namespace IFRS9_ECL.Core.PDComputation
             {
 
                 int vasicekSearchMonth = Convert.ToInt32((month - 1) / 3) + 1;
-                double vasicekIndexMonthValue = lstVarsicekIndex.FirstOrDefault(row => row.Month == (vasicekSearchMonth < 24 ? vasicekSearchMonth : 24)).ScenarioFactor;
-
+                double vasicekIndexMonthValue = 0;
+                try
+                {
+                    vasicekIndexMonthValue = lstVarsicekIndex.FirstOrDefault(row => row.Month == (vasicekSearchMonth < 24 ? vasicekSearchMonth : 24)).ScenarioFactor;
+                }
+                catch
+                {
+                    try
+                    {
+                        var lstV = lstVarsicekIndex.LastOrDefault();
+                        vasicekIndexMonthValue = lstV.ScenarioFactor;
+                    }
+                    catch { }
+                }
                 //Pd group 1 to 9
                 for (int pdGroup = 1; pdGroup < 10; pdGroup++)
                 {
                     string pdGroupName = pdGroup.ToString();
-                    double logOddsRatioMonthRankValue = logOddsRatio.FirstOrDefault(row => row.Rank == pdGroup && row.Month == month).CreditRating;
+                    double logOddsRatioMonthRankValue = 0;
+
+                    try
+                    {
+                        logOddsRatioMonthRankValue = logOddsRatio.FirstOrDefault(row => row.Rank == pdGroup && row.Month == month).CreditRating;
+                    }
+                    catch {
+                        try
+                        {
+                            var lstOddRatio = logOddsRatio.LastOrDefault(row => row.Rank == pdGroup);
+                            logOddsRatioMonthRankValue = lstOddRatio.CreditRating;
+                        }
+                        catch { }
+                    }
 
                     var dr = new LifeTimeObject();
                     dr.PdGroup = pdGroupName;

@@ -42,7 +42,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var pdMapping = GetPdMappingResult(); //YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy
 
 
-            var lbContractIds = loanbook.Select(o => o.ContractId.ToUpper().Replace("EXPLOAN|", "")).ToList();
+            var lbContractIds = loanbook.Select(o => o.ContractId).ToList();
 
             sicrInput = sicrInput.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
             pdMapping= pdMapping.Where(o => lbContractIds.Contains(o.ContractId)).ToList();
@@ -53,7 +53,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 try
                 {
-                    var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId.ToUpper().Replace("EXPLOAN|", "") == row.ContractId);
+                    var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
                     var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
 
                     var newRow = new StageClassification();
@@ -70,7 +70,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     }
                     newRow.projectionMonth = 0;
                     try { newRow.projectionMonth = loanbookRecord.LIM_MONTH; } catch { }
-                    newRow.ContractId = newRow.ContractId.ToUpper().Replace("EXPLOAN|", "");
+                    newRow.ContractId = newRow.ContractId;
                     stageClassification.Add(newRow);
                 }catch(Exception ex)
                 {

@@ -124,7 +124,7 @@ namespace IFRS9_ECL.Core
                 var lgdItm=DataAccess.i.ParseDataToObject(new LGDAccountData(), dr);
                 lgdAccountData.Add(lgdItm);
             }
-            var contract_Ids = loanbook.Select(o => o.ContractNo).ToList();
+            var contract_Ids = loanbook.Select(o => o.ContractId).ToList();
             var filteredList = lgdAccountData.Where(o=> contract_Ids.Contains(o.CONTRACT_NO)).ToList();
             foreach(var itm in filteredList)
             {

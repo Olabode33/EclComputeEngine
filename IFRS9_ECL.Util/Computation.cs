@@ -52,5 +52,9 @@ namespace IFRS9_ECL.Util
             return standardDeviationP;
         }
 
+        public static string GetActualContractId(string contractId)
+        {
+            return contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix) ? contractId.Split('|')[1] : contractId;
+        }
     }
 }

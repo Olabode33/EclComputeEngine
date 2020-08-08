@@ -35,8 +35,10 @@ namespace IFRS9_ECL.Core
             reportingDate = GetReportingDate(eclType, eclId);
             ViR= GetVIR(eclType, eclId);
         }
-
-        private DateTime GetReportingDate(EclType _eclType, Guid eclId)
+        public ECLTasks()
+        {
+        }
+            private DateTime GetReportingDate(EclType _eclType, Guid eclId)
         {
             var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
             var dtR = DataAccess.i.GetData(ecls);
@@ -319,26 +321,23 @@ namespace IFRS9_ECL.Core
                                             collateralTable[i].vehicle_omv
                 };
 
-                    double valueArray2 =
-                        refinedRawData[i].DebentureOMV ?? 0 +
-                     refinedRawData[i].CashOMV ?? 0 +
-                     refinedRawData[i].InventoryOMV ?? 0 +
-                     refinedRawData[i].PlantEquipmentOMV ?? 0 +
-                     refinedRawData[i].ResidentialPropertyOMV ?? 0 +
-                     refinedRawData[i].CommercialPropertyOMV ?? 0 +
-                     refinedRawData[i].ReceivablesOMV ?? 0 +
-                     refinedRawData[i].SharesOMV ?? 0 +
-                     refinedRawData[i].VehicleOMV ?? 0;
+                    refinedRawData[i].DebentureOMV = refinedRawData[i].DebentureOMV ?? 0;
+                    refinedRawData[i].CashOMV = refinedRawData[i].CashOMV ?? 0;
+                    refinedRawData[i].InventoryOMV = refinedRawData[i].InventoryOMV ?? 0;
+                    refinedRawData[i].PlantEquipmentOMV = refinedRawData[i].PlantEquipmentOMV ?? 0;
+                    refinedRawData[i].ResidentialPropertyOMV = refinedRawData[i].ResidentialPropertyOMV ?? 0;
+                    refinedRawData[i].CommercialPropertyOMV = refinedRawData[i].CommercialPropertyOMV ?? 0;
+                    refinedRawData[i].ReceivablesOMV = refinedRawData[i].ReceivablesOMV ?? 0;
+                    refinedRawData[i].SharesOMV = refinedRawData[i].SharesOMV ?? 0;
+                    refinedRawData[i].VehicleOMV = refinedRawData[i].VehicleOMV ?? 0;
+
+                    double valueArray2 = refinedRawData[i].DebentureOMV.Value + refinedRawData[i].CashOMV.Value + refinedRawData[i].InventoryOMV.Value + refinedRawData[i].PlantEquipmentOMV.Value + refinedRawData[i].ResidentialPropertyOMV.Value + refinedRawData[i].CommercialPropertyOMV.Value + refinedRawData[i].ReceivablesOMV.Value + refinedRawData[i].SharesOMV.Value + refinedRawData[i].VehicleOMV.Value;
 
 
                     double product_1 = SumProduct(tempOVMarray, selection);
                     double result;
                     double value1, value2;
 
-                    if(collateralTable[i].contract_no== "003BCSP172710001")
-                    {
-
-                    }
                     if (valueArray2 != 0)
                     {
                         value1 = product_1 / valueArray2;
@@ -453,13 +452,15 @@ namespace IFRS9_ECL.Core
             var collaterals = new List<LGDCollateralData>();
             LGD_Inputs input = new LGD_Inputs();
 
-            var pd_x_ead_List = lGDPreCalc.Select(O => O.pd_x_ead).ToList();
 
+
+            var pd_x_ead_List = lGDPreCalc.Select(O => O.pd_x_ead).ToList();
             //calculate the value for Debenture_OMV
             //foreach (var itm in lstRaw)
             for (int i = 0; i < lstRaw.Count; i++)
             {
                 var collateralTable = new LGDCollateralData();
+                
 
                 input.debenture_omv = lstRaw[i].DebentureOMV ?? 0;
                 input.cash_omv = lstRaw[i].CashOMV ?? 0;
@@ -482,7 +483,7 @@ namespace IFRS9_ECL.Core
                 input.vehicle_fsv = lstRaw[i].VehicleFSV ?? 0;
 
                 input.customer_no = lstRaw[i].CustomerNo;
-                input.contractid = lstRaw[i].ContractNo;
+                input.contractid = lstRaw[i].ContractId;
                 input.account_no = lstRaw[i].AccountNo;
 
                 input.pd_x_ead = lGDPreCalc[i].pd_x_ead;//
@@ -553,7 +554,6 @@ namespace IFRS9_ECL.Core
                 //collateralTable.contract_no = input.customer_no;
 
                 collateralTable = SumProduct(pd_x_ead_List, collateralTable, Debenture_Omv_array, Cash_Omv_array, Inventory_Omv_array, Plant_Equipment_Omv_array, Residential_Omv_array, Commercial_Omv_array, Receivables_Omv_array, Shares_Omv_array, Vehicle_Omv_array, Debenture_Fsv_array, Cash_Fsv_array, Inventory_Fsv_array, Plant_Equipment_Fsv_array, Residential_Fsv_array, Commercial_Fsv_array, Receivables_Fsv_array, Shares_Fsv_array, Vehicle_Fsv_array, CustomerNo_array, ProjectFinance_array, input);
-
 
                 collaterals.Add(collateralTable);
             }
@@ -747,7 +747,7 @@ namespace IFRS9_ECL.Core
         }
 
 
-        internal void EAD_LifeTimeProjections(List<Refined_Raw_Retail_Wholesale> refined_lstRaw, List<LifeTimeEADs> lifeTimeEAD_w, List<CIRProjections> cirProjections, List<PaymentSchedule> paymentScheduleProjection, CalibrationResult_EAD_CCF_Summary ccfData)
+        internal void EAD_LifeTimeProjections(List<Refined_Raw_Retail_Wholesale> refined_lstRaw, List<LifeTimeEADs> lifeTimeEAD_w, List<CIRProjections> cirProjections, List<PaymentSchedule> _paymentScheduleProjection, CalibrationResult_EAD_CCF_Summary ccfData)
         {
             var lifetimeEadInputs = new List<LifeTimeProjections>();
             var lstContractIds = lifeTimeEAD_w.Select(o => o.contract_no).Distinct().ToList();
@@ -835,10 +835,13 @@ namespace IFRS9_ECL.Core
                     
                     double overallvalue = 0;
 
-                    var ps_proj = paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract);
+                    var realContractId = contract;// Computation.GetActualContractId(contract);
+                    
                     var cirgroup_cirProjections = cirProjections.Where(o => o.cir_group == cir_group_value).ToList();
-                    var contract_paymentScheduleProjection = paymentScheduleProjection.Where(o => o.ContractId == contract).ToList();
+                    var contract_paymentScheduleProjection = _paymentScheduleProjection.Where(o => o.ContractId == realContractId).ToList();
                     contract_paymentScheduleProjection.OrderBy(o => o.NoOfSchedules).ToList();
+
+                    var ps_proj = _paymentScheduleProjection.FirstOrDefault(o => o.ContractId == realContractId);
 
                     var PrePaymentFactor = 0.0;
                     try { PrePaymentFactor = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "PrePaymentFactor)").Value); } catch { }
@@ -920,8 +923,8 @@ namespace IFRS9_ECL.Core
                                     if (obj.interest_divisor.ToLower() == ECLStringConstants.i._interestDivisior.ToLower())
                                     {
                                         //x = ($H4=T$3)*SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*($H4+$G4)/T$3
-                                        //if (obj.months_to_expiry == monthIndex)
-                                        //{
+                                        if (obj.months_to_expiry == monthIndex)
+                                        {
                                             //get range
                                             double[] h_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
                                                                             && o.Month >= 0
@@ -934,7 +937,7 @@ namespace IFRS9_ECL.Core
                                                                             .Select(x => x.value)
                                                                     .ToArray();
                                             g_value = SumProduct(h_value, i_value) * (obj.months_to_expiry + obj.months_in_force) / monthIndex;
-                                        //}
+                                        }
                                     }
                                     else
                                     {
@@ -1568,17 +1571,11 @@ namespace IFRS9_ECL.Core
 
         public List<LGDPrecalculationOutput> LGDPreCalculation(List<Loanbook_Data> lstRaw)
         {
-            var input = new LGD_Inputs();
-            ////This will be obtained from the DB
-            //var qry=Queries.LGD_PD_AssumptionSelectQry;
-
-            //var _pd_assumptions = DataAccess.i.GetData(qry);
+            
 
             var pd_assumptions = new List<LGD_PD_Assumptions>();
-            //foreach (DataRow dr in _pd_assumptions.Rows)
-            //{
-            //    pd_assumptions.Add(DataAccess.i.ParseDataToObject(new LGD_PD_Assumptions(), dr));
-            //}
+           
+
             var cali12Month = new CalibrationInput_PD_CR_RD_Processor().GetPD12MonthsPD(this._eclId, this._eclType);
             var pd_internalModelInputs_Credit= new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_Assumptions().Where(o=>o.PdGroup== Models.PD.PdInputAssumptionGroupEnum.CreditPD).ToList();
             var pd_non_InternalModelInputs_Credit= new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_NonInternalModelInputs(12);
@@ -1594,7 +1591,7 @@ namespace IFRS9_ECL.Core
             pd_assumptions.Add(new LGD_PD_Assumptions { eclId = this._eclId, pd_group = ECLStringConstants.i.ExpiredContractsPrefix, pd = 0.1 });
 
             List<double?> outstanding_Bal_Lcy_array = lstRaw.Select(o=>o.OutstandingBalanceLCY).ToList();
-            List<string> ContractID_list = lstRaw.Select(o=>o.ContractNo).ToList();
+            List<string> ContractID_list = lstRaw.Select(o=>o.ContractId).ToList();
             
 
             var r_arry = new List<double>();
@@ -1621,7 +1618,8 @@ namespace IFRS9_ECL.Core
 
             foreach (var itm in lstRaw)
             {
-                input.new_contract_no = itm.ContractNo;
+                var input = new LGD_Inputs();
+                input.new_contract_no = itm.ContractId;
                 List<string> newContractID_array = GetValue(ContractID_list, input.new_contract_no);
                 var c_arry = new List<double>();
                 foreach (var c_itm in newContractID_array)
@@ -1641,7 +1639,7 @@ namespace IFRS9_ECL.Core
 
                 input.customer_no = itm.CustomerNo;
                 input.product_type = itm.ProductType;
-                input.new_contract_no = itm.ContractNo;
+                input.new_contract_no = itm.ContractId;
                 input.restructure_indicator = itm.RestructureIndicator;
                 input.restructure_end_date = itm.RestructureEndDate;
                 input.contract_end_date = itm.ContractEndDate;
@@ -1670,6 +1668,8 @@ namespace IFRS9_ECL.Core
                 input.specialised_lending = input.specialised_lending ?? "";
                 tempDT.project_finance_ind = input.project_finance_ind = (input.specialised_lending.ToUpper() == ECLStringConstants.i.PROJECT_FINANCE) ? 1 : 0;
                 tempDT.customer_no = input.customer_no;
+                tempDT.contract_id = input.new_contract_no;
+
 
                 lstTempDT.Add(tempDT);
 
