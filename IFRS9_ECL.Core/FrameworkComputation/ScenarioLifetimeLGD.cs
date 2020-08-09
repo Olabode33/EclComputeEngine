@@ -79,7 +79,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             lifetimeEAD = _lifetimeEAD;//GetLifetimeEadResult(loanbook);
 
-            //lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
+           // lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
 
             contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
             var taskLst = new List<Task>();
@@ -197,14 +197,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             for (int i = 0; i < threads; i++)
             {
                 var subcontract = contractData.Skip(i * 500).Take(500).ToList();
-                var subcontractIds = subcontract.Select(o => o.CONTRACT_NO.ToUpper().Replace("EXPLOAN|", "")).ToList();
-                var subpdMapping = pdMapping.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
-                var subsicrInput = sicrInput.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
-                var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
-                var sublifetimeEAD = lifetimeEAD.Where(o => subcontractIds.Contains(o.ContractId.ToUpper().Replace("EXPLOAN|", ""))).ToList();
-                var sublifetimeCollateralBest = lifetimeCollateralBest.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
-                var sublifetimeCollateralOptimistic = lifetimeCollateralOptimistic.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
-                var sublifetimeCollateralDownturn = lifetimeCollateralDownturn.Where(o => subcontractIds.Contains(o.ContractId.ToUpper())).ToList();
+                var subcontractIds = subcontract.Select(o => o.CONTRACT_NO).ToList();
+                var subpdMapping = pdMapping.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var subsicrInput = sicrInput.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var sublifetimeEAD = lifetimeEAD.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var sublifetimeCollateralBest = lifetimeCollateralBest.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var sublifetimeCollateralOptimistic = lifetimeCollateralOptimistic.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                var sublifetimeCollateralDownturn = lifetimeCollateralDownturn.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
 
                 var pdGroups = subpdMapping.Select(o => o.PdGroup).ToList();
                 var sublifetimePdBest = lifetimePdBest.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
@@ -605,7 +605,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             //return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
             //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            try { return lifetimeEAD.FirstOrDefault(x => x.ContractId.ToUpper().Replace("EXPLOAN|", "") == contractId.ToUpper() && x.ProjectionMonth == month).ProjectionValue; }
+            try { return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue; }
             catch { return 0; }
 
         }

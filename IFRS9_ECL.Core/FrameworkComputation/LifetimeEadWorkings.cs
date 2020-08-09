@@ -149,7 +149,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 Console.WriteLine($"FEAD - {contract_no}");
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).OrderBy(o=>o.Month).ToList();
 
-                string contractId = contract_no.Replace("EXPLOAN|", "");
+                string contractId = contract_no;
 
                 int cirIndex = 1;
                 try { cirIndex = marginalAccumulationFactor.FirstOrDefault(o => o.EirGroup == c_eadInputs[0].Cir_Group).Rank; } catch { };
@@ -371,15 +371,28 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var bt_ead = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             var bt_ead_data=bt_ead.GetBehaviouralData(this._eclId, this._eclType);
+
+
+            var _eclTask = new ECLTasks();
+            
             foreach (DataRow dr in _lstRaw.Rows)
             {
                 var loanRec = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
-
+                
                 loanRec.ContractId = loanRec.ContractId ?? "";
                 loanRec.AccountNo = loanRec.AccountNo ?? "";
+                loanRec.ProductType = loanRec.ProductType ?? "";
+                loanRec.Segment = loanRec.Segment ?? "";
 
                 loanRec.ContractId = loanRec.ContractId.Trim();
                 loanRec.AccountNo = loanRec.AccountNo.Trim();
+                loanRec.ProductType = loanRec.ProductType.Trim();
+                loanRec.Segment = loanRec.Segment.Trim();
+
+                loanRec.ContractId = loanRec.ContractId.ToUpper();
+                loanRec.AccountNo = loanRec.AccountNo.ToUpper();
+                loanRec.ProductType = loanRec.ProductType.ToUpper();
+                loanRec.Segment = loanRec.Segment.ToUpper();
 
                 double noOfMonths = 0;
 
@@ -478,9 +491,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 //if(loanRec.ContractNo=="")
                 loanRec.LIM_MONTH = noOfMonths;
+
+                loanRec.ContractId = _eclTask.GenerateContractId(loanRec);
                 lstRaw.Add(loanRec);
             }
-            lstRaw = lstRaw.OrderBy(o => o.AccountNo).ToList();
+            lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ToList();
             return lstRaw;
         }
 

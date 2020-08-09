@@ -106,13 +106,6 @@ namespace IFRS9_ECL.Core
                 Log4Net.Log.Info($"Start Time {DateTime.Now}");
 
 
-                var _eclTask = new ECLTasks(masterGuid, eclType);
-
-                foreach(var itm in loanbook_data)
-                {
-                    itm.ContractId = _eclTask.GenerateContractId(itm);
-                }
-
 
                 var overrideExist = false;
                 if (eclRegister.Status==12)

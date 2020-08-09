@@ -1448,7 +1448,7 @@ namespace IFRS9_ECL.Core.Report
                 // if (rd.ResultDetailDataMore.Any(o => o.ContractNo == itm.ContractNo))
                 //   continue;
 
-                var _lstTfer = lstTfer.Where(o => o.ContractId == itm.ContractNo).ToList();
+                var _lstTfer = lstTfer.Where(o => o.ContractId == itm.ContractId).ToList();
 
                 var stage = 1;
                 try { stage = _lstTfer.FirstOrDefault(o => o.Scenario == 1).Stage; } catch { }
@@ -1480,7 +1480,7 @@ namespace IFRS9_ECL.Core.Report
                 var rddm = new ResultDetailDataMore
                 {
                     AccountNo = itm.AccountNo,
-                    ContractNo = itm.ContractNo,
+                    ContractNo = itm.ContractId,
                     CustomerNo = itm.CustomerNo,
                     ProductType = itm.ProductType,
                     Sector = itm.Sector,
