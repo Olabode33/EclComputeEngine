@@ -17,7 +17,7 @@ namespace IFRS9_ECL.Core.Calibration.Input
         public string Contract_No { get; set; }
 
         public string Product_Type { get; set; }
-public int? Current_Rating { get; set; }
+public string Current_Rating { get; set; }
         public int? Days_Past_Due { get; set; }
 
         public string Classification { get; set; }

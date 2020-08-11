@@ -34,6 +34,7 @@ namespace IFRS9_ECL.Core.Calibration
             //DataView dv = _dt.DefaultView;
             //dv.Sort = "Account_No,Contract_No,RAPP_Date";
             var dt = _dt;// dv.ToTable();
+            var rowCount = dt.Rows.Count + 1;
 
             if (dt.Rows.Count == 0)
                 return true;
@@ -41,7 +42,8 @@ namespace IFRS9_ECL.Core.Calibration
             var counter = Util.AppSettings.GetCounter(dt.Rows.Count);
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "PD_CR_RD.xlsx")}";
-            var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}PD_CR_RD.xlsx")}";
+            var fileGuid = Guid.NewGuid().ToString();
+            var path1 = $"{Path.Combine(baseAffPath, $"{fileGuid}PD_CR_RD.xlsx")}";
 
             if (File.Exists(path1))
             {
@@ -64,7 +66,7 @@ namespace IFRS9_ECL.Core.Calibration
                 //}
 
                 //1 is for header
-                worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1));
+                //worksheet.DeleteRow(dt.Rows.Count + 1, rows - (dt.Rows.Count + 1)); /********************* Enable after test
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
@@ -82,7 +84,7 @@ namespace IFRS9_ECL.Core.Calibration
                     worksheet.Cells[i + 2, 2].Value = itm.Account_No;
                     worksheet.Cells[i + 2, 3].Value = itm.Contract_No;
                     worksheet.Cells[i + 2, 4].Value = itm.Product_Type;
-                    worksheet.Cells[i + 2, 5].Value = itm.Current_Rating;
+                    try { worksheet.Cells[i + 2, 5].Value = Convert.ToInt32(itm.Current_Rating); } catch { worksheet.Cells[i + 2, 5].Value = itm.Current_Rating; }
                     worksheet.Cells[i + 2, 6].Value = itm.Days_Past_Due;
                     worksheet.Cells[i + 2, 7].Value = itm.Classification;
                     worksheet.Cells[i + 2, 8].Value = itm.Outstanding_Balance_Lcy;
@@ -115,7 +117,133 @@ namespace IFRS9_ECL.Core.Calibration
                                                                     _missingValue);
 
 
+            //Sort
+            Worksheet calculationSheet = theWorkbook.Sheets[3];
+            Range sortRange = calculationSheet.Range["A2", "K" + rowCount.ToString()];
+            sortRange.Sort(sortRange.Columns[11], DataOption1: XlSortDataOption.xlSortTextAsNumbers); // RAPP_DATE
+            sortRange.Sort(sortRange.Columns[3], DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
 
+
+
+            Log4Net.Log.Info("Done updating excel");
+            //refresh and calculate to modify
+            theWorkbook.RefreshAll();
+            Log4Net.Log.Info("Done refreshing");
+            excel.Calculate();
+            Log4Net.Log.Info("Done Calculating");
+            //Get inputs for solver template
+            Worksheet pdCalculationSheet = theWorkbook.Sheets[2];
+            Dictionary<int, string> solverInputs12MonthsPd = new Dictionary<int, string>();
+            Dictionary<int, string> solverInputsOutstandingBal = new Dictionary<int, string>();
+            for (int i = 0; i < 10; i++)
+            {
+                var pdValue = pdCalculationSheet.Cells[79, 3 + i].Value;
+                var outstandingBalValue = pdCalculationSheet.Cells[53, 3 + i].Value;
+                //solverSheet.Cells[5, 3 + i] = pdCalculationSheet.Cells[79, 3 + i].Value;
+                solverInputs12MonthsPd[i + 1] = pdValue.ToString();
+                solverInputsOutstandingBal[i + 1] = outstandingBalValue.ToString();
+            }
+
+            theWorkbook.Save();
+            Log4Net.Log.Info("Save to Path");
+            theWorkbook.Close(true);
+            Log4Net.Log.Info("Close");
+            //excel.Quit();
+
+            #region ExcelSolver
+            //Solution for Excel Solver
+
+            var solverTemplatePath = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, "PD_CR_RD_Solver_Template.xlsm")}";
+            var solverFilePath = $"{Path.Combine(baseAffPath, $"{fileGuid}_PD_CR_RD_Solver.xlsm")}";
+
+            //Save solver file for affiliate
+            Application solverExcel = new Application();
+            solverExcel.Visible = false;
+            solverExcel.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow;
+            var solverTemplateWorkbook = solverExcel.Workbooks.Open(solverTemplatePath,
+                                                                    _missingValue,
+                                                                    false,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue);
+            solverTemplateWorkbook.SaveAs(solverFilePath);
+            solverTemplateWorkbook.Close();
+
+            //Reopen for calculation 
+            var solverWorkbook = solverExcel.Workbooks.Open(solverFilePath,
+                                                                    _missingValue,
+                                                                    false,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue);
+
+            Worksheet solverSheet = solverWorkbook.Sheets[1];
+            for (int i = 0; i < 10; i++)
+            {
+                try{ solverSheet.Cells[4, 3 + i] = Convert.ToDouble(solverInputsOutstandingBal[i + 1]); } catch { solverSheet.Cells[4, 3 + i] = 0; }
+                try{ solverSheet.Cells[8, 3 + i] = Convert.ToDouble(solverInputs12MonthsPd[i + 1]); } catch { solverSheet.Cells[8, 3 + i] = 0; }
+            }
+
+            //refresh and calculate to modify
+            solverWorkbook.RefreshAll();
+            Log4Net.Log.Info("Done initial solver calculation");
+            solverExcel.Calculate();
+            Log4Net.Log.Info("Done initial solver calculation");
+
+            var solverValueG = 0.0;
+            var solverValueI = 0.0;
+            if (solverExcel.AddIns["Solver Add-In"].Installed)
+            {
+                solverExcel.Run("PdCrDrSolverMacro");
+                //update solver result and recalculate
+                solverValueG = solverSheet.Cells[11, 7].Value;
+                solverValueI = solverSheet.Cells[11, 9].Value;
+                //pdCalculationSheet.Cells[83,7] = solverSheet.Cells[8,7].Value;
+                //pdCalculationSheet.Cells[83,9] = solverSheet.Cells[8,9].Value;
+
+                solverWorkbook.Save();
+                solverWorkbook.Close(true);
+                solverExcel.Quit();
+            }
+            else
+            {
+                Log4Net.Log.Error("Solver Add-In not installed");
+            }
+
+            #endregion ExcelSolver
+
+            theWorkbook = excel.Workbooks.Open(txtLocation,
+                                                                    _missingValue,
+                                                                    false,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    true,
+                                                                    _missingValue,
+                                                                    _missingValue,
+                                                                    _missingValue);
+
+
+            pdCalculationSheet = theWorkbook.Sheets[2];
+            pdCalculationSheet.Cells[83,7] = solverValueG;
+            pdCalculationSheet.Cells[83,9] = solverValueI;
             Log4Net.Log.Info("Done updating excel");
             //refresh and calculate to modify
             theWorkbook.RefreshAll();
@@ -146,41 +274,41 @@ namespace IFRS9_ECL.Core.Calibration
 
             var rs = new CalibrationResult_PD_12Months_Summary();
 
-            rs.Normal_12_Months_PD = worksheet1.Cells[14,6].Value;
+            rs.Normal_12_Months_PD = worksheet1.Cells[16,6].Value;
             rs.Normal_12_Months_PD = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Normal_12_Months_PD) ?0 : rs.Normal_12_Months_PD;
 
 
-            rs.DefaultedLoansA = worksheet1.Cells[17, 3].Value;
+            rs.DefaultedLoansA = worksheet1.Cells[19, 3].Value;
             rs.DefaultedLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.DefaultedLoansA) ?0 : rs.DefaultedLoansA;
 
-            rs.DefaultedLoansB = worksheet1.Cells[17, 4].Value;
+            rs.DefaultedLoansB = worksheet1.Cells[19, 4].Value;
             rs.DefaultedLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.DefaultedLoansB) ?0 : rs.DefaultedLoansB;
 
-            rs.CuredLoansA = worksheet1.Cells[18, 3].Value;
+            rs.CuredLoansA = worksheet1.Cells[20, 3].Value;
             rs.CuredLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredLoansA) ?0 : rs.CuredLoansA;
 
-            rs.CuredLoansB = worksheet1.Cells[18, 4].Value;
+            rs.CuredLoansB = worksheet1.Cells[20, 4].Value;
             rs.CuredLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredLoansB) ?0 : rs.CuredLoansB;
 
-            rs.Cure_Rate = worksheet1.Cells[19, 5].Value;
+            rs.Cure_Rate = worksheet1.Cells[21, 5].Value;
             rs.Cure_Rate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Cure_Rate) ?0 : rs.Cure_Rate;
 
-            rs.CuredPopulationA = worksheet1.Cells[21, 3].Value;
+            rs.CuredPopulationA = worksheet1.Cells[23, 3].Value;
             rs.CuredPopulationA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredPopulationA) ?0 : rs.CuredPopulationA;
 
-            rs.CuredPopulationB = worksheet1.Cells[21, 4].Value;
+            rs.CuredPopulationB = worksheet1.Cells[23, 4].Value;
             rs.CuredPopulationB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.CuredPopulationB) ?0 : rs.CuredPopulationB;
 
-            rs.RedefaultedLoansA = worksheet1.Cells[22, 3].Value;
+            rs.RedefaultedLoansA = worksheet1.Cells[24, 3].Value;
             rs.RedefaultedLoansA = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.RedefaultedLoansA) ?0 : rs.RedefaultedLoansA;
 
-            rs.RedefaultedLoansB = worksheet1.Cells[22, 4].Value;
+            rs.RedefaultedLoansB = worksheet1.Cells[24, 4].Value;
             rs.RedefaultedLoansB = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.RedefaultedLoansB) ?0 : rs.RedefaultedLoansB;
 
-            rs.Redefault_Rate = worksheet1.Cells[23, 5].Value;
+            rs.Redefault_Rate = worksheet1.Cells[25, 5].Value;
             rs.Redefault_Rate = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Redefault_Rate) ?0 : rs.Redefault_Rate;
 
-            rs.Redefault_Factor = worksheet1.Cells[25, 5].Value;
+            rs.Redefault_Factor = worksheet1.Cells[27, 3].Value;
             rs.Redefault_Factor = ECLNonStringConstants.i.ExcelDefaultValue.Contains(rs.Redefault_Factor) ?0 : rs.Redefault_Factor;
 
             Log4Net.Log.Info("Got SUmmary");
