@@ -33,6 +33,10 @@ namespace IFRS9_ECL.Core.Calibration.Input
         public double? Redefault_Rate { get; set; }
 
         public double? Redefault_Factor { get; set; }
+        public double? Commercial_CureRate { get; set; }
+        public double? Commercial_RedefaultRate { get; set; }
+        public double? Consumer_CureRate { get; set; }
+        public double? Consumer_RedefaultRate { get; set; }
 
         public string Comment { get; set; }
 

@@ -129,7 +129,7 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_PD_CR_DR(Guid calibrationId)
         {
-            return $"select Id=-1, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationInput_PD_CR_DR where CalibrationID ='{calibrationId}' union all select Id, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating from CalibrationHistory_PD_CR_DR where AffiliateId =(select OrganizationUnitId from CalibrationRunPdCrDrs where Id='{calibrationId}')  order by Account_No,Contract_No,RAPP_Date"; //RAPP_Date desc
+            return $"select Id=-1, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating,Segment from CalibrationInput_PD_CR_DR where CalibrationID ='{calibrationId}' union all select Id, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating,Segment from CalibrationHistory_PD_CR_DR where AffiliateId =(select OrganizationUnitId from CalibrationRunPdCrDrs where Id='{calibrationId}')  order by Account_No,Contract_No,RAPP_Date"; //RAPP_Date desc
         }
 
         public static string CalibrationResult_LGD_RecoveryRate_Update(Guid calibrationId, double? overall_Exposure_At_Default, double? overall_PvOfAmountReceived, double? overall_Count, double? overall_RecoveryRate, double? corporate_Exposure_At_Default, double? corporate_PvOfAmountReceived, double? corporate_Count, double? corporate_RecoveryRate, double? commercial_Exposure_At_Default, double? commercial_PvOfAmountReceived, double? commercial_Count, double? commercial_RecoveryRate, double? consumer_Exposure_At_Default, double? consumer_PvOfAmountReceived, double? consumer_Count, double? consumer_RecoveryRate)
@@ -144,9 +144,24 @@ namespace IFRS9_ECL.Data
             return $" insert into CalibrationResult_PD_12Months(Rating, Outstanding_Balance, Redefault_Balance, Redefaulted_Balance, Total_Redefault, Months_PDs_12, Comment, Status, CalibrationId, DateCreated) values({Rating}, {Outstanding_Balance}, {Redefault_Balance}, {Redefaulted_Balance}, {Total_Redefault}, {Months_PDs_12},'', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
 
-        public static string CalibrationResult_PD_Update_Summary(Guid calibrationId, string lstQry, double? Normal_12_Months_PD, double? DefaultedLoansA, double? DefaultedLoansB, double? CuredLoansA, double? CuredLoansB, double? Cure_Rate, double? CuredPopulationA, double? CuredPopulationB, double? RedefaultedLoansA, double? RedefaultedLoansB, double? Redefault_Rate, double? Redefault_Factor)
+        public static string CalibrationResult_PD_CommCons_Update(Guid calibrationId, int Month, double? Comm1, double? Cons1, double? Comm2, double? Cons2)
         {
-            return $"delete from CalibrationResult_PD_12Months where CalibrationID ='{calibrationId.ToString()}'; delete from CalibrationResult_PD_12Months_Summary where CalibrationID ='{calibrationId.ToString()}'; {lstQry} insert into CalibrationResult_PD_12Months_Summary(Normal_12_Months_PD, DefaultedLoansA, DefaultedLoansB, CuredLoansA, CuredLoansB, Cure_Rate, CuredPopulationA, CuredPopulationB, RedefaultedLoansA, RedefaultedLoansB, Redefault_Rate, Redefault_Factor, Comment, Status, CalibrationId, DateCreated) values({Normal_12_Months_PD}, {DefaultedLoansA}, {DefaultedLoansB}, {CuredLoansA}, {CuredLoansB}, {Cure_Rate}, {CuredPopulationA}, {CuredPopulationB}, {RedefaultedLoansA}, {RedefaultedLoansB}, {Redefault_Rate}, {Redefault_Factor},  '', 1, '{calibrationId.ToString()}', GetDate()); ";
+            return $" insert into CalibrationResult_PD_CommsCons_MarginalDefaultRate(Month, Comm1, Cons1, Comm2, Cons2, Comment, Status, CalibrationId, DateCreated) values({Month}, {Comm1}, {Cons1}, {Comm2}, {Cons2}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
+        }
+
+        public static string CalibrationResult_PD_Update_Summary(Guid calibrationId, string lstQry, string commsCons, double? Normal_12_Months_PD, double? DefaultedLoansA, double? DefaultedLoansB, double? CuredLoansA, double? CuredLoansB, double? Cure_Rate, double? CuredPopulationA, double? CuredPopulationB, double? RedefaultedLoansA, double? RedefaultedLoansB, double? Redefault_Rate, double? Redefault_Factor, 
+                                                                 double? Commercial_CureRate, double? Commercial_RedefaultRate, double? Consumer_CureRate, double? Consumer_RedefaultRate)
+        {
+            return $"delete from CalibrationResult_PD_12Months where CalibrationID ='{calibrationId.ToString()}'; "+
+                $"delete from CalibrationResult_PD_12Months_Summary where CalibrationID ='{calibrationId.ToString()}'; {lstQry} " +
+                $"delete from CalibrationResult_PD_CommsCons_MarginalDefaultRate where CalibrationID ='{calibrationId.ToString()}'; {commsCons} " +
+                $"insert into CalibrationResult_PD_12Months_Summary(Normal_12_Months_PD, DefaultedLoansA, DefaultedLoansB, CuredLoansA, CuredLoansB, Cure_Rate, " +
+                $"CuredPopulationA, CuredPopulationB, RedefaultedLoansA, RedefaultedLoansB, Redefault_Rate, Redefault_Factor, " +
+                $"Commercial_CureRate, Commercial_RedefaultRate, Consumer_CureRate, Consumer_RedefaultRate, " +
+                $"Comment, Status, CalibrationId, DateCreated) values({Normal_12_Months_PD}, {DefaultedLoansA}, {DefaultedLoansB}, {CuredLoansA}, {CuredLoansB}, {Cure_Rate}, " +
+                $"{CuredPopulationA}, {CuredPopulationB}, {RedefaultedLoansA}, {RedefaultedLoansB}, {Redefault_Rate}, {Redefault_Factor},  " +
+                $"{Commercial_CureRate}, {Commercial_RedefaultRate}, {Consumer_CureRate}, {Consumer_RedefaultRate}, " +
+                $"'', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
         public static string MacroResult_BatchInsert(int macroId, string lstQry, long affiliateId)
         {

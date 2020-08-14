@@ -102,6 +102,7 @@
     <Compile Include="Calibration\Entities\CalibrationResult_LGD_Haricut.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_PD_12Months.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_PD_12Months_Summary.cs" />
+    <Compile Include="Calibration\Entities\CalibrationResult_PD_CommsCons_MarginalDefaultRate.cs" />
     <Compile Include="Calibration\Entities\EAD_Behavioural_Terms_Data.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_LGD_RecoveryRate.cs" />
     <Compile Include="Calibration\Entities\LGD_HairCut.cs" />
