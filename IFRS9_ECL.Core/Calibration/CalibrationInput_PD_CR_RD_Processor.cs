@@ -66,7 +66,7 @@ namespace IFRS9_ECL.Core.Calibration
                 //}
 
                 //1 is for header
-                //worksheet.DeleteRow(dt.Rows.Count + 2, rows - (dt.Rows.Count + 2)); //TODO::: Enable after testing
+                worksheet.DeleteRow(dt.Rows.Count + 2, rows - (dt.Rows.Count + 2)); //TODO::: Enable after testing
                 // loop through the worksheet rows
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
