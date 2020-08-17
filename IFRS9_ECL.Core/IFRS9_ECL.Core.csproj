@@ -68,6 +68,9 @@
     <Reference Include="NPOI.OpenXmlFormats, Version=2.5.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <HintPath>..\packages\NPOI.2.5.1\lib\net45\NPOI.OpenXmlFormats.dll</HintPath>
     </Reference>
+    <Reference Include="office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -99,6 +102,7 @@
     <Compile Include="Calibration\Entities\CalibrationResult_LGD_Haricut.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_PD_12Months.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_PD_12Months_Summary.cs" />
+    <Compile Include="Calibration\Entities\CalibrationResult_PD_CommsCons_MarginalDefaultRate.cs" />
     <Compile Include="Calibration\Entities\EAD_Behavioural_Terms_Data.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_LGD_RecoveryRate.cs" />
     <Compile Include="Calibration\Entities\LGD_HairCut.cs" />
