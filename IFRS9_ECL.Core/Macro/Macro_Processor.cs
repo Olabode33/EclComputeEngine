@@ -1,13 +1,7 @@
-﻿using IFRS9_ECL.Core.Calibration.Input;
-using IFRS9_ECL.Core.Macro.Entities;
+﻿using IFRS9_ECL.Core.Macro.Entities;
 using IFRS9_ECL.Core.Macro.Input;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Util;
-using Microsoft.Office.Interop.Excel;
-using NPOI.HSSF.UserModel;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
-using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Core.Calibration
 {
@@ -24,7 +17,6 @@ namespace IFRS9_ECL.Core.Calibration
         List<AffiliateMacroEconomicVariableOffsets> affM = new List<AffiliateMacroEconomicVariableOffsets>();
         public bool ProcessMacro(int macroId, long affiliateId)
         {
-
 
             var qry = Queries.Affiliate_MacroeconomicVariable(affiliateId);
             var dt = DataAccess.i.GetData(qry);
@@ -205,16 +197,18 @@ namespace IFRS9_ECL.Core.Calibration
 
             var started = false;
 
-            var allDataStartPeriod = lstMacroData[1].Split(',')[0];
+            var startPos = lstMacroData.Count()- all_score.Count() +1; // one is to exlude the header
+//            var allDataStartPeriod = lstMacroData[startPos].Split(',')[0];
             for (int i = 1; i <all_score.Count(); i++)
             {
                 var _singleLine = all_score[i].Split(',');
 
-                if (allDataStartPeriod == startPeriod)
+                var posData = lstMacroData[startPos].Split(',')[0];
+                if (posData == startPeriod)//allDataStartPeriod 
                 {
                     started = true;
                 }
-                allDataStartPeriod =GetNextPeriod(allDataStartPeriod, i);
+                
 
 
                 if (started)
@@ -228,14 +222,18 @@ namespace IFRS9_ECL.Core.Calibration
 
                         mcPrincipalComponent.Add(mp);
                 }
-                if (allDataStartPeriod == endPeriod)
+                if (posData == endPeriod)
                 {
                     started = false;
                     break;
                 }
+                startPos++;
+               // allDataStartPeriod = GetNextPeriod(allDataStartPeriod, i);
             }
 
             // Principal Component SUmmary result
+            var groupDataStartPos= groupMacroData.IndexOf(groupMacroData.FirstOrDefault(o => o.period == startPeriod));
+            var extractForPrinCompSummary = groupMacroData.Skip(groupDataStartPos).Take(mcPrincipalComponent.Count).ToList();
             var lstPrinSummary = new List<MacroResult_PrincipalComponentSummary>();
             for (int i = 0; i < loadingOutputResult.Count; i++)
             {
@@ -255,23 +253,23 @@ namespace IFRS9_ECL.Core.Calibration
                 
                 if (i == 0)
                 {
-                    sum.Value = groupMacroData.Average(o => o.MacroValue1);
-                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue1));
+                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue1);
+                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue1));
                 }
                 if (i == 1)
                 {
-                    sum.Value = groupMacroData.Average(o => o.MacroValue2);
-                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue2));
+                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue2);
+                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue2));
                 }
                 if (i == 2)
                 {
-                    sum.Value = groupMacroData.Average(o => o.MacroValue3);
-                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue3));
+                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue3);
+                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue3));
                 }
                 if (i == 3)
                 {
-                    sum.Value = groupMacroData.Average(o => o.MacroValue4);
-                    sum1.Value = Computation.GetStandardDeviationS(groupMacroData.Select(o => o.MacroValue4));
+                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue4);
+                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue4));
                 }
                 
                 lstPrinSummary.Add(sum);
@@ -307,7 +305,7 @@ namespace IFRS9_ECL.Core.Calibration
             try { statistics.IndexWeight1 = eIngenValues[0] < 1 ? 0 : eIngenValues[0]; } catch { statistics.IndexWeight1 = 0; }
             try{statistics.IndexWeight2 = eIngenValues[1] < 1 ? 0 : eIngenValues[1]; } catch { statistics.IndexWeight2 = 0; }
             try{statistics.IndexWeight3 = eIngenValues[2] < 1 ? 0 : eIngenValues[2]; } catch { statistics.IndexWeight3=0; }
-            try{statistics.IndexWeight4 = eIngenValues[3] < 1 ? 0 : eIngenValues[3]; } catch { statistics.IndexWeight4 = 0; }
+             try{statistics.IndexWeight4 = eIngenValues[3] < 1 ? 0 : eIngenValues[3]; } catch { statistics.IndexWeight4 = 0; }
 
             // Get Index Data
             var indxData = new List<MacroResult_IndexData>();
@@ -316,14 +314,25 @@ namespace IFRS9_ECL.Core.Calibration
                 var mcp = mcPrincipalComponent[i];
 
                 var indx = new MacroResult_IndexData();
-                if(groupMacroData.Count>(i + maxBackLag))
-                {
+               // if(extractForPrinCompSummary.Count>(i + maxBackLag))
+               // {
                     indx.MacroId = macroId;
-                    indx.Period = groupMacroData[i + maxBackLag].period;
-                    indx.BfNpl = groupMacroData[i + maxBackLag].NPL;
-                    indx.Index = (mcPrincipalComponent[i].PrincipalComponent1 ?? 0 * statistics.IndexWeight1 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent2 ?? 0 * statistics.IndexWeight2 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent3 ?? 0 * statistics.IndexWeight3 ?? 0) + (mcPrincipalComponent[i].PrincipalComponent4 ?? 0 * statistics.IndexWeight4 ?? 0);
+                    indx.Period = extractForPrinCompSummary[i].period;
+                    indx.BfNpl = extractForPrinCompSummary[i].NPL;
+                mcPrincipalComponent[i].PrincipalComponent1 = mcPrincipalComponent[i].PrincipalComponent1 ?? 0;
+                mcPrincipalComponent[i].PrincipalComponent2 = mcPrincipalComponent[i].PrincipalComponent2 ?? 0;
+                mcPrincipalComponent[i].PrincipalComponent3 = mcPrincipalComponent[i].PrincipalComponent3 ?? 0;
+                mcPrincipalComponent[i].PrincipalComponent4 = mcPrincipalComponent[i].PrincipalComponent4 ?? 0;
+
+                statistics.IndexWeight1 = statistics.IndexWeight1 ?? 0;
+                statistics.IndexWeight2 = statistics.IndexWeight2 ?? 0;
+                statistics.IndexWeight3 = statistics.IndexWeight3 ?? 0;
+                statistics.IndexWeight4 = statistics.IndexWeight4 ?? 0;
+
+
+                indx.Index = (mcPrincipalComponent[i].PrincipalComponent1.Value * statistics.IndexWeight1.Value) + (mcPrincipalComponent[i].PrincipalComponent2.Value * statistics.IndexWeight2.Value) + (mcPrincipalComponent[i].PrincipalComponent3.Value * statistics.IndexWeight3.Value) + (mcPrincipalComponent[i].PrincipalComponent4.Value * statistics.IndexWeight4.Value);
                     indxData.Add(indx);
-                }
+               // }
             }
 
             statistics.StandardDev = 0;
@@ -332,9 +341,12 @@ namespace IFRS9_ECL.Core.Calibration
             statistics.TTC_PD = 0;
 
             //Continue Statistical Data
+            //////////////////////////Remove IT///////////////////////////////
+            indxData = indxData.Take(indxData.Count - 2).ToList(); //removeit
+            //////////////////////////Remove IT///////////////////////////////
+
             try { statistics.StandardDev = Computation.GetStandardDeviationP(indxData.Select(o => o.Index).ToList()); } catch { }
             try{statistics.Average = indxData.Average(o => o.Index); } catch { }
-            try{statistics.Correlation = MathNet.Numerics.Statistics.Correlation.Pearson(indxData.Select(o => o.Index), indxData.Select(o => o.BfNpl)); } catch { }
             try{statistics.TTC_PD = indxData.Average(o => o.BfNpl); } catch { }
 
             for (int i = 0; i < indxData.Count; i++)
@@ -343,8 +355,12 @@ namespace IFRS9_ECL.Core.Calibration
                 try {indxData[i].StandardIndex = (indxData[i].Index - statistics.Average.Value) / statistics.StandardDev.Value; } catch { }
             }
 
-            // Get CorMat
-            var macV1 = groupMacroData.Select(o => o.MacroValue1).ToList();
+                var arry1 = indxData.Select(o => o.StandardIndex).ToArray();
+            var arry2 = indxData.Select(o => o.StandardIndex).ToArray();
+                var fitResult = new FitResult();
+            statistics.Correlation=fitResult.ComputeCoeff(arry1, arry2);
+              // Get CorMat
+              var macV1 = groupMacroData.Select(o => o.MacroValue1).ToList();
             var macV2 = groupMacroData.Select(o => o.MacroValue2).ToList();
             var macV3 = groupMacroData.Select(o => o.MacroValue3).ToList();
             var macV4 = groupMacroData.Select(o => o.MacroValue4).ToList();
@@ -371,41 +387,63 @@ namespace IFRS9_ECL.Core.Calibration
                 }
             }
 
+
+            //Delete all affiliate macroData
+            qry = Queries.DeleteAffiliateMacroData(macroId, affiliateId);
+            DataAccess.i.ExecuteQuery(qry);
+
             var sb = new StringBuilder();
             // Save Principal Component Result to DB
             foreach (var prinC in mcPrincipalComponent)
             {
                 sb.Append(Queries.MacroResult_PrinC(macroId, prinC.PrincipalComponent1, prinC.PrincipalComponent2, prinC.PrincipalComponent3, prinC.PrincipalComponent4));
             }
+            qry = sb.ToString().Replace("NaN", "0");
+            DataAccess.i.ExecuteQuery(qry);
+
+            sb = new StringBuilder();
             // Save Index Result to DB
             foreach (var mId in indxData)
             {
                 sb.Append(Queries.MacroResult_IndxResult(macroId, mId.Period, mId.Index, mId.StandardIndex, mId.BfNpl));
             }
+            qry = sb.ToString().Replace("NaN", "0");
+            DataAccess.i.ExecuteQuery(qry);
+
+            sb = new StringBuilder();
             // Save Statistics Index Result to DB
             sb.Append(Queries.MacroResult_StatisticalIndex(macroId, statistics.IndexWeight1, statistics.IndexWeight2, statistics.IndexWeight3,
                 statistics.IndexWeight4, statistics.StandardDev, statistics.Average, statistics.Correlation, statistics.TTC_PD));
+            qry = sb.ToString().Replace("NaN", "0");
+            DataAccess.i.ExecuteQuery(qry);
+
+            sb = new StringBuilder();
             // Save Correlation Mat Index Result to DB
             foreach (var corMar in lstCorMat)
             {
                 sb.Append(Queries.MacroResult_CorMat(macroId, corMar.MacroEconomicIdA, corMar.MacroEconomicIdB, corMar.MacroEconomicLabelA, corMar.MacroEconomicLabelB, corMar.Value));
-
             }
+            qry = sb.ToString().Replace("NaN", "0");
+            DataAccess.i.ExecuteQuery(qry);
+
             // Save Principal Component Result to DB
+            sb = new StringBuilder();
             foreach (var pcs in lstPrinSummary)
             {
                 sb.Append(Queries.MacroResult_PrincipalComponent(macroId, pcs.PrincipalComponentIdA, pcs.PrincipalComponentIdB, pcs.PricipalComponentLabelA, pcs.PricipalComponentLabelB, pcs.Value));
             }
+            qry = sb.ToString().Replace("NaN", "0");
+            DataAccess.i.ExecuteQuery(qry);
 
             //Actual Selected MacroEconomic Variable
+            sb = new StringBuilder();
             foreach (var itm in actual_macvar)
             {
                 sb.Append(Queries.MacroResult_SelectedMacroEconomicVariables(itm.BackwardOffset, itm.AffiliateId, itm.MacroeconomicVariableId));
             }
-            //MacroResult_SelectedMacroEconomicVariables
-            qry = Queries.MacroResult_BatchInsert(macroId, sb.ToString(), affiliateId);
-            qry = qry.Replace("NaN", "0");
+            qry = sb.ToString().Replace("NaN", "0");
             DataAccess.i.ExecuteQuery(qry);
+
 
             return true;
 
@@ -591,6 +629,7 @@ namespace IFRS9_ECL.Core.Calibration
             }
 
             finalMaxIndex = finalMaxIndex.Distinct().ToList();
+            //finalMaxIndex = finalMaxIndex.Take(5).ToList();
             finalMaxIndex.Sort();
 
             var strFinal = string.Join(",", finalMaxIndex);
@@ -667,23 +706,23 @@ namespace IFRS9_ECL.Core.Calibration
 
             var macroIds = itms.Select(o => o.MacroeconomicId).ToList();
 
-            foreach (var itm in macroIds)
-            {
-                if (itms.Where(p => p.MacroeconomicId == itm).Any(o => o.Value > 0))
-                {
-                    // do nothing
-                }
-                else
-                {
-                    var toRemoveItms = itms.Where(p => p.MacroeconomicId == itm).ToList();
-                    foreach (var _itm in toRemoveItms)
-                    {
-                        itms.Remove(_itm);
-                    }
-                    var rmvAff = affM.FirstOrDefault(o => o.MacroeconomicVariableId == itm);
-                    affM.Remove(rmvAff);
-                }
-            }
+            //foreach (var itm in macroIds)
+            //{
+            //    if (itms.Where(p => p.MacroeconomicId == itm).Any(o => o.Value > 0))
+            //    {
+            //        // do nothing
+            //    }
+            //    else
+            //    {
+            //        var toRemoveItms = itms.Where(p => p.MacroeconomicId == itm).ToList();
+            //        foreach (var _itm in toRemoveItms)
+            //        {
+            //            itms.Remove(_itm);
+            //        }
+            //        var rmvAff = affM.FirstOrDefault(o => o.MacroeconomicVariableId == itm);
+            //        affM.Remove(rmvAff);
+            //    }
+            //}
 
             header.Add("Units");
             for (int i = 0; i < affM.Count; i++)

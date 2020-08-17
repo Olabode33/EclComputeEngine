@@ -1309,7 +1309,7 @@ namespace IFRS9_ECL.Core.Report
         ReportDetailExtractor rde = new ReportDetailExtractor();
         ReportDetailExtractor temp_header = new ReportDetailExtractor();
         double overrides_overlay = 0;
-        List<TempEadInput> lstTWEI = new List<TempEadInput>();
+        //List<TempEadInput> lstTWEI = new List<TempEadInput>();
         List<EclOverrides> ovrde = new List<EclOverrides>();
         ResultDetail rd = new ResultDetail();
         EclType _eclType;
@@ -1364,14 +1364,14 @@ namespace IFRS9_ECL.Core.Report
                 lstTfer.Add(DataAccess.i.ParseDataToObject(tfer, dr));
             }
 
-            qry = $"select distinct Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";
-            dt = DataAccess.i.GetData(qry);
+            //qry = $"select distinct Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";
+            //dt = DataAccess.i.GetData(qry);
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                var twei = new TempEadInput();
-                lstTWEI.Add(DataAccess.i.ParseDataToObject(twei, dr));
-            }
+            //foreach (DataRow dr in dt.Rows)
+            //{
+            //    var twei = new TempEadInput();
+            //    lstTWEI.Add(DataAccess.i.ParseDataToObject(twei, dr));
+            //}
 
             rd.ResultDetailDataMore = new List<ResultDetailDataMore>();
 
@@ -1475,7 +1475,7 @@ namespace IFRS9_ECL.Core.Report
                 try { D_Value_Override = _lstTfer.FirstOrDefault(o => o.ScenarioOverride == 3).FinalEclValueOverride; } catch { D_Value_Override = 0; }
 
                 var outStandingBal = 0.0;
-                try { outStandingBal = lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractId).Value; } catch { }
+                try { outStandingBal = itm.OutstandingBalanceLCY.Value; } catch { };// lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractId).Value; } catch { }
 
                 var rddm = new ResultDetailDataMore
                 {

@@ -125,6 +125,7 @@
     <Compile Include="Macro\Entities\MacroResult_PrincipalComponentSummary.cs" />
     <Compile Include="Macro\Entities\MacroResult_SelectedMacroEconomicVariables.cs" />
     <Compile Include="Macro\Entities\MacroResult_Statistics.cs" />
+    <Compile Include="Macro\FitResult.cs" />
     <Compile Include="Macro\Macro_Processor.cs" />
     <Compile Include="Macro\Entities\MacroData.cs" />
     <Compile Include="PDComputation\AffiliateRho.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="ProcessECL_PD.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report\ETI_Colors.cs" />
+    <Compile Include="Report\ExcelReport.cs" />
     <Compile Include="Report\ReportComputation.cs" />
   </ItemGroup>
   <ItemGroup>

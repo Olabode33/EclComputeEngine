@@ -77,10 +77,10 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected double ComputeVasicekAverageFitted()
         {
-            var rptDate = GetReportingDate(_eclType, _eclId);
-            rptDate = rptDate.AddMonths(-69);
+            //var rptDate = GetReportingDate(_eclType, _eclId);
+            //rptDate = rptDate.AddMonths(-69);
             var fitted = ComputeEtiNplIndex();
-            return fitted.Where(m => m.Date >=new DateTime(2013, 12,30)) // rptDate)// 
+            return fitted.Where(m => m.Date >= new DateTime(2013, 12,30)) // rptDate)//  new DateTime(2016, 03, 31)) 
                 .Average(o => o.Fitted);
         }
         public List<VasicekEtiNplIndex> ComputeEtiNplIndex()

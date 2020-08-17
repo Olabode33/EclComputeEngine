@@ -65,9 +65,10 @@ namespace IFRS9_ECL.Core.PDComputation
 
             for (int month = 1; month <= ECLNonStringConstants.i.MaxMarginalLifetimeRedefaultPdMonth; month++)
             {
-
+                
                 int vasicekSearchMonth = Convert.ToInt32((month - 1) / 3) + 1;
                 double vasicekIndexMonthValue = 0;
+
                 try
                 {
                     vasicekIndexMonthValue = lstVarsicekIndex.FirstOrDefault(row => row.Month == (vasicekSearchMonth < 24 ? vasicekSearchMonth : 24)).ScenarioFactor;
@@ -84,7 +85,8 @@ namespace IFRS9_ECL.Core.PDComputation
                 //Pd group 1 to 9
                 for (int pdGroup = 1; pdGroup < 10; pdGroup++)
                 {
-                    string pdGroupName = pdGroup.ToString();
+
+                        string pdGroupName = pdGroup.ToString();
                     double logOddsRatioMonthRankValue = 0;
 
                     try

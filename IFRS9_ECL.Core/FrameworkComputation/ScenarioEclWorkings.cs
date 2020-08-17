@@ -162,15 +162,26 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             switch (stage.Stage)
             {
+                //case 1:
+                //    double[] monthEclArray = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1 && o.EclMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).OrderBy(m => m.EclMonth).Select(n => n.MonthlyEclValue).ToArray();
+                //    double[] monthCdfArray = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1 && o.ProjectionMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).OrderBy(m => m.ProjectionMonth).Select(n => n.ProjectionValue).ToArray();
+
+                //    finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray, monthCdfArray);
+                //    break;
+                //case 2:
+                //    double[] monthEclArray2 = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1).OrderBy(m => m.EclMonth).Select(n => n.MonthlyEclValue).ToArray();// && o.EclMonth <= FrameworkConstants.ProjectionMonth).Select(n => n.MonthlyEclValue).ToArray();
+                //    double[] monthCdfArray2 = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1).OrderBy(m => m.ProjectionMonth).Select(n => n.ProjectionValue).ToArray();// && o.ProjectionMonth < FrameworkConstants.ProjectionMonth).Select(n => n.ProjectionValue).ToArray(); //FrameworkConstants.ProjectionMonth
+                //    finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray2, monthCdfArray2);
+                //    break;
                 case 1:
-                    double[] monthEclArray = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1 && o.EclMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).Select(n => n.MonthlyEclValue).ToArray();
-                    double[] monthCdfArray = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1 && o.ProjectionMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).Select(n => n.ProjectionValue).ToArray();
+                    double[] monthEclArray = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1 && o.EclMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).OrderBy(m => m.EclMonth).Select(n => n.MonthlyEclValue).ToArray();
+                    double[] monthCdfArray = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1 && o.ProjectionMonth <= FrameworkConstants.ScenerioWorkingMaxMonth).OrderBy(m => m.ProjectionMonth).Select(n => n.ProjectionValue).ToArray();
 
                     finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray, monthCdfArray);
                     break;
                 case 2:
-                    double[] monthEclArray2 = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1).Select(n => n.MonthlyEclValue).ToArray();// && o.EclMonth <= FrameworkConstants.ProjectionMonth).Select(n => n.MonthlyEclValue).ToArray();
-                    double[] monthCdfArray2 = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1).Select(n => n.ProjectionValue).ToArray();// && o.ProjectionMonth < FrameworkConstants.ProjectionMonth).Select(n => n.ProjectionValue).ToArray(); //FrameworkConstants.ProjectionMonth
+                    double[] monthEclArray2 = monthlyEcl.Where(o => o.ContractId == contractId && o.EclMonth >= 1).OrderBy(m => m.EclMonth).Select(n => n.MonthlyEclValue).ToArray();// && o.EclMonth <= FrameworkConstants.ProjectionMonth).Select(n => n.MonthlyEclValue).ToArray();
+                    double[] monthCdfArray2 = cummulativeDiscountFactor.Where(o => o.EirGroup == eirGroup && o.ProjectionMonth >= 1).OrderBy(m => m.ProjectionMonth).Select(n => n.ProjectionValue).ToArray();// && o.ProjectionMonth < FrameworkConstants.ProjectionMonth).Select(n => n.ProjectionValue).ToArray(); //FrameworkConstants.ProjectionMonth
                     finalEclValue = ExcelFormulaUtil.SumProduct(monthEclArray2, monthCdfArray2);
                     break;
                 default:

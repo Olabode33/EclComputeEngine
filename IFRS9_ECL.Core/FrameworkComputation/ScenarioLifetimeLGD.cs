@@ -79,7 +79,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             lifetimeEAD = _lifetimeEAD;//GetLifetimeEadResult(loanbook);
 
-           // lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
+            //lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
 
             contractData = new ProcessECL_LGD(this._eclId, this._eclType).GetLgdContractData(loanbook);
             var taskLst = new List<Task>();
@@ -200,7 +200,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 var subcontractIds = subcontract.Select(o => o.CONTRACT_NO).ToList();
                 var subpdMapping = pdMapping.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
                 var subsicrInput = sicrInput.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+                 var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
                 var sublifetimeEAD = lifetimeEAD.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
                 var sublifetimeCollateralBest = lifetimeCollateralBest.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
                 var sublifetimeCollateralOptimistic = lifetimeCollateralOptimistic.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
@@ -239,14 +239,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             }
             Log4Net.Log.Info($"ComputeLifetimeLGD Completed: {completedTask}");
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append($"COntractID,Month,Scenario,Value,{Environment.NewLine}");
-            foreach (var itm in lifetimeLGD)
-            {
-                sb.Append($"{itm.ContractId},{itm.Month},{itm.Ecl_Scenerio.ToString()},{itm.Value},{Environment.NewLine}");
-
-            }
-            File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "LGDOutput.csv"), sb.ToString());
+            //StringBuilder sb = new StringBuilder();
+            //sb.Append($"COntractID,Month,Scenario,Value,{Environment.NewLine}");
+            //foreach (var itm in lifetimeLGD)
+            //{
+            //    if(itm!=null)
+            //        sb.Append($"{itm.ContractId},{itm.Month},{itm.Ecl_Scenerio.ToString()},{itm.Value},{Environment.NewLine}");
+            //}
+            //File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LGDOutput.csv"), sb.ToString());
 
 
             return lifetimeLGD;
@@ -272,18 +272,38 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxx
                     //try { loanStage= stageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage; } catch { };
                     int loanStage = 1;
-
+                    try
+                    {
                         loanStage = substageClassification.FirstOrDefault(x => x.ContractId == contractId).Stage;
+                    }
+                    catch (Exception ex)
+                    {
+                        if(contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
+                        {
+                            loanStage = 3;
+                        }
+                        Log4Net.Log.Error(ex);
+                    }
 
 
 
                     var pdMappingRow = subpdMapping.FirstOrDefault(x => x.ContractId == contractId);
 
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                   
-                    string pdGroup = pdMappingRow.PdGroup;
-                    string segment = pdMappingRow.Segment;
-                    string productType = pdMappingRow.ProductType;
+
+                    string pdGroup = pdMappingRow.PdGroup ?? "";
+                    string segment = pdMappingRow.Segment ?? "";
+
+                    if(contractId== "EXPLOAN|CORPORATE")
+                    {
+                        contractId = "EXPLOAN|CORPORATE";
+                    }
+
+                    if(segment=="" && contractId.StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                    {
+                        try { segment = contractId.Split('|')[1]; } catch { }
+                    }
+                    string productType = pdMappingRow.ProductType??"";
 
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
                     var sicrInputRow = subsicrInput.FirstOrDefault(x => x.ContractId == contractId);
@@ -317,21 +337,29 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_90;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_90;
+                        //unsecuredRecoveriesBest = 0.2026;
+                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 180)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_180;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_180;
+                        //unsecuredRecoveriesBest = 0.2026;
+                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 270)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_270;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_270;
+                        //unsecuredRecoveriesBest = 0.2026;
+                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 360)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_360;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_360;
+                        //unsecuredRecoveriesBest = 0.2026;
+                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
 
                     var month = 0;
@@ -673,6 +701,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 {
                     rcvCaliRate_ = rcvCaliRate.Corporate_RecoveryRate;
                     _lgdAssumption.Segment_Product_Type = "Corporate";
+                }
+                else
+                {
+                    rcvCaliRate_ = 0;
+                    _lgdAssumption.Segment_Product_Type = "";
                 }
                 _lgdAssumption.Days_0 = rcvCaliRate_;
                 _lgdAssumption.Days_90 = rcvCaliRate_ - (rcvCaliRate_ * 0.25);

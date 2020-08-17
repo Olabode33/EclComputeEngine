@@ -122,13 +122,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //Do Nothing
             }
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append($"COntractID,Month,Value,{Environment.NewLine}");
-            foreach (var itm in lifetimeEad)
-            {
-                sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
-            }
-            File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "EADOutput.csv"), sb.ToString());
+            //StringBuilder sb = new StringBuilder();
+            //sb.Append($"COntractID,Month,Value,{Environment.NewLine}");
+            //foreach (var itm in lifetimeEad)
+            //{
+            //    if(itm!=null)
+            //        sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
+            //}
+            //File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EADOutput.csv"), sb.ToString());
 
             Log4Net.Log.Info("Completed ComputeLifetimeEad");
             return lifetimeEad;//.Where(o=> contractIds.Contains(o.ContractId)).ToList();
@@ -145,7 +146,6 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //{
                 //    var cc = 0;
                 //}
-
                 Console.WriteLine($"FEAD - {contract_no}");
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).OrderBy(o=>o.Month).ToList();
 
@@ -167,6 +167,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 month0Record.ProjectionMonth = 0;
                 month0Record.ProjectionValue = c_eadInputs.FirstOrDefault(o=>o.Month==0).Value;
                 sub_lifetimeEad.Add(month0Record);
+
+                if(contract_no.ToUpper().StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                {
+                    continue;
+                }
 
                 var noOfMonths = 150;// loanRec.LIM_MONTH + 1; //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 //for (int month = 1; month < noOfMonths; month++)
@@ -383,6 +388,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 loanRec.AccountNo = loanRec.AccountNo ?? "";
                 loanRec.ProductType = loanRec.ProductType ?? "";
                 loanRec.Segment = loanRec.Segment ?? "";
+                loanRec.OutstandingBalanceLCY = loanRec.OutstandingBalanceLCY ?? 0;
 
                 loanRec.ContractId = loanRec.ContractId.Trim();
                 loanRec.AccountNo = loanRec.AccountNo.Trim();
@@ -415,9 +421,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                             else
                             {
                                 if (reportingDate > _EXP_EOMWithExpiryCalibration)
-                                    noOfMonths = Math.Round(Financial.YearFrac(_EXP_EOMWithExpiryCalibration,reportingDate, DayCountBasis.ActualActual) * 12, 0);
+                                    noOfMonths = 0;
                                 else
-                                    noOfMonths = Math.Round(Financial.YearFrac(reportingDate,_EXP_EOMWithExpiryCalibration, DayCountBasis.ActualActual) * 12, 0);
+                                    noOfMonths = Math.Round(Financial.YearFrac(reportingDate, _EXP_EOMWithExpiryCalibration, DayCountBasis.ActualActual) * 12, 0);
                             }
                         }
                         else
@@ -493,10 +499,27 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 loanRec.LIM_MONTH = noOfMonths;
 
                 loanRec.ContractId = _eclTask.GenerateContractId(loanRec);
-                lstRaw.Add(loanRec);
+                if(loanRec.ContractId.ToUpper().StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                {
+                    loanRec.LIM_MONTH = 0;
+                }
+                //if (loanRec.ContractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
+                    lstRaw.Add(loanRec);
             }
-            lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ToList();
-            return lstRaw;
+            
+            lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ThenBy(p => p.ContractNo).ToList();
+
+            var newLoanBook = new List<Loanbook_Data>();
+            var distinctContracts = lstRaw.Select(o => o.ContractId).Distinct().ToList();
+            foreach (var contract in distinctContracts)
+            {
+                var new_contract = lstRaw.LastOrDefault(o => o.ContractId == contract);
+                new_contract.OutstandingBalanceLCY = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
+                newLoanBook.Add(new_contract);
+            }
+            //newLoanBook = lstRaw;
+
+            return newLoanBook;
         }
 
         protected double ComputeLifetimeValue(List<LifeTimeProjections> eadInputRecords, double eadInputRecord, List<IrFactor> accumlationFactor, long monthsPastDue, int months, int cirIndex, string productType)

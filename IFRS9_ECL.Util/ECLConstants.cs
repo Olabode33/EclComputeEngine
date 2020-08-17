@@ -160,6 +160,7 @@ namespace IFRS9_ECL.Util
         public const string HalfYear = "H";
         public const int HalfYear_number = 6;
         public const string S = "S";
+        public const int S_number = -1000;
         public const string S_value = "Error";
     }
 

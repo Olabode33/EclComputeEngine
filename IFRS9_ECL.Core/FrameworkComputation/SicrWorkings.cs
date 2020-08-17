@@ -53,10 +53,25 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 try
                 {
+                    if (string.IsNullOrEmpty(row.ContractId))
+                        continue; //YYYYYYYYYYYYYYYYYYYYYYYYYY
+
+                    var newRow = new StageClassification();
+
+                    if (row.ContractId.ToUpper().StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                    {
+                        newRow.ContractId = row.ContractId;
+                        newRow.Stage = 3;
+                        newRow.projectionMonth = 0;
+                        stageClassification.Add(newRow);
+                        continue;
+                    }
+                        
+
                     var loanbookRecord = loanbook.FirstOrDefault(x => x.ContractId == row.ContractId);
                     var pdMappingRecord = pdMapping.FirstOrDefault(x => x.ContractId == row.ContractId);
 
-                    var newRow = new StageClassification();
+                    
                     newRow.ContractId = row.ContractId;
                     newRow.Stage = ComputeStage(row, loanbookRecord, assumption, pdMappingRecord.PdGroup);
 
@@ -74,6 +89,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     stageClassification.Add(newRow);
                 }catch(Exception ex)
                 {
+                    Log4Net.Log.Info(row.ContractId);
                     Log4Net.Log.Error(ex);
                 }
             }

@@ -87,7 +87,7 @@ namespace IFRS9_ECL.Core.PDComputation
                         dataRow.Month = monthCount;
                         dataRow.Rank = rank;
                         dataRow.Rating = rate.Rating;
-                        dataRow.CreditRating = 1.0 - Math.Pow((1.0 - rate.LogOddsRatio), (1.0 / 12.0)); ;
+                        dataRow.CreditRating = 1.0 - Math.Pow((1.0 - rate.LogOddsRatio), (1.0 / 12.0));
                         monthlyLogOddsRatioResult.Add(dataRow);
                     }
                     monthCount += 1;

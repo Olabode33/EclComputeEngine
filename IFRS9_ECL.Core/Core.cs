@@ -1,5 +1,6 @@
 ﻿using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.FrameworkComputation;
+using IFRS9_ECL.Core.Report;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Framework;
@@ -107,6 +108,23 @@ namespace IFRS9_ECL.Core
 
 
 
+
+
+
+                //new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(loanbook_data);
+
+
+
+               // return true; ;
+
+
+
+
+
+
+
+
+
                 var overrideExist = false;
                 if (eclRegister.Status==12)
                 {
@@ -121,22 +139,35 @@ namespace IFRS9_ECL.Core
 
 
 
+                var new_loanbook_data = loanbook_data;// new List<Loanbook_Data>();
+                //var distinctContracts = loanbook_data.Select(o => o.ContractId).Distinct().ToList();
+                //foreach (var contract in distinctContracts)
+                //{
+                //    var new_contract = loanbook_data.LastOrDefault(o => o.ContractId == contract);
+                //    new_contract.OutstandingBalanceLCY = loanbook_data.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
+                //    loanbook_data.Add(new_contract);
+                //}
+
                 if (!overrideExist) //1!=1)//
                 {
+
                     // Process EAD
-                    new ProcessECL_EAD(masterGuid, eclType).ProcessTask(loanbook_data);
+                    new ProcessECL_EAD(masterGuid, eclType).ProcessTask(new_loanbook_data);
                     qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
                     DataAccess.i.ExecuteQuery(qry);
 
-                    //Process LGD
-                    new ProcessECL_LGD(masterGuid, eclType).ProcessTask(loanbook_data);
+    //Process LGD
+                    new ProcessECL_LGD(masterGuid, eclType).ProcessTask(new_loanbook_data);
                     qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
                     DataAccess.i.ExecuteQuery(qry);
 
                     //Process PD
-                    new ProcessECL_PD(masterGuid, eclType).ProcessTask(loanbook_data);
+                    new ProcessECL_PD(masterGuid, eclType).ProcessTask(new_loanbook_data);
                     qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, ""); // should change to framekwork
                     DataAccess.i.ExecuteQuery(qry);
+
+                
+
                 }
 
                 //Process Framework
@@ -149,43 +180,56 @@ namespace IFRS9_ECL.Core
 
                 //loanbook_data = loanbook_data.Where(o => o.ContractId.Contains("001CMMA142020001")).ToList();
 
-                var eadInput = new LifetimeEadWorkings(masterGuid, eclType).GetTempEadInputData(loanbook_data);
-                var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(loanbook_data, eadInput);
 
-                var stageClassification = GetStagingClassificationResult(loanbook_data,masterGuid, eclType);
 
-                var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(loanbook_data, lifetimeEad, eadInput, stageClassification);
-
-                var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
-                new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-
-                //var task1 = Task.Run(() =>
+                //var newLoanBook = new List<Loanbook_Data>();
+                //var distinctContracts = lstRaw.Select(o => o.ContractId).Distinct().ToList();
+                //foreach (var contract in distinctContracts)
                 //{
-                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
-                //    Log4Net.Log.Info("************Processing Final Best");
-                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                //});
-                //taskLst.Add(task1);
-                //var task2 = Task.Run(() =>
-                //{
-                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
-                //    Log4Net.Log.Info("*************Processing Final Optimistic");
-                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                //});
-                //taskLst.Add(task2);
-                //var task3 = Task.Run(() =>
-                //{
-                //    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
-                //    Log4Net.Log.Info("*************Processing Final Down turn");
-                //    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
-                //});
-                //taskLst.Add(task3);
+                //    var new_contract = lstRaw.FirstOrDefault(o => o.ContractId == contract);
+                //    new_contract.OutstandingBalanceLCY = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
+                //    newLoanBook.Add(new_contract);
+                //}
 
-                //while (!taskLst.Any(o => o.IsCompleted))
+                var eadInput = new LifetimeEadWorkings(masterGuid, eclType).GetTempEadInputData(new_loanbook_data);
+                //eadInput = eadInput.OrderBy(o => o.Month).ToList();
+                var lifetimeEad = new LifetimeEadWorkings(masterGuid, eclType).ComputeLifetimeEad(new_loanbook_data, eadInput);
+
+
+                var stageClassification = GetStagingClassificationResult(new_loanbook_data, masterGuid, eclType);
+
+                var lifetimeLGD = new ScenarioLifetimeLGD(masterGuid, eclType, ECL_Scenario.Best).ComputeLifetimeLGD(new_loanbook_data, lifetimeEad, eadInput, stageClassification);
+
+                //var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+                //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+
+                var task1 = Task.Run(() =>
+                {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+                    Log4Net.Log.Info("************Processing Final Best");
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Best, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                });
+                taskLst.Add(task1);
+                var task2 = Task.Run(() =>
+                {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+                    Log4Net.Log.Info("*************Processing Final Optimistic");
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Optimistic, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                });
+                taskLst.Add(task2);
+                var task3 = Task.Run(() =>
+                {
+                    var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+                    Log4Net.Log.Info("*************Processing Final Down turn");
+                    new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
+                });
+                taskLst.Add(task3);
+
+                
                 var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
                 while (0 < 1)
                 {
@@ -196,7 +240,7 @@ namespace IFRS9_ECL.Core
                     //Do Nothing
                 }
 
-                new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(loanbook_data);
+                new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(new_loanbook_data);
 
 
                 if (!overrideExist)
@@ -210,6 +254,7 @@ namespace IFRS9_ECL.Core
                     DataAccess.i.ExecuteQuery(qry);
                 }
 
+                var rpt = new ExcelReport().GenerateResult(masterGuid.ToString(), lifetimeEad, lifetimeLGD);
 
 
                 Log4Net.Log.Info($"End Time {DateTime.Now}");

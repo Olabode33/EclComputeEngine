@@ -1,9 +1,6 @@
-﻿using IFRS9_ECL.Core;
-using IFRS9_ECL.Core.FrameworkComputation;
-using IFRS9_ECL.Models;
+﻿using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.PD;
-using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
@@ -13,58 +10,107 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IFRS9_ECL
+namespace IFRS9_ECL.Core.Report
 {
-    class Program
+    public class ExcelReport
     {
-        static void Main(string[] args)
+        public bool GenerateResult(string eclId, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> allLifetimeLgd)
         {
-            var eclId = "9ec1ae81-a13f-4c90-4bba-08d83eb190fd";
-            Read_EAD_Input(eclId);
+            try
+            {
+                Read_EAD_Input(eclId);
+            }catch(Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
             Read_LGD_AccountData(eclId);
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
             Read_LGD_CollateralData(eclId);
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
             Read_PD_Mapping(eclId);
-            Read_EAD_Impairment(eclId);
-            Read_LGD_Impairment(eclId);
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
+            Read_EAD_Impairment(eclId, lifetimeEad);
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
+            Read_LGD_Impairment(eclId, allLifetimeLgd);
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+            try { 
             Read_PD_Impairment(eclId);
-            Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
 
-
-            //Log4Net.Log.Info($"End Time {DateTime.Now}");
-            //Log4Net.Log.Info("Done Done Done");
-            ////Console.ReadKey();
-            // return;
+            return true;
         }
 
-        private static void Read_PD_Mapping(string eclId)
+
+        private void Read_PD_Mapping(string eclId)
         {
             var qry = $"SELECT ContractId,PdGroup,TtmMonths,MaxDpd,MaxClassificationScore,Pd12Month,LifetimePd,RedefaultLifetimePd,Stage1Transition,Stage2Transition,DaysPastDue from WholesalePdMappings where WholesaleEclId='{eclId}'";
             var dt = Data.DataAccess.i.GetData(qry);
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
             var fpath = Path.Combine(basepath, $"PD_Mapping.csv");
             ToCSV(dt, fpath);
         }
 
-        private static void Read_LGD_CollateralData(string eclId)
+        private void Read_LGD_CollateralData(string eclId)
         {
             var qry = $"SELECT Month,CollateralProjectionType,Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle FROM WholesaleLgdCollateralProjection where WholesaleEclId='{eclId}'";
             var dt = Data.DataAccess.i.GetData(qry);
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
             var fpath = Path.Combine(basepath, $"LGD_CollateralData.csv");
             ToCSV(dt, fpath);
         }
 
 
-        private static void Read_LGD_AccountData(string eclId)
+        private void Read_LGD_AccountData(string eclId)
         {
             var qry = $"SELECT CONTRACT_NO,TTR_YEARS,COST_OF_RECOVERY,GUARANTOR_PD,GUARANTOR_LGD,GUARANTEE_VALUE,GUARANTEE_LEVEL FROM WholesaleLGDAccountData where WholesaleEclId='{eclId}'";
             var dt = Data.DataAccess.i.GetData(qry);
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
             var fpath = Path.Combine(basepath, $"LGD_AccountData.csv");
             ToCSV(dt, fpath);
         }
 
-        public static void ToCSV(DataTable dtDataTable, string strFilePath)
+        private void ToCSV(DataTable dtDataTable, string strFilePath)
         {
             StreamWriter sw = new StreamWriter(strFilePath, false);
             //headers  
@@ -104,15 +150,19 @@ namespace IFRS9_ECL
             sw.Close();
         }
 
-        private static void Read_PD_Impairment(string eclId)
+        private void Read_PD_Impairment(string eclId)
         {
             //var eclId = "9ec1ae81-a13f-4c90-4bba-08d83eb190fd";
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
 
-            for(int l=0; l<3; l++)
+            for (int l = 0; l < 3; l++)
             {
                 var sc = "";
-                if(l==0)
+                if (l == 0)
                 {
                     sc = "Bests";
                 }
@@ -180,10 +230,15 @@ namespace IFRS9_ECL
             Console.WriteLine("Done Read_EAD_Input");
         }
 
-        public static void Read_EAD_Input(string eclId)
+        private void Read_EAD_Input(string eclId)
         {
 
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if(!Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
+
             var qry = $"select Contract_no, Month, Value, Eir_Group, Cir_Group from WholesaleEadLifetimeProjections where WholesaleEclId='{eclId}'";
 
             var dt = Data.DataAccess.i.GetData(qry);
@@ -237,21 +292,25 @@ namespace IFRS9_ECL
         }
 
 
-        public static void Read_EAD_Impairment(string eclId)
+        private void Read_EAD_Impairment(string eclId, List<LifetimeEad> lifetimeEad)
         {
-            
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
-           // var eadPathCsv = @"C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\EADOutput.csv";
-            var eadPathCsv = Path.Combine(basepath, $"EADOutput.csv");
-            var csvrows = File.ReadAllLines(eadPathCsv);
 
-            var lifetimeEad = new List<LifetimeEad>();
-            //sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
-            for (int i=1; i< csvrows.Length; i++)
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (!Directory.Exists(basepath))
             {
-                var itmArry=csvrows[i].Split(',');
-                lifetimeEad.Add(new LifetimeEad {ContractId= itmArry[0],ProjectionMonth= int.Parse(itmArry[1]), ProjectionValue = double.Parse(itmArry[2]) });
+                Directory.CreateDirectory(basepath);
             }
+            // var eadPathCsv = @"C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\EADOutput.csv";
+            //var eadPathCsv = Path.Combine(basepath, $"EADOutput.csv");
+            //var csvrows = File.ReadAllLines(eadPathCsv);
+
+            //var lifetimeEad = new List<LifetimeEad>();
+            ////sb.Append($"{itm.ContractId},{itm.ProjectionMonth},{itm.ProjectionValue},{Environment.NewLine}");
+            //for (int i = 1; i < csvrows.Length; i++)
+            //{
+            //    var itmArry = csvrows[i].Split(',');
+            //    lifetimeEad.Add(new LifetimeEad { ContractId = itmArry[0], ProjectionMonth = int.Parse(itmArry[1]), ProjectionValue = double.Parse(itmArry[2]) });
+            //}
             var maxMonth = lifetimeEad.Max(o => o.ProjectionMonth);
             lifetimeEad = lifetimeEad.OrderBy(o => o.ContractId).ThenBy(p => p.ProjectionMonth).ThenBy(q => q.ProjectionValue).ToList();
             var sb = new StringBuilder();
@@ -292,10 +351,14 @@ namespace IFRS9_ECL
         }
 
 
-        public static void Read_LGD_Impairment(string eclId)
+        private void Read_LGD_Impairment(string eclId, List<LifetimeLgd> allLifetimeLgd)
         {
             //var eclId = "9ec1ae81-a13f-4c90-4bba-08d83eb190fd";
-            var basepath = AppDomain.CurrentDomain.BaseDirectory;
+            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            if (!Directory.Exists(basepath))
+            {
+                Directory.CreateDirectory(basepath);
+            }
 
             var eadPathCsv = Path.Combine(basepath, $"LGDOutput.csv");
             //var eadPathCsv = @"C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\LGDOutput.csv";
@@ -305,29 +368,35 @@ namespace IFRS9_ECL
             lifetimeLgd.Add(new List<LifetimeLgd>());
             lifetimeLgd.Add(new List<LifetimeLgd>());
             lifetimeLgd.Add(new List<LifetimeLgd>());
-            //sb.Append($"{itm.ContractId},{itm.Month},{itm.Ecl_Scenerio.ToString()},{itm.Value},{Environment.NewLine}");
-            for (int i = 1; i < csvrows.Length; i++)
-            {
-                var itmArry = csvrows[i].Split(',');
-                var snr = itmArry[2] == ECL_Scenario.Best.ToString() ? ECL_Scenario.Best : (itmArry[2] == ECL_Scenario.Optimistic.ToString() ? ECL_Scenario.Optimistic : ECL_Scenario.Downturn);
-
-                if(snr== ECL_Scenario.Best)
-                {
-                    lifetimeLgd[0].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
-                }
-                if (snr == ECL_Scenario.Optimistic)
-                {
-                    lifetimeLgd[1].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
-                }
-                if (snr == ECL_Scenario.Downturn)
-                {
-                    lifetimeLgd[2].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
-                }
-
-            }
 
 
-            for (int i=0; i< lifetimeLgd.Count; i++)
+            lifetimeLgd[0] = allLifetimeLgd.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+            lifetimeLgd[1] = allLifetimeLgd.Where(o => o.Ecl_Scenerio == ECL_Scenario.Optimistic).ToList();
+            lifetimeLgd[2] = allLifetimeLgd.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
+
+            ////sb.Append($"{itm.ContractId},{itm.Month},{itm.Ecl_Scenerio.ToString()},{itm.Value},{Environment.NewLine}");
+            //for (int i = 0; i < allLifetimeLgd.Count(); i++)
+            //{
+            //    var itmArry = csvrows[i].Split(',');
+            //    var snr = allLifetimeLgd[i].Ecl_Scenerio itmArry[2] == ECL_Scenario.Best.ToString() ? ECL_Scenario.Best : (itmArry[2] == ECL_Scenario.Optimistic.ToString() ? ECL_Scenario.Optimistic : ECL_Scenario.Downturn);
+
+            //    if (snr == ECL_Scenario.Best)
+            //    {
+            //        lifetimeLgd[0].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
+            //    }
+            //    if (snr == ECL_Scenario.Optimistic)
+            //    {
+            //        lifetimeLgd[1].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
+            //    }
+            //    if (snr == ECL_Scenario.Downturn)
+            //    {
+            //        lifetimeLgd[2].Add(new LifetimeLgd { ContractId = itmArry[0], Month = int.Parse(itmArry[1]), Ecl_Scenerio = snr, Value = double.Parse(itmArry[3]) });
+            //    }
+
+            //}
+
+
+            for (int i = 0; i < lifetimeLgd.Count; i++)
             {
                 var _lifetimeLgd = lifetimeLgd[i];
                 var maxMonth = _lifetimeLgd.Max(o => o.Month);
@@ -388,6 +457,6 @@ namespace IFRS9_ECL
 
             Console.WriteLine("Done Read_LGD_Lifetime");
         }
-
     }
+
 }

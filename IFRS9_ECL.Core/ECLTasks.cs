@@ -95,7 +95,7 @@ namespace IFRS9_ECL.Core
             {
                 i++;
                 //Log4Net.Log.Info(i);
-                var refined = new Refined_Raw_Retail_Wholesale();
+                var refined = new Refined_Raw_Retail_Wholesale { BASE_RATE="0", contract_no="", credit_limit_lcy=0, currency="", CURRENT_CONTRACTUAL_INTEREST_RATE="0", EIR="", INTEREST_PAYMENT_STRUCTURE="", INTEREST_RATE_TYPE="", INTRODUCTORY_PERIOD="", IPT_O_PERIOD="", LIM_MONTH=0, original_bal_lcy="0", ORIGINATION_CONTRACTUAL_INTEREST_RATE="0", OUTSTANDING_BALANCE_LCY="0", POST_IP_CONTRACTUAL_INTEREST_RATE="0", PRINCIPAL_PAYMENT_STRUCTURE="", product_type="", RESTRUCTURE_INDICATOR=0, segment="" };
                 refined.contract_no = rr.ContractId;// GenerateContractId(rr);
 
                 var filtLstRaw = lstRaw.FirstOrDefault(o => o.ContractId == refined.contract_no);
@@ -319,7 +319,7 @@ namespace IFRS9_ECL.Core
                                             collateralTable[i].receivables_omv ,
                                             collateralTable[i].shares_omv ,
                                             collateralTable[i].vehicle_omv
-                };
+                    };
 
                     refinedRawData[i].DebentureOMV = refinedRawData[i].DebentureOMV ?? 0;
                     refinedRawData[i].CashOMV = refinedRawData[i].CashOMV ?? 0;
@@ -365,7 +365,7 @@ namespace IFRS9_ECL.Core
                     //END OF TTM
 
                     //GUARANTY_PD, GUARANTY_LGD, GUARANTEE_VALUE
-                    if (refinedRawData[i].GuaranteeIndicator.ToString() == "1")
+                    if (refinedRawData[i].GuaranteeIndicator)
                     {
                         refinedRawData[i].GuarantorPD = string.IsNullOrEmpty(refinedRawData[i].GuarantorPD) ? "0" : refinedRawData[i].GuarantorPD;
                         accountData[i].GUARANTOR_PD = double.Parse(refinedRawData[i].GuarantorPD);
@@ -385,11 +385,15 @@ namespace IFRS9_ECL.Core
                         double product = SumProduct(pd_x_ead_List, Guarantee_value_array, Customer_no_array);
                         if (product != 0)
                         {
-                            accountData[i].GUARANTEE_VALUE = value1 / product;
+                            var guaranteeValue = refinedRawData[i].GuaranteeValue ?? 0;
+                            var guaranteeLevel = refinedRawData[i].GuaranteeLevel ?? 0;
+                            accountData[i].GUARANTEE_VALUE = (value1 * guaranteeValue) / product;
+                            accountData[i].GUARANTEE_LEVEL = guaranteeLevel;
                         }
                         else
                         {
                             accountData[i].GUARANTEE_VALUE = 0;
+                            accountData[i].GUARANTEE_LEVEL = 0;
                         }
                     }
                     else
@@ -397,6 +401,7 @@ namespace IFRS9_ECL.Core
                         accountData[i].GUARANTOR_PD = 0;
                         accountData[i].GUARANTOR_LGD = 0;
                         accountData[i].GUARANTEE_VALUE = 0;
+                        accountData[i].GUARANTEE_LEVEL = 0;
                     }
 
                 }
@@ -697,6 +702,27 @@ namespace IFRS9_ECL.Core
 
             foreach (var item in lstRaw)
             {
+                item.DebentureOMV = item.DebentureOMV ?? 0;
+                item.CashOMV = item.CashOMV ?? 0;
+                item.InventoryOMV = item.InventoryOMV ?? 0;
+                item.PlantEquipmentOMV = item.PlantEquipmentOMV ?? 0;
+                item.ResidentialPropertyOMV = item.ResidentialPropertyOMV ?? 0;
+                item.CommercialPropertyOMV = item.CommercialPropertyOMV ?? 0;
+                item.ReceivablesOMV = item.ReceivablesOMV ?? 0;
+                item.SharesOMV = item.SharesOMV ?? 0;
+                item.VehicleOMV = item.VehicleOMV ?? 0;
+
+                item.DebentureFSV = item.DebentureFSV ?? 0;
+                item.CashFSV = item.CashFSV ?? 0;
+                item.InventoryFSV = item.InventoryFSV ?? 0;
+                item.PlantEquipmentFSV = item.PlantEquipmentFSV ?? 0;
+                item.ResidentialPropertyFSV = item.ResidentialPropertyFSV ?? 0;
+                item.CommercialProperty = item.CommercialProperty ?? 0;
+                item.ReceivablesFSV = item.ReceivablesFSV ?? 0;
+                item.SharesFSV = item.SharesFSV ?? 0;
+                item.VehicleFSV = item.VehicleFSV ?? 0;
+
+
                 Debenture_Omv_array.Add(item.DebentureOMV == input.debenture_omv ? 1:0);
                 Cash_Omv_array.Add(item.CashOMV == input.cash_omv ? 1:0);
                 Inventory_Omv_array.Add(item.InventoryOMV == input.inventory_omv ? 1:0);
@@ -889,9 +915,10 @@ namespace IFRS9_ECL.Core
                                 }
 
 
-                                    //component = ps_proj.PaymentType;
+                                //component = ps_proj.PaymentType;
 
-                                    double c_value = cirgroup_cirProjections.FirstOrDefault(o => o.cir_group == cir_group_value && o.months == monthIndex-1).cir_effective;
+                                double c_value = 0;
+                                try { c_value = cirgroup_cirProjections.FirstOrDefault(o => o.cir_group == cir_group_value && o.months == monthIndex - 1).cir_effective; } catch { }
                                     component = component ?? "";
                                     if (component.ToLower() != ECLStringConstants.i._amortise.ToLower())
                                     {
@@ -923,7 +950,8 @@ namespace IFRS9_ECL.Core
                                     if (obj.interest_divisor.ToLower() == ECLStringConstants.i._interestDivisior.ToLower())
                                     {
                                         //x = ($H4=T$3)*SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*($H4+$G4)/T$3
-                                        if (obj.months_to_expiry == monthIndex)
+//obj.months_to_expiry
+                                        if (lifetime_query.LIM_MONTH == monthIndex)
                                         {
                                             //get range
                                             double[] h_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
@@ -932,11 +960,11 @@ namespace IFRS9_ECL.Core
                                                                             .Select(x => x.Value)
                                                                             .ToArray();
                                             double[] i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
-                                                                            && o.months >= 0
+                                                                            && o.months > 0
                                                                             && o.months <= monthIndex)
-                                                                            .Select(x => x.value)
+                                                                            .Select(x => x.cir_effective)
                                                                     .ToArray();
-                                            g_value = SumProduct(h_value, i_value) * (obj.months_to_expiry + obj.months_in_force) / monthIndex;
+                                            g_value = SumProduct(h_value, i_value) * (lifetime_query.LIM_MONTH + obj.months_in_force) / monthIndex;
                                         }
                                     }
                                     else
@@ -1077,7 +1105,17 @@ namespace IFRS9_ECL.Core
 
             if (r.ContractStartDate == null && r.ContractEndDate == null && r.CreditLimit == 0 && r.OriginalBalanceLCY == 0)
             {
-                var colSum = r.DebentureOMV ?? +r.CashOMV ?? +r.InventoryOMV ?? +r.PlantEquipmentOMV ?? +r.ResidentialPropertyOMV ?? +r.CommercialPropertyOMV ?? +r.ReceivablesOMV ?? +r.SharesOMV ?? +r.VehicleOMV ?? +(r.GuaranteeIndicator ? 1 : 0);
+                r.DebentureOMV = r.DebentureOMV ?? 0;
+                r.CashOMV = r.CashOMV ?? 0;
+                r.InventoryOMV = r.InventoryOMV ?? 0;
+                r.PlantEquipmentOMV = r.PlantEquipmentOMV ?? 0;
+                r.ResidentialPropertyOMV = r.ResidentialPropertyOMV ?? 0;
+                r.CommercialPropertyOMV = r.CommercialPropertyOMV ?? 0;
+                r.ReceivablesOMV = r.ReceivablesOMV ?? 0;
+                r.SharesOMV = r.SharesOMV ?? 0;
+                r.VehicleOMV = r.VehicleOMV ?? 0;
+
+                var colSum = r.DebentureOMV +r.CashOMV +r.InventoryOMV +r.PlantEquipmentOMV +r.ResidentialPropertyOMV +r.CommercialPropertyOMV +r.ReceivablesOMV +r.SharesOMV +r.VehicleOMV +(r.GuaranteeIndicator ? 1 : 0);
                 return colSum == 0 ? $"{ECLStringConstants.i.ExpiredContractsPrefix}{r.ProductType}|{r.Segment}" : $"{ECLStringConstants.i.ExpiredContractsPrefix}{r.ProductType}|{r.ContractNo}";
             }
             else
@@ -1087,19 +1125,38 @@ namespace IFRS9_ECL.Core
             
         }
 
-        internal List<EIRProjections> EAD_EIRProjections(List<LifeTimeEADs> lifeTimeEAD)
+        internal List<EIRProjections> EAD_EIRProjections(List<LifeTimeEADs> _lifeTimeEAD)
         {
+            var lifeTimeEAD = new List<LifeTimeEADs>();
+            var _maxdates = new List<DateTime>();
+            var eir_base_premiums = new List<string>();
+            foreach (var itm in _lifeTimeEAD)
+            {
+                if (itm == null)
+                    continue;
+
+                if (!string.IsNullOrEmpty(itm.cir_base_premium))
+                     eir_base_premiums.Add(itm.cir_base_premium);
+
+
+                if (itm.end_date != null)
+                    _maxdates.Add(itm.end_date.Value);
+
+                lifeTimeEAD.Add(itm);
+
+            }
+            eir_base_premiums = eir_base_premiums.Distinct().ToList();
             var rs = new List<EIRProjections>();
 
-            var eir_base_premiums = lifeTimeEAD.Select(o => o.eir_base_premium).Distinct().ToList();
+            //var eir_base_premiums = lifeTimeEAD.Select(o => o.eir_base_premium).Distinct().ToList();
 
             double noOfMonths = 1;
-            var maximumDate = lifeTimeEAD.Max(o => o.end_date);
+            var maximumDate = _maxdates.Max();// lifeTimeEAD.Max(o => o.end_date);
             if (maximumDate != null)
             {
                 try
                 {
-                    double noOfDays = (maximumDate.Value - reportingDate).Days;
+                    double noOfDays = (maximumDate - reportingDate).Days;
                     noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                 }
                 catch (Exception ex)
@@ -1111,7 +1168,7 @@ namespace IFRS9_ECL.Core
 
             foreach (var group_value in eir_base_premiums)
             {
-
+                noOfMonths = 240;
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1145,23 +1202,37 @@ namespace IFRS9_ECL.Core
             return rs;
         }
 
-        internal List<CIRProjections> EAD_CIRProjections(List<LifeTimeEADs> lifeTimeEAD)
+        internal List<CIRProjections> EAD_CIRProjections(List<LifeTimeEADs> _lifeTimeEAD)
         {
-
-
-
-
             var rs = new List<CIRProjections>();
+            var lifeTimeEAD= new List<LifeTimeEADs>();
+            var cir_base_premiums = new List<string>();
+            var _maxdates = new List<DateTime>();
+            foreach (var itm in _lifeTimeEAD)
+            {
+                if (itm == null)
+                    continue;
 
-            var cir_base_premiums = lifeTimeEAD.Select(o => o.cir_base_premium).Distinct().ToList();
+                if (!string.IsNullOrEmpty(itm.cir_base_premium))
+                    cir_base_premiums.Add(itm.cir_base_premium);
+
+
+                if (itm.end_date!=null)
+                    _maxdates.Add(itm.end_date.Value);
+
+                lifeTimeEAD.Add(itm);
+
+            }
+            //var cir_base_premiums = lifeTimeEAD.Where(p=>!string.IsNullOrEmpty(p.cir_base_premium)).Select(o => o.cir_base_premium).Distinct().ToList();
+            cir_base_premiums = cir_base_premiums.Distinct().ToList();
 
             double noOfMonths = 1;
-            var maximumDate = lifeTimeEAD.Max(o => o.end_date);
+            var maximumDate = _maxdates.Max();// lifeTimeEAD.Max(o => o.end_date);
             if (maximumDate != null)
             {
                 try
                 {
-                    double noOfDays = (maximumDate.Value - reportingDate).Days;
+                    double noOfDays = (maximumDate - reportingDate).Days;
                     noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
                 }
                 catch (Exception ex)
@@ -1173,7 +1244,7 @@ namespace IFRS9_ECL.Core
 
             foreach (var group_value in cir_base_premiums)
             {
-
+                noOfMonths = 240;
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1222,9 +1293,9 @@ namespace IFRS9_ECL.Core
                 try
                 {
 
-                    var r = new LifeTimeEADs();
+                    var r = new LifeTimeEADs { cir_base_premium="", cir_premium="", contract_no="", credit_limit_lcy="0", eir_base_premium="", eir_premium="", end_date=null, first_interest_month="", interest_divisor="", LIM_MONTH=0, mths_in_force="0", mths_to_expiry="0", remaining_ip="", rem_interest_moritorium="", revised_base="", segment="", start_date=null  };
 
-                    r.contract_no = i.contract_no;
+                    r.contract_no = string.IsNullOrEmpty(i.contract_no) ? "" : i.contract_no;
                     r.segment = i.segment;
                     r.credit_limit_lcy = i.credit_limit_lcy != null ? i.credit_limit_lcy.Value.ToString() : "0";
                     r.start_date = S_E_Date(i.RESTRUCTURE_START_DATE.ToString(), i.RESTRUCTURE_INDICATOR.ToString(), i.CONTRACT_START_DATE.ToString());
@@ -1266,7 +1337,7 @@ namespace IFRS9_ECL.Core
                             //***********************************************
                             if (r.start_date != null && r.end_date != null)
                                 if (r.start_date < r.end_date)
-                                    r.mths_in_force = Math.Round(Financial.YearFrac(Convert.ToDateTime(r.start_date), Convert.ToDateTime(r.end_date), DayCountBasis.ActualActual) * 12, 0).ToString();
+                                    r.mths_in_force = Math.Round(Financial.YearFrac(Convert.ToDateTime(r.start_date), reportingDate, DayCountBasis.ActualActual) * 12, 0).ToString();
                         }
                         catch { }
 
@@ -1288,7 +1359,8 @@ namespace IFRS9_ECL.Core
                         r.first_interest_month = First_Interest_Month(interest_divisor, mths_to_expiry, rem_interest_moritorium, mths_in_force, ipt_o_period).ToString();
 
                     }
-                    rs.Add(r);
+                    if(r!=null)
+                        rs.Add(r);
                 }
                 catch (Exception ex)
                 {

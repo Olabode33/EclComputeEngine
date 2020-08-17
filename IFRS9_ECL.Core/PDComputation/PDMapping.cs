@@ -149,10 +149,7 @@ namespace IFRS9_ECL.Core.PDComputation
                     Log4Net.Log.Error(ex);
                     var cc = ex;
                 }
-                if (loanbookRecord.ContractId.Contains("10123603239201"))
-                {
-                    var cc = 33;
-                }
+
                 pdMappingTable.Add(mappingRow);
             }
             pdMappingTable = pdMappingTable.Select(row =>
@@ -304,15 +301,14 @@ namespace IFRS9_ECL.Core.PDComputation
         }
         protected int ComputeMaxClassificationScorePerRecord(PdMappings pdMappingWorkingRecord, List<PdMappings> pdMappingWorkings)
         {
-            var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
-            //var r= pdMappingWorkings.Where(row => row.ContractId == pdMappingWorkingRecord.ContractId).Max(row => row.ClassificationScore);
+            //var r= pdMappingWorkings.Where(row => row.AccountNo == pdMappingWorkingRecord.AccountNo).Max(row => row.ClassificationScore);
+            var r= pdMappingWorkings.Where(row => row.ContractId == pdMappingWorkingRecord.ContractId).Max(row => row.ClassificationScore);
             return r;
         }
         protected double ComputeMaxDpdPerRecord(Loanbook_Data loanbookRecord, List<Loanbook_Data> loanbook)
         {
-
-            var temp = loanbook.Where(o => o.AccountNo == loanbookRecord.AccountNo).Max(p => p.DaysPastDue);
-            //var temp = loanbook.Where(o => o.ContractId == loanbookRecord.ContractId).Max(p => p.DaysPastDue);
+            //var temp = loanbook.Where(o => o.AccountNo == loanbookRecord.AccountNo).Max(p => p.DaysPastDue);
+            var temp = loanbook.Where(o => o.ContractId == loanbookRecord.ContractId).Max(p => p.DaysPastDue);
             return temp ?? 0;
         }
         protected int? ComputeClassificationScorePerRecord(Loanbook_Data loanbookRecord)

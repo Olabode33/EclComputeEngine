@@ -29,6 +29,8 @@ namespace IFRS9_ECL.Core
             try
             {
 
+             
+
                 // Compute Credit Index
                 var crdIndx = new CreditIndex(this._eclId, this._eclType);
                 crdIndx.Run();
@@ -109,16 +111,16 @@ namespace IFRS9_ECL.Core
                 
 
                 // Compute Scenario Life time Pd -- best
-                var slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
-                slt_Pd_b.Run();
+                var _slt_Pd_b = new ScenarioLifetimePd(ECL_Scenario.Best, this._eclId, this._eclType);
+                _slt_Pd_b.Run();
 
                 // Compute Scenario Redefault Lifetime Pds  -- best
                 var sRedefault_lt_pd_b = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Best, this._eclId, this._eclType);
                 sRedefault_lt_pd_b.Run();
 
                 // Compute Scenario Life time Pd -- Optimistic
-                var slt_Pd_o = new ScenarioLifetimePd(ECL_Scenario.Optimistic, this._eclId, this._eclType);
-                slt_Pd_o.Run();
+                var _slt_Pd_o = new ScenarioLifetimePd(ECL_Scenario.Optimistic, this._eclId, this._eclType);
+                _slt_Pd_o.Run();
 
                 // Compute Scenario Redefault Lifetime Pds  -- Optimistic
                 var sRedefault_lt_pd_o = new ScenarioRedefaultLifetimePds(Util.ECL_Scenario.Optimistic, this._eclId, this._eclType);
