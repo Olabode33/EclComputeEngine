@@ -91,20 +91,59 @@ namespace IFRS9_ECL.Core
                 //Do Nothing
             }
 
+            //Task t = Task.WhenAll(taskLst);
+
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
+
             return "";
 
         }
 
+        public List<EclAssumptions> GetECLEADInputAssumptions()
+        {
+            var qry = Queries.eclEadInputAssumptions(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+            var eclAssumptions = new List<EclAssumptions>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                eclAssumptions.Add(DataAccess.i.ParseDataToObject(new EclAssumptions(), dr));
+            }
+
+            return eclAssumptions;
+        }
+        
 
         public string ProcessResultDetails(List<Loanbook_Data> loanbook)
         {
+            var _eclEadInputAssumption=GetECLEADInputAssumptions();
+            var CCF_OBE = 0.5;
+            try { CCF_OBE = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "ConversionFactorOBE").Value); } catch { }
+
 
             var qry = Queries.ClearFrameworkReportTable(this._eclId, this._eclType);
 
             DataAccess.i.ExecuteQuery(qry);
 
             // Gennerate Result Details
-            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook);
+            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook, CCF_OBE);
            
             return "";
         }

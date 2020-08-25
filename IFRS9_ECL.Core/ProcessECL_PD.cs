@@ -107,6 +107,26 @@ namespace IFRS9_ECL.Core
                         }
                         //Do Nothing
                     }
+                    //Task t = Task.WhenAll(taskLst);
+
+                    //try
+                    //{
+                    //    t.Wait();
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Log4Net.Log.Error(ex);
+                    //}
+                    //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+                    //if (t.Status == TaskStatus.RanToCompletion)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to completion");
+                    //}
+                    //if (t.Status == TaskStatus.Faulted)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to fault");
+                    //}
                 }
                 
 
@@ -195,9 +215,12 @@ namespace IFRS9_ECL.Core
         {
             var dt = DataAccess.i.GetData(PD_Queries.Get_macroEconomicsQuery(this._eclId, this._eclType));
             var data = new List<PDI_MacroEconomics>();
+
+            //Log4Net.Log.Info($"**************************");
             foreach (DataRow dr in dt.Rows)
             {
                 var itm = DataAccess.i.ParseDataToObject(new PDI_MacroEconomics(), dr);
+                //Log4Net.Log.Info($"{itm.Date},{itm.MacroEconomicVariableId},{itm.BestEstimateMacroEconomicValue},{itm.OptimisticMacroEconomicValue},{itm.DownturnMacroEconomicValue}");
                 data.Add(itm);
             }
             return data;
@@ -219,7 +242,7 @@ namespace IFRS9_ECL.Core
                 data.Add(itm);
             }
             data = data.OrderBy(o => o.Date).ToList();
-            return data;
+            return data.Skip(data.Count-32).Take(32).ToList();
         }
 
         //public List<PDI_MacroEcoBest> Get_PDI_MacroEcoBest()

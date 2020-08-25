@@ -838,9 +838,9 @@ namespace IFRS9_ECL.Core
                     var CCF_OBE = 1.0;
                     try { CCF_OBE = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "ConversionFactorOBE").Value); } catch { }
 
-                    double value = projection_Calulcation_lifetimeEAD_0(obj.outstanding_balance_lcy, obj.product_type);
+                    double value = obj.outstanding_balance_lcy;// 0;// projection_Calulcation_lifetimeEAD_0(obj.outstanding_balance_lcy, obj.product_type);
                     var product_type = obj.product_type.ToLower();
-                    if (product_type.Contains(ECLStringConstants.i._productType_loan.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_od.ToLower()) || product_type.Contains(ECLStringConstants.i.CARDS.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_lease.ToLower()) ||  product_type.Contains(ECLStringConstants.i._productType_mortgage.ToLower()))
+                    if (product_type.Contains(ECLStringConstants.i._productType_loan.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_od.ToLower()) || product_type.Contains(ECLStringConstants.i.CARDS.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_lease.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_mortgage.ToLower()))
                     {
                         //do nothing
                     }
@@ -938,9 +938,9 @@ namespace IFRS9_ECL.Core
                                     double f_value = 0;
                                     try { f_value = contract_paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value; } catch { };
 
-                                    outstandingBalance = outstandingBalance - f_value;
-                                    if (outstandingBalance <= 0)
-                                        continue;
+                                    //outstandingBalance = overallvalue - f_value;
+                                    //if (outstandingBalance <= 0)
+                                        //continue;
 
                                     f_value = f_value * ECLNonStringConstants.i.Local_Currency;
 
@@ -1014,10 +1014,7 @@ namespace IFRS9_ECL.Core
                                     //                                    overallvalue = overallvalue - Math.Max(f_value, 0) * (1 - val);
                                     overallvalue = Math.Max(overallvalue, 0) * (1 - PrePaymentFactor);
 
-                                    if(overallvalue==0)
-                                    {
-                                        overallvalue = previousMonth;
-                                    }
+                                   
                                 //}
                                 //else
                                 //{
@@ -1035,12 +1032,16 @@ namespace IFRS9_ECL.Core
                         //{
                         //    try { overallvalue = double.Parse(refined_query.OUTSTANDING_BALANCE_LCY.Trim()) + (double.Parse(refined_query.OUTSTANDING_BALANCE_LCY.Trim()) * 0.00000099); } catch { };
                         //}
+                        if (overallvalue <= 0)
+                        {
+                            //overallvalue = outstandingBalance;
+                        }
                         contract_lifetimeEadInputs.Add(new LifeTimeProjections { Contract_no = contract, Eir_Group = eir_group_value, Cir_Group = cir_group_value, Month = monthIndex, Value = overallvalue });
 
 
                     }
-
-                    lifetimeEadInputs.AddRange(contract_lifetimeEadInputs);
+                    lock(lifetimeEadInputs)
+                        lifetimeEadInputs.AddRange(contract_lifetimeEadInputs);
                 }
             }catch(Exception ex)
             {
@@ -1125,7 +1126,7 @@ namespace IFRS9_ECL.Core
             
         }
 
-        internal List<EIRProjections> EAD_EIRProjections(List<LifeTimeEADs> _lifeTimeEAD)
+        internal List<EIRProjections> EAD_EIRProjections(List<LifeTimeEADs> _lifeTimeEAD, int maxProjectionMonth)
         {
             var lifeTimeEAD = new List<LifeTimeEADs>();
             var _maxdates = new List<DateTime>();
@@ -1168,7 +1169,7 @@ namespace IFRS9_ECL.Core
 
             foreach (var group_value in eir_base_premiums)
             {
-                noOfMonths = 240;
+                noOfMonths = maxProjectionMonth;
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1202,7 +1203,7 @@ namespace IFRS9_ECL.Core
             return rs;
         }
 
-        internal List<CIRProjections> EAD_CIRProjections(List<LifeTimeEADs> _lifeTimeEAD)
+        internal List<CIRProjections> EAD_CIRProjections(List<LifeTimeEADs> _lifeTimeEAD, int maxProjectionMonth)
         {
             var rs = new List<CIRProjections>();
             var lifeTimeEAD= new List<LifeTimeEADs>();
@@ -1244,7 +1245,7 @@ namespace IFRS9_ECL.Core
 
             foreach (var group_value in cir_base_premiums)
             {
-                noOfMonths = 240;
+                noOfMonths = maxProjectionMonth;
                 for (int mnthIdx = 0; mnthIdx < noOfMonths; mnthIdx++)
                 {
                     var val = 0.0;
@@ -1327,7 +1328,7 @@ namespace IFRS9_ECL.Core
 
 
                         r.cir_base_premium = CIR_Base_Premium(r.remaining_ip, i.ORIGINATION_CONTRACTUAL_INTEREST_RATE,
-                                                                            r.revised_base, r.eir_premium);
+                                                                            r.revised_base, r.cir_premium);
 
                         r.eir_base_premium = EIR_Base_Premium(r.revised_base, r.eir_premium);
                         r.mths_in_force = "0";

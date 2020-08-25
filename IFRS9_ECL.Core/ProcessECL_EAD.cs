@@ -100,35 +100,35 @@ namespace IFRS9_ECL.Core
                     }
                     Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
-                    Task t = Task.WhenAll(taskLst);
+                    //Task t = Task.WhenAll(taskLst);
 
-                    try
-                    {
-                        t.Wait();
-                    }
-                    catch(Exception ex)
-                    {
-                        Log4Net.Log.Error(ex);
-                    }
-                        Log4Net.Log.Info($"All Task status: {t.Status}");
-                    
-                    if (t.Status== TaskStatus.RanToCompletion)
-                    {
-                        Log4Net.Log.Info($"All Task ran to completion");
-                    }
-                    if (t.Status == TaskStatus.RanToCompletion)
-                    {
-                        Log4Net.Log.Info($"All Task ran to fault");
-                    }
-
-                    //while (0 < 1)
+                    //try
                     //{
-                    //    if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
-                    //    {
-                    //        break;
-                    //    }
-                    //    //Do Nothing
+                    //    t.Wait();
                     //}
+                    //catch(Exception ex)
+                    //{
+                    //    Log4Net.Log.Error(ex);
+                    //}
+                    //    Log4Net.Log.Info($"All Task status: {t.Status}");
+                    
+                    //if (t.Status== TaskStatus.RanToCompletion)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to completion");
+                    //}
+                    //if (t.Status == TaskStatus.Faulted)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to fault");
+                    //}
+
+                    while (0 < 1)
+                    {
+                        if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                        {
+                            break;
+                        }
+                        //Do Nothing
+                    }
 
                 }
 
@@ -138,11 +138,12 @@ namespace IFRS9_ECL.Core
                 //Task.Run(() => {
                 //    DoEIRProjectionTask(lifetimeEADs, this._eclId);
                 //});
-                DoEIRProjectionTask(lifetimeEADs, this._eclId);
+                var maxProjectionMonth = Convert.ToInt32(loanbooks.Max(o => o.LIM_MONTH));
+                DoEIRProjectionTask(lifetimeEADs, this._eclId, maxProjectionMonth);
                 // DoEIRProjectionTask(lifeTimeEAD, lstContractIds, masterGuid);
 
                 //populate for CIR projections
-                var cirProjections = new ECLTasks(this._eclId, this._eclType).EAD_CIRProjections(lifetimeEADs);
+                var cirProjections = new ECLTasks(this._eclId, this._eclType).EAD_CIRProjections(lifetimeEADs, maxProjectionMonth);
                 Log4Net.Log.Info("Completed EAD_CIRProjections");
                 //insert into DB
                 ExecuteNative.SaveCIRProjections(cirProjections, this._eclId, this._eclType);
@@ -184,12 +185,26 @@ namespace IFRS9_ECL.Core
                     }
                     Log4Net.Log.Info($"Total Task : {taskLst.Count()}");
 
+                    //Task t = Task.WhenAll(taskLst);
 
-                    //var completedTask = taskLst.Where(o => o.Status == TaskStatus.RanToCompletion).Count();
-                    //Log4Net.Log.Info($"Task Completed: {completedTask}");
+                    //try
+                    //{
+                    //    t.Wait();
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Log4Net.Log.Error(ex);
+                    //}
+                    //Log4Net.Log.Info($"All Task status: {t.Status}");
 
-                    //while (taskLst.Count != tasks.Count)
-                    //while (!taskLst.Any(o => o.IsCompleted))
+                    //if (t.Status == TaskStatus.RanToCompletion)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to completion");
+                    //}
+                    //if (t.Status == TaskStatus.Faulted)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to fault");
+                    //}
 
                     while (0 < 1)
                     {
@@ -272,7 +287,28 @@ namespace IFRS9_ECL.Core
                         }
                         //Do Nothing
                     }
-                   
+
+                    //Task t = Task.WhenAll(taskLst);
+
+                    //try
+                    //{
+                    //    t.Wait();
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Log4Net.Log.Error(ex);
+                    //}
+                    //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+                    //if (t.Status == TaskStatus.RanToCompletion)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to completion");
+                    //}
+                    //if (t.Status == TaskStatus.Faulted)
+                    //{
+                    //    Log4Net.Log.Info($"All Task ran to fault");
+                    //}
+
                 }
 
                 Log4Net.Log.Info("Completed EAD_LifeTimeProjections");
@@ -296,17 +332,19 @@ namespace IFRS9_ECL.Core
             Log4Net.Log.Info("Completed GenerateContractIdandRefinedData");
 
             var lifeTimeEAD = new ECLTasks(eclId, this._eclType).GenerateLifeTimeEAD(refined_lstRaw);
+            lock (refined_lstRaws)
+                refined_lstRaws.AddRange(refined_lstRaw);
 
-            refined_lstRaws.AddRange(refined_lstRaw);
-            lifetimeEADs.AddRange(lifeTimeEAD);
+            lock (lifetimeEADs)
+                lifetimeEADs.AddRange(lifeTimeEAD);
             
         }
 
-        private void DoEIRProjectionTask(List<LifeTimeEADs> lifeTimeEAD, Guid masterGuid)
+        private void DoEIRProjectionTask(List<LifeTimeEADs> lifeTimeEAD, Guid masterGuid, int maxProjectionMonth)
         {
             
             //populate for EIR projections
-            var eirProjections = new ECLTasks(this._eclId, this._eclType).EAD_EIRProjections(lifeTimeEAD);
+            var eirProjections = new ECLTasks(this._eclId, this._eclType).EAD_EIRProjections(lifeTimeEAD, maxProjectionMonth);
             Log4Net.Log.Info("Completed EAD_EIRProjections");
             //insert into DB
             ExecuteNative.SaveEIRProjections(eirProjections, masterGuid, this._eclType);
@@ -339,7 +377,7 @@ namespace IFRS9_ECL.Core
                 //}
                 if (string.IsNullOrEmpty(item.Frequency))
                 {
-                    item.Frequency = "M";
+                    item.Frequency = ECLScheduleConstants.Monthly;
                 }
                 string frequency = item.Frequency.Trim();
                 if (ECLScheduleConstants.Bullet == frequency)
@@ -400,7 +438,7 @@ namespace IFRS9_ECL.Core
                         }
                         else
                         {
-                            start_month = 1;
+                            start_month = 0;
                         }
 
                     }
@@ -415,7 +453,7 @@ namespace IFRS9_ECL.Core
                     }
                     else
                     {
-                        start_month = -1  * 1;
+                        start_month = -1  * 0;
                     }
 
                     //var projectionMonth = item.NoOfSchedules + start_month;
@@ -476,7 +514,9 @@ namespace IFRS9_ECL.Core
             
 
             //_ps.GroupBy(t => new { t.ContractRefNo, t.Months }).Select(group => new { Months=group. });
-            paymentScheduleProjections.AddRange(_ps);
+            lock(paymentScheduleProjections)
+                paymentScheduleProjections.AddRange(_ps);
+
             Log4Net.Log.Info($"PS Count - {counter}");
         }
 

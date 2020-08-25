@@ -16,54 +16,102 @@ namespace IFRS9_ECL.Core.Report
     {
         public bool GenerateResult(string eclId, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> allLifetimeLgd)
         {
+            var taskLst = new List<Task>();
             try
             {
-                Read_EAD_Input(eclId);
-            }catch(Exception ex)
+                var task1 = Task.Run(() =>
+                {
+                    Read_EAD_Input(eclId);
+                });
+                taskLst.Add(task1);
+            }
+            catch(Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_LGD_AccountData(eclId);
+            try {
+                var task2 = Task.Run(() =>
+                {
+                    Read_LGD_AccountData(eclId);
+                });
+                taskLst.Add(task2);
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_LGD_CollateralData(eclId);
+            try {
+                var task3 = Task.Run(() =>
+                {
+                    Read_LGD_CollateralData(eclId);
+                });
+                taskLst.Add(task3);
+                
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_PD_Mapping(eclId);
+            try {
+                var task4 = Task.Run(() =>
+                {
+                    Read_PD_Mapping(eclId);
+                });
+                taskLst.Add(task4);
+
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_EAD_Impairment(eclId, lifetimeEad);
+            try
+            {
+                var task5 = Task.Run(() =>
+                {
+                    Read_EAD_Impairment(eclId, lifetimeEad);
+                });
+                taskLst.Add(task5);
+                
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_LGD_Impairment(eclId, allLifetimeLgd);
+            try
+            {
+                var task6 = Task.Run(() =>
+                {
+                    Read_LGD_Impairment(eclId, allLifetimeLgd);
+                });
+                taskLst.Add(task6);
+                
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
             }
-            try { 
-            Read_PD_Impairment(eclId);
+            try
+            {
+                var task7 = Task.Run(() =>
+                {
+                    Read_PD_Impairment(eclId);
+                });
+                taskLst.Add(task7);
+                
             }
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
+            }
+            
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
             }
 
             return true;
@@ -85,7 +133,7 @@ namespace IFRS9_ECL.Core.Report
 
         private void Read_LGD_CollateralData(string eclId)
         {
-            var qry = $"SELECT Month,CollateralProjectionType,Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle FROM WholesaleLgdCollateralProjection where WholesaleEclId='{eclId}'";
+            var qry = $"SELECT contract_no,customer_no,debenture_omv,cash_omv,inventory_omv,plant_and_equipment_omv,residential_property_omv,commercial_property_omv,receivables_omv,shares_omv,vehicle_omv,total_omv,debenture_fsv,cash_fsv,inventory_fsv,plant_and_equipment_fsv,residential_property_fsv,commercial_property_fsv,receivables_fsv,shares_fsv,vehicle_fsv FROM WholesaleLGDCollateral WholesaleLgdCollateralProjection where WholesaleEclId='{eclId}'";
             var dt = Data.DataAccess.i.GetData(qry);
             var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
             if (Directory.Exists(basepath))
@@ -360,9 +408,9 @@ namespace IFRS9_ECL.Core.Report
                 Directory.CreateDirectory(basepath);
             }
 
-            var eadPathCsv = Path.Combine(basepath, $"LGDOutput.csv");
+            //var eadPathCsv = Path.Combine(basepath, $"LGDOutput.csv");
             //var eadPathCsv = @"C:\PwC\Projects\SourceCode\Firs_9_ECL\Code\IFRS_Test1\bin\Debug\LGDOutput.csv";
-            var csvrows = File.ReadAllLines(eadPathCsv);
+            //var csvrows = File.ReadAllLines(eadPathCsv);
 
             var lifetimeLgd = new List<List<LifetimeLgd>>();
             lifetimeLgd.Add(new List<LifetimeLgd>());
@@ -403,7 +451,8 @@ namespace IFRS9_ECL.Core.Report
                 _lifetimeLgd = _lifetimeLgd.OrderBy(o => o.ContractId).ThenBy(p => p.Month).ThenBy(q => q.Value).ToList();
 
                 var sb = new StringBuilder();
-                var header = "Contract_No,";
+
+        var header = "Contract_No,PdIndex,LgdIndex,RedefaultLifetimePD,CureRate,UrBest,URDownturn,Cor,GPd,GuarantorLgd,GuaranteeValue,GuaranteeLevel,Stage,";
 
                 for (int j = 0; j <= maxMonth; j++)
                 {
@@ -420,7 +469,8 @@ namespace IFRS9_ECL.Core.Report
                 {
                     Console.WriteLine($"{cnt} - {contract}");
                     var contractData = _lifetimeLgd.Where(o => o.ContractId == contract).OrderBy(p => p.Month).ToList();
-                    var contractLine = $"{contract},";
+                    var fr = contractData.FirstOrDefault();
+                    var contractLine = $"{contract},{fr.PdIndex},{fr.LgdIndex},{fr.RedefaultLifetimePD},{fr.CureRate},{fr.UrBest},{fr.URDownturn},{fr.Cor},{fr.GPd},{fr.GuarantorLgd},{fr.GuaranteeValue},{fr.GuaranteeLevel},{fr.Stage},";
 
                     foreach (var monthVal in contractData)
                     {

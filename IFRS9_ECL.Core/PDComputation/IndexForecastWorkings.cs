@@ -148,6 +148,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 itm.Principal3 = ExcelFormulaUtil.SumProduct(standardised, principal3);
                 itm.Principal4 = ExcelFormulaUtil.SumProduct(standardised, principal4);
 
+                //Log4Net.Log.Info($"{itm.Date},{itm.MacroEconomicVariableId},{itm.MacroEconomicValue},{this._Scenario.ToString()}++++++");
                 principalData.Add(itm);
             }
 
@@ -185,6 +186,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 dr.MacroEconomicValue = (row.MacroEconomicValue - macroeconomicMean.MacroEconomicValue) / macroeconomicStandardDeviation.MacroEconomicValue;
 
                 standardisedData.Add(dr);
+                Log4Net.Log.Info($"{dr.Date},{dr.MacroEconomicVariableId},{dr.MacroEconomicValue},{this._Scenario.ToString()}++++++");
             }
 
             return standardisedData;
@@ -213,6 +215,7 @@ namespace IFRS9_ECL.Core.PDComputation
             }
 
             var reportingDate= GetReportingDate(_eclType, _eclId);
+            //Log4Net.Log.Info("=================");
             for (int i = 0; i < projections.Count; i++)
             {
                 if (projections[i].Date > reportingDate)// && i > 3
@@ -223,10 +226,10 @@ namespace IFRS9_ECL.Core.PDComputation
                     var _bdate = 0;
                     if (bdate != null)
                     {
-                        if(bdate.BackDateQuarters==1)
-                        {
-                            bdate.BackDateQuarters = bdate.BackDateQuarters;
-                        }
+                        //if (bdate.BackDateQuarters == 1)
+                        //{
+                        //    bdate.BackDateQuarters = bdate.BackDateQuarters;
+                        //}
                         _bdate = bdate.BackDateQuarters * 3;
                     }
                     var _dt = itm.Date.AddMonths(-_bdate);
@@ -234,6 +237,7 @@ namespace IFRS9_ECL.Core.PDComputation
                     if(_itm==null)
                     {
                         _itm = projections.Last();
+
                     }
                     var dr = new IndexForecast();
                     dr.Date = itm.Date;
@@ -246,6 +250,8 @@ namespace IFRS9_ECL.Core.PDComputation
                         dr.MacroEconomicValue = _itm.OptimisticMacroEconomicValue;
 
                     originalData.Add(dr);
+
+                    //Log4Net.Log.Info($"{dr.Date},{dr.MacroEconomicVariableId},{dr.MacroEconomicValue},{this._Scenario.ToString()}");
                 }
             }
 

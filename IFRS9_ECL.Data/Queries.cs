@@ -116,6 +116,12 @@ namespace IFRS9_ECL.Data
             return $" insert into CalibrationResult_LGD_HairCut_Summary(Debenture,Cash,Inventory,Plant_And_Equipment,Residential_Property,Commercial_Property,Receivables,Shares,Vehicle, Comment, Status, CalibrationId, DateCreated) " +
                 $"values ({Debenture}, {Cash}, {Inventory}, {Plant_And_Equipment}, {Residential_Property}, {Commercial_Property}, {Receivables}, {Shares}, {Vehicle}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
+
+        public static string ClearAllEclLogs(string eclType, string eclId)
+        {
+            return $"delete from {eclType}EadCirProjections where {eclType}EclId='{eclId}'; delete from {eclType}EadEirProjections where {eclType}EclId='{eclId}'; delete from {eclType}EadLifetimeProjections where {eclType}EclId='{eclId}'; delete from {eclType}LGDAccountData where {eclType}EclId='{eclId}'; delete from {eclType}LGDCollateral where {eclType}EclId='{eclId}'; delete from {eclType}PDCreditIndex where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeBests where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeDownturns where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeOptimistics where {eclType}EclId='{eclId}'; delete from {eclType}PdMappings where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeBests where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeDownturns where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeOptimistics where {eclType}EclId='{eclId}'; delete from {eclType}ECLFrameworkFinal where {eclType}EclId='{eclId}'; delete from {eclType}ECLFrameworkFinalOverride where {eclType}EclId='{eclId}';";
+        }
+
         public static string CalibrationResult_HairCut_UpdateFinal(Guid calibrationId, string subQry)
         {
             return $"delete from CalibrationResult_LGD_HairCut where CalibrationID ='{calibrationId.ToString()}'; delete from CalibrationResult_LGD_HairCut_Summary where CalibrationID ='{calibrationId.ToString()}'; {subQry}";
@@ -198,9 +204,9 @@ namespace IFRS9_ECL.Data
         }
         public static string UpdateGuidTableServiceId(string TableName, int serviceId, Guid recordId)
         {
-            return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}'";
+            return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}' and ServiceId =0";
         }
-        public static string EclsRegisterUpdate(string eclType, string eclId, int status, string exception)
+        public static string ClearAllEclLogs(string eclType, string eclId, int status, string exception)
         {
             return $"update {eclType.ToString()}Ecls set status={status}, ExceptionComment='{exception}' where Id ='{eclId}'";
         }
@@ -269,22 +275,23 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
-            //******************************************************
-            //return $"select * from {eclType.ToString()}EclDataLoanBooks where ContractNo='1762533824' and ContractNo not like ' %EXP%' and {eclType.ToString()}EclUploadId='{guid.ToString()}' ";
-            // and Id not in (     select top 0 Id from WholesaleEclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' order by CreationTime)100269872001
-            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and customerNo in (select customerNo from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' and contractNo in ('100007186004'))";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700'))";// like '%14004156%'";// and ContractNo like ' %701010142124400%'"; //and customerNo like '%14025993%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
+            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and customerNo in (select customerNo from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' and contractNo in ('293000107'))";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700'))";// like '%14004156%'";// and ContractNo like ' %701010142124400%'"; //and customerNo like '%14025993%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
         {
-            return $"Select ContractRefNo, StartDate, Component, NoOfSchedules, Frequency, Amount  from {eclType.ToString()}EclDataPaymentSchedules where {eclType.ToString()}EclUploadId='{guid.ToString()}' and COMPONENT!='GH_INTLN'";// and contractRefNo in ('100007186004')";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700')"; //
+            return $"Select ContractRefNo, StartDate, Component, NoOfSchedules, Frequency, Amount  from {eclType.ToString()}EclDataPaymentSchedules where {eclType.ToString()}EclUploadId='{guid.ToString()}' and COMPONENT!='GH_INTLN'";// and contractRefNo in ('293000107')";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700')"; //
         }
 
         public static string LGD_Assumption { get { return "Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, [Cost of Recovery] costOfRecovery from LGD_Assumptions"; } }
 
         public static string EAD_GetEIRProjections(Guid eclId, EclType eclType)
         {
-            return $"select eir_group,month months,value from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
+            return $"select eir_group,month months,value from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}' and Month=0";
+        }
+        public static string EAD_GetEIRProjectionsCount(Guid eclId, EclType eclType)
+        {
+            return $"select max(month) Cnt from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
 

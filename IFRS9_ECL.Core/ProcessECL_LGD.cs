@@ -70,7 +70,26 @@ namespace IFRS9_ECL.Core
                     }
                     //Do Nothing
                 }
+                //Task t = Task.WhenAll(taskLst);
 
+                //try
+                //{
+                //    t.Wait();
+                //}
+                //catch (Exception ex)
+                //{
+                //    Log4Net.Log.Error(ex);
+                //}
+                //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+                //if (t.Status == TaskStatus.RanToCompletion)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to completion");
+                //}
+                //if (t.Status == TaskStatus.Faulted)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to fault");
+                //}
 
                 return true;
             }catch(Exception ex)

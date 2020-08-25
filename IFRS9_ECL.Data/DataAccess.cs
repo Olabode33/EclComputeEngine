@@ -28,7 +28,7 @@ namespace IFRS9_ECL.Data
                 con.Open();
                 var i = com.ExecuteNonQuery();
                 con.Close();
-                return 0;
+                return i;
             }
             catch (Exception ex)
             {

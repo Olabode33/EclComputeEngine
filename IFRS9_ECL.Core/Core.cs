@@ -23,9 +23,10 @@ namespace IFRS9_ECL.Core
         public bool ProcessRunTask(int serviceId)
         {
             this.serviceId = serviceId;
+            ProcessECLRunTask();
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
-           ProcessECLRunTask();
+           
             return true;
         }
         public bool ProcessCaliMacroTaskOnly(int serviceId)
@@ -33,6 +34,7 @@ namespace IFRS9_ECL.Core
             this.serviceId = serviceId;
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
+            ProcessECLRunTask();
             return true;
         }
 
@@ -89,9 +91,15 @@ namespace IFRS9_ECL.Core
                 }
 
                 var qry = Queries.UpdateGuidTableServiceId($"{eclRegister.eclType.ToString()}Ecls",this.serviceId, eclRegister.Id);
-                DataAccess.i.ExecuteQuery(qry);
+                var resp=DataAccess.i.ExecuteQuery(qry);
 
-                qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
+                if(resp==0)
+                {
+                    Log4Net.Log.Info($"Another service has picked ECL with ID {eclRegister.Id} of Type [{eclRegister.eclType.ToString()}].");
+                    return true;
+                }
+
+                qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
                 DataAccess.i.ExecuteQuery(qry);
                 var eclType = eclRegister.eclType;
                 Log4Net.Log.Info($"Found ECL with ID {eclRegister.Id} of Type [{eclType.ToString()}]. Running will commence if it has not been picked by another Job");
@@ -99,11 +107,12 @@ namespace IFRS9_ECL.Core
 
 
                 var masterGuid = eclRegister.Id;//Guid.NewGuid();
-                                                //masterGuid = Guid.Parse("4140a69e-a729-4269-a078-91a01b5e0cd0");
+                                                
 
                 LifetimeEadWorkings lifetimeEadWorkings = new LifetimeEadWorkings(masterGuid, eclType);
                 var loanbook_data = lifetimeEadWorkings.GetLoanBookData();
 
+                //masterGuid = Guid.Parse("23f61e5f-46aa-4f33-aab0-08d844eaa419");
                 Log4Net.Log.Info($"Start Time {DateTime.Now}");
 
 
@@ -131,7 +140,7 @@ namespace IFRS9_ECL.Core
                     overrideExist = CheckOverrideDataExist(masterGuid, eclType);
                     if(!overrideExist)
                     {
-                        qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "No Override data found");
+                        qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "No Override data found");
                         DataAccess.i.ExecuteQuery(qry);
                     }
                 }
@@ -153,17 +162,17 @@ namespace IFRS9_ECL.Core
 
                     // Process EAD
                     new ProcessECL_EAD(masterGuid, eclType).ProcessTask(new_loanbook_data);
-                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 6, "");
                     DataAccess.i.ExecuteQuery(qry);
 
     //Process LGD
                     new ProcessECL_LGD(masterGuid, eclType).ProcessTask(new_loanbook_data);
-                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
                     DataAccess.i.ExecuteQuery(qry);
 
                     //Process PD
                     new ProcessECL_PD(masterGuid, eclType).ProcessTask(new_loanbook_data);
-                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, ""); // should change to framekwork
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, ""); // should change to framekwork
                     DataAccess.i.ExecuteQuery(qry);
 
                 
@@ -207,6 +216,8 @@ namespace IFRS9_ECL.Core
                 //_lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Downturn).ToList();
                 //new ProcessECL_Framework(masterGuid, ECL_Scenario.Downturn, eclType).ProcessTask(new_loanbook_data, lifetimeEad, _lifetimeLGD, cummulativeDiscountFactor, eadInput, stageClassification);
 
+                //var bst = lifetimeLGD.Where(o => o.ContractId == "160000017006" && o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
+
                 var task1 = Task.Run(() =>
                 {
                     var _lifetimeLGD = lifetimeLGD.Where(o => o.Ecl_Scenerio == ECL_Scenario.Best).ToList();
@@ -240,22 +251,47 @@ namespace IFRS9_ECL.Core
                     //Do Nothing
                 }
 
+                //Task t = Task.WhenAll(taskLst);
+
+                //try
+                //{
+                //    t.Wait();
+                //}
+                //catch (Exception ex)
+                //{
+                //    Log4Net.Log.Error(ex);
+                //}
+                //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+                //if (t.Status == TaskStatus.RanToCompletion)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to completion");
+                //}
+                //if (t.Status == TaskStatus.Faulted)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to fault");
+                //}
+                
+
                 new ProcessECL_Framework(masterGuid, eclType).ProcessResultDetails(new_loanbook_data);
 
 
                 if (!overrideExist)
                 {
-                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 4, "");
                     DataAccess.i.ExecuteQuery(qry);
                 }
                 else
                 {
-                    qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "");
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "");
                     DataAccess.i.ExecuteQuery(qry);
                 }
-
+                //Exporting Reports
                 var rpt = new ExcelReport().GenerateResult(masterGuid.ToString(), lifetimeEad, lifetimeLGD);
 
+                //Delete Logs in table
+                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString());
+                    DataAccess.i.ExecuteQuery(qry);
 
                 Log4Net.Log.Info($"End Time {DateTime.Now}");
                 return true;
@@ -263,7 +299,7 @@ namespace IFRS9_ECL.Core
             catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
-                var qry = Queries.EclsRegisterUpdate(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 13, ex.ToString());
+                var qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 13, ex.ToString());
                 DataAccess.i.ExecuteQuery(qry);
             }
             return true;
@@ -303,7 +339,13 @@ namespace IFRS9_ECL.Core
 
 
                         qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadBehaviouralTerms", this.serviceId, caliId);
-                        DataAccess.i.ExecuteQuery(qry);
+                        var resp = DataAccess.i.ExecuteQuery(qry);
+
+                        if (resp == 0)
+                        {
+                            Log4Net.Log.Info($"Another service has picked Behavioural Calibration with ID {caliId.ToString()}.");
+                            return true;
+                        }
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadBehaviouralTerms");
                         DataAccess.i.ExecuteQuery(qry);
@@ -344,7 +386,12 @@ namespace IFRS9_ECL.Core
                         caliId = (Guid)dt.Rows[0]["Id"];
 
                         qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadCcfSummary", this.serviceId, caliId);
-                        DataAccess.i.ExecuteQuery(qry);
+                        var resp=DataAccess.i.ExecuteQuery(qry);
+                        if (resp == 0)
+                        {
+                            Log4Net.Log.Info($"Another service has picked CCF Calibration with ID {caliId.ToString()}.");
+                            return true;
+                        }
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadCcfSummary");
                         DataAccess.i.ExecuteQuery(qry);
@@ -380,7 +427,12 @@ namespace IFRS9_ECL.Core
 
 
                         qry = Queries.UpdateGuidTableServiceId("CalibrationRunLgdHairCut", this.serviceId, caliId);
-                        DataAccess.i.ExecuteQuery(qry);
+                        var resp = DataAccess.i.ExecuteQuery(qry);
+                        if (resp == 0)
+                        {
+                            Log4Net.Log.Info($"Another service has picked Haircut Calibration with ID {caliId.ToString()}.");
+                            return true;
+                        }
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunLgdHairCut");
                         DataAccess.i.ExecuteQuery(qry);
@@ -415,7 +467,12 @@ namespace IFRS9_ECL.Core
                         caliId = (Guid)dt.Rows[0]["Id"];
 
                         qry = Queries.UpdateGuidTableServiceId("CalibrationRunLgdRecoveryRate", this.serviceId, caliId);
-                        DataAccess.i.ExecuteQuery(qry);
+                        var resp = DataAccess.i.ExecuteQuery(qry);
+                        if (resp == 0)
+                        {
+                            Log4Net.Log.Info($"Another service has picked Recovery Rate Calibration with ID {caliId.ToString()}.");
+                            return true;
+                        }
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunLgdRecoveryRate");
                         DataAccess.i.ExecuteQuery(qry);
@@ -449,7 +506,12 @@ namespace IFRS9_ECL.Core
                         caliId = (Guid)dt.Rows[0]["Id"];
 
                         qry = Queries.UpdateGuidTableServiceId("CalibrationRunPdCrDrs", this.serviceId, caliId);
-                        DataAccess.i.ExecuteQuery(qry);
+                        var resp = DataAccess.i.ExecuteQuery(qry);
+                        if (resp == 0)
+                        {
+                            Log4Net.Log.Info($"Another service has picked PD CR DR Calibration with ID {caliId.ToString()}.");
+                            return true;
+                        }
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunPdCrDrs");
                         DataAccess.i.ExecuteQuery(qry);

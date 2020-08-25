@@ -231,12 +231,22 @@ namespace IFRS9_ECL.Core.Calibration
                // allDataStartPeriod = GetNextPeriod(allDataStartPeriod, i);
             }
 
+
+            //Continue Principal Component
+            //////////////////////////Remove IT///////////////////////////////
+            mcPrincipalComponent = mcPrincipalComponent.Take(mcPrincipalComponent.Count - 2).ToList(); //removeit
+            //////////////////////////Remove IT///////////////////////////////
+
             // Principal Component SUmmary result
-            var groupDataStartPos= groupMacroData.IndexOf(groupMacroData.FirstOrDefault(o => o.period == startPeriod));
-            var extractForPrinCompSummary = groupMacroData.Skip(groupDataStartPos).Take(mcPrincipalComponent.Count).ToList();
+            var groupDataStartPos = groupMacroData.IndexOf(groupMacroData.FirstOrDefault(o => o.period == startPeriod));
+            
             var lstPrinSummary = new List<MacroResult_PrincipalComponentSummary>();
             for (int i = 0; i < loadingOutputResult.Count; i++)
             {
+                var selectedVariable = actual_macvar[i];
+
+                var _extractForPrinCompSummary = groupMacroData.Skip(groupDataStartPos- selectedVariable.BackwardOffset).Take(mcPrincipalComponent.Count).ToList();
+
                 var sum = new MacroResult_PrincipalComponentSummary();
                 sum.PrincipalComponentIdA = 1;
                 sum.PrincipalComponentIdB = 4 + i;
@@ -253,23 +263,23 @@ namespace IFRS9_ECL.Core.Calibration
                 
                 if (i == 0)
                 {
-                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue1);
-                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue1));
+                    sum.Value = _extractForPrinCompSummary.Average(o => o.MacroValue1);
+                    sum1.Value = Computation.GetStandardDeviationS(_extractForPrinCompSummary.Select(o => o.MacroValue1));
                 }
                 if (i == 1)
                 {
-                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue2);
-                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue2));
+                    sum.Value = _extractForPrinCompSummary.Average(o => o.MacroValue2);
+                    sum1.Value = Computation.GetStandardDeviationS(_extractForPrinCompSummary.Select(o => o.MacroValue2));
                 }
                 if (i == 2)
                 {
-                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue3);
-                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue3));
+                    sum.Value = _extractForPrinCompSummary.Average(o => o.MacroValue3);
+                    sum1.Value = Computation.GetStandardDeviationS(_extractForPrinCompSummary.Select(o => o.MacroValue3));
                 }
                 if (i == 3)
                 {
-                    sum.Value = extractForPrinCompSummary.Average(o => o.MacroValue4);
-                    sum1.Value = Computation.GetStandardDeviationS(extractForPrinCompSummary.Select(o => o.MacroValue4));
+                    sum.Value = _extractForPrinCompSummary.Average(o => o.MacroValue4);
+                    sum1.Value = Computation.GetStandardDeviationS(_extractForPrinCompSummary.Select(o => o.MacroValue4));
                 }
                 
                 lstPrinSummary.Add(sum);
@@ -314,9 +324,11 @@ namespace IFRS9_ECL.Core.Calibration
                 var mcp = mcPrincipalComponent[i];
 
                 var indx = new MacroResult_IndexData();
-               // if(extractForPrinCompSummary.Count>(i + maxBackLag))
-               // {
-                    indx.MacroId = macroId;
+                // if(extractForPrinCompSummary.Count>(i + maxBackLag))
+                // {
+                var extractForPrinCompSummary = groupMacroData.Skip(groupDataStartPos).Take(mcPrincipalComponent.Count).ToList();
+
+                indx.MacroId = macroId;
                     indx.Period = extractForPrinCompSummary[i].period;
                     indx.BfNpl = extractForPrinCompSummary[i].NPL;
                 mcPrincipalComponent[i].PrincipalComponent1 = mcPrincipalComponent[i].PrincipalComponent1 ?? 0;
@@ -340,10 +352,6 @@ namespace IFRS9_ECL.Core.Calibration
             statistics.Correlation = 0;
             statistics.TTC_PD = 0;
 
-            //Continue Statistical Data
-            //////////////////////////Remove IT///////////////////////////////
-            indxData = indxData.Take(indxData.Count - 2).ToList(); //removeit
-            //////////////////////////Remove IT///////////////////////////////
 
             try { statistics.StandardDev = Computation.GetStandardDeviationP(indxData.Select(o => o.Index).ToList()); } catch { }
             try{statistics.Average = indxData.Average(o => o.Index); } catch { }
