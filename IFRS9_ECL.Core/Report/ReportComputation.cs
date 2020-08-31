@@ -1358,7 +1358,8 @@ namespace IFRS9_ECL.Core.Report
             
             temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
 
-            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
+            //            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
+            qry = $"select Stage, FinalEclValue, Scenario, ContractId from {_eclTypeTable}ECLFrameworkFinal where {_eclType}EclId = '{_eclId}' and EclMonth=0";
             dt = DataAccess.i.GetData(qry);
 
             foreach(DataRow dr in dt.Rows)

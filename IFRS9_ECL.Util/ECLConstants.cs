@@ -125,12 +125,19 @@ namespace IFRS9_ECL.Util
 
         public List<double?> ExcelDefaultValue { get { return new List<double?> { -2146826281, -2146826246 }; } }
 
-        
+
 
         ///It will be obtained from the DB this is in percentage
         //*********************************************************
 
-        public double Rho = 0.00470275844438257;// 0.21733359; //******************************
+        public double Rho(long affliateId)
+        {
+            if (affliateId==41)
+            {
+                return 0.0280579042261724;
+            }
+            return 0.00470275844438257;// 0.21733359; //******************************
+        }
 
 
 

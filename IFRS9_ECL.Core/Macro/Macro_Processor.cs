@@ -31,6 +31,8 @@ namespace IFRS9_ECL.Core.Calibration
 
             ProcessMacroAnalysis(affiliateId, macroId);
 
+            //return true;
+
             // Read Eingen final to determine the comp to consider
             var EingenFinalPath = Path.Combine(AppSettings.MacroModelPath, affiliateId.ToString(), "ETI_Eingen_Final.csv");
             var all_Eingen = File.ReadAllLines(EingenFinalPath);
@@ -587,8 +589,10 @@ namespace IFRS9_ECL.Core.Calibration
                 Log4Net.Log.Error(ex);
             }
 
-
+            //return;
             var loadingData = File.ReadAllLines(loading_initial);
+
+            
 
             var computationCount = 0;
             var pickedClosed = false;
@@ -633,7 +637,10 @@ namespace IFRS9_ECL.Core.Calibration
                     }
                     tempResult.Add(val);
                 }
-                finalMaxIndex.Add(tempResult.Select((n, j) => (Number: n, Index: j)).Max().Index + 2);
+                var max = tempResult.Max();
+                var uMax=tempResult.IndexOf(max) + 2;
+                finalMaxIndex.Add(uMax);
+                //finalMaxIndex.Add(tempResult.Select((n, j) => (Number: n, Index: j)).Max().Index + 2);
             }
 
             finalMaxIndex = finalMaxIndex.Distinct().ToList();
@@ -750,6 +757,12 @@ namespace IFRS9_ECL.Core.Calibration
 
                 var body = new List<string>();
                 body.Add(period);
+
+                var _itms=itms.Where(o => o.Period == pickPeriod && o.MacroeconomicId !=-1).ToList();
+                //foreach(var itm in _itms)
+                //{
+                //    try { body.Add(itm.Value.ToString()); } catch { body.Add("0"); }
+                //}
                 for (int j = 0; j < affM.Count; j++)
                 {
                     try { body.Add(itms.FirstOrDefault(o => o.Period == pickPeriod && o.MacroeconomicId == affM[j].MacroeconomicVariableId).Value.ToString()); } catch { body.Add("0"); };

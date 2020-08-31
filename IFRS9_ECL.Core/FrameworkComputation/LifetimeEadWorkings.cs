@@ -420,15 +420,21 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 try
                 {
-                    if (loanRec.ContractEndDate != null)
+                    var ContractEndDate = loanRec.ContractEndDate;
+                    if (loanRec.RestructureEndDate != null && loanRec.RestructureIndicator)
                     {
-                        var tmpEndMonth = loanRec.ContractEndDate;
+                        if(!loanRec.RestructureEndDate.ToString().Contains("000"))
+                            ContractEndDate = loanRec.RestructureEndDate;
+                    }
+                    if (ContractEndDate != null)
+                    {
+                        var tmpEndMonth = ContractEndDate;
                         var _EXP_EOMWithExpiryCalibration = EndOfMonth(tmpEndMonth.Value, int.Parse(Math.Ceiling(bt_ead_data.Expired).ToString()));
                         var EOMWithExpiryCalibration = EndOfMonth(tmpEndMonth.Value, int.Parse(Math.Ceiling(bt_ead_data.NonExpired).ToString()));
 
                         var EOM = EndOfMonth(tmpEndMonth.Value, 0);
                         loanRec.ProductType = loanRec.ProductType ?? "";
-                        if (loanRec.ContractEndDate < reportingDate && (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower()))
+                        if (ContractEndDate < reportingDate && (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower()))
                         {
                             if (reportingDate == _EXP_EOMWithExpiryCalibration)
                             {

@@ -290,8 +290,8 @@ namespace IFRS9_ECL.Core
                 var rpt = new ExcelReport().GenerateResult(masterGuid.ToString(), lifetimeEad, lifetimeLGD);
 
                 //Delete Logs in table
-                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString());
-                    DataAccess.i.ExecuteQuery(qry);
+                    //qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString());
+                    //DataAccess.i.ExecuteQuery(qry);
 
                 Log4Net.Log.Info($"End Time {DateTime.Now}");
                 return true;

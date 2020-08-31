@@ -742,7 +742,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var rcvCaliRate = new CalibrationInput_LGD_RecoveryRate_Processor().GetLGDRecoveryRateData(this._eclId, this._eclType);
 
             //foreach (DataRow dr in dt.Rows)
-            var rcvCaliRate_ = 1.0;
+            var rcvCaliRate_ = 0.0;
             for (int i = 0; i < 3; i++)
             {
                 var _lgdAssumption = new LgdInputAssumptions_UnsecuredRecovery();

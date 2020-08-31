@@ -54,7 +54,14 @@ namespace IFRS9_ECL.Util
 
         public static string GetActualContractId(string contractId)
         {
-            return contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix) ? contractId.Split('|')[1] : contractId;
+            try
+            {
+                return contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix) ? contractId.Split('|')[1] : contractId;
+            }
+            catch
+            {
+                return contractId;
+            }
         }
     }
 }

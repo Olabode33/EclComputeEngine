@@ -53,9 +53,17 @@ namespace IFRS9_ECL.Core.PDComputation
             var indexForecast = GetScenarioIndexForecastResult();
             int month = 1;
 
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            var eclReg = new EclRegister { OrganizationUnitId = -1 };
+            if (dtR.Rows.Count > 0)
+            {
+                eclReg = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+            }
             foreach (var row in indexForecast)
             {
-                double scenarioPd = ComputeVasicekIndex(row.Standardised, pdTtc, ECLNonStringConstants.i.Rho);
+
+                double scenarioPd = ComputeVasicekIndex(row.Standardised, pdTtc, ECLNonStringConstants.i.Rho(eclReg.OrganizationUnitId));
 
                 var dr = new VasicekEtiNplIndex();
                 dr.Date = row.Date;
@@ -92,6 +100,15 @@ namespace IFRS9_ECL.Core.PDComputation
 
             var vasicekEtiNplIndex = new List<VasicekEtiNplIndex>();
 
+
+            var ecls = Queries.EclsRegister(_eclType.ToString(), _eclId.ToString());
+            var dtR = DataAccess.i.GetData(ecls);
+            var eclReg = new EclRegister { OrganizationUnitId = -1 };
+            if (dtR.Rows.Count > 0)
+            {
+                eclReg = DataAccess.i.ParseDataToObject(new EclRegister(), dtR.Rows[0]);
+            }
+            var rho = ECLNonStringConstants.i.Rho(eclReg.OrganizationUnitId);
             foreach (var etiNplRecord in etiNpl)
             {
                 double index = 0;
@@ -101,8 +118,9 @@ namespace IFRS9_ECL.Core.PDComputation
                 newRecord.Date = etiNplRecord.Date;
                 newRecord.EtiNpl = etiNplRecord.Series;
                 newRecord.Index = index;
-                newRecord.Fitted = ComputeVasicekIndex(index, pdTtc, ECLNonStringConstants.i.Rho);
-                newRecord.Residuals = etiNplRecord.Series - ComputeVasicekIndex(index, pdTtc, ECLNonStringConstants.i.Rho);
+                
+                newRecord.Fitted = ComputeVasicekIndex(index, pdTtc, rho);
+                newRecord.Residuals = etiNplRecord.Series - ComputeVasicekIndex(index, pdTtc, rho);
 
                 vasicekEtiNplIndex.Add(newRecord);
             }

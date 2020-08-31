@@ -186,7 +186,7 @@ namespace IFRS9_ECL.Core.PDComputation
                 dr.MacroEconomicValue = (row.MacroEconomicValue - macroeconomicMean.MacroEconomicValue) / macroeconomicStandardDeviation.MacroEconomicValue;
 
                 standardisedData.Add(dr);
-                Log4Net.Log.Info($"{dr.Date},{dr.MacroEconomicVariableId},{dr.MacroEconomicValue},{this._Scenario.ToString()}++++++");
+                //Log4Net.Log.Info($"{dr.Date},{dr.MacroEconomicVariableId},{dr.MacroEconomicValue},{this._Scenario.ToString()}++++++");
             }
 
             return standardisedData;
