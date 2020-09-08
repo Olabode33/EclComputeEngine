@@ -101,7 +101,26 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
                 //Do Nothing
             }
+            //Task t = Task.WhenAll(taskLst);
 
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
 
             return finalEcl;
         }
@@ -143,7 +162,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     var cc = ex;
                 }
             }
-            finalEcl.AddRange(_finalEcl);
+            lock(finalEcl)
+                finalEcl.AddRange(_finalEcl);
         }
 
         private double ComputeFinalEclValue(List<FinalEcl> monthlyEcl, List<IrFactor> cummulativeDiscountFactor, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, string contractId, StageClassification stage, string eirGroup)

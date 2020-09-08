@@ -41,17 +41,22 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var lifetimeCollateral = new List<LifetimeCollateral>();
 
             var contractData = GetContractData(loanbook);
+            Log4Net.Log.Info($"Get COntract at ComputeLifetimeCollateral {contractData.Count}");
             var marginalDiscountFactor = GetMarginalDiscountFactor();
+            Log4Net.Log.Info($"Get marginalDiscountFactor at ComputeLifetimeCollateral {marginalDiscountFactor.Count}");
             //var eadInputs = GetTempEadInputData(loanbook);
             var collateralProjections = GetScenarioCollateralProjection();
+            Log4Net.Log.Info($"Get collateralProjections at ComputeLifetimeCollateral {collateralProjections.Count}");
             var updatedFsv = GetUpdatedFsvResult();
-
+            Log4Net.Log.Info($"Get updatedFsv at ComputeLifetimeCollateral {updatedFsv.Count}");
             var actual_eadInputContractData = eadInputs.Select(o => o.Contract_no).Distinct().ToList();
             
             contractData = contractData.Where(o => actual_eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
 
+            Log4Net.Log.Info($"starting Loop at ComputeLifetimeCollateral");
             foreach (var row in contractData)
             {
+                //Log4Net.Log.Info($"LP {row.CONTRACT_NO}");
                 string contractId = row.CONTRACT_NO;
                 string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
                 long eirIndex = 0;
@@ -99,7 +104,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //maxMonth = 627; //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 for (int month = 0; month < maxMonth; month++)
                 {
-
+                    //Log4Net.Log.Info($"LP {row.CONTRACT_NO} - {month}");
                     double product = GetProductValue(marginalDiscountFactor, eirGroup, ttrMonth, month);
                     double sumProduct = GetSumProductValue(collateralProjections, ttrMonth, fsvArray, month);
                     double value = product * sumProduct;
@@ -114,7 +119,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     lifetimeCollateral.Add(newRow);
                 }
             }
-
+            Log4Net.Log.Info($"Done ComputeLifetimeCollateral");
 
             return lifetimeCollateral;
         }

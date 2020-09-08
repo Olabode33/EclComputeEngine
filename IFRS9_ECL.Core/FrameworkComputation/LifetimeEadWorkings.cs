@@ -121,7 +121,26 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
                 //Do Nothing
             }
+            //Task t = Task.WhenAll(taskLst);
 
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
             //StringBuilder sb = new StringBuilder();
             //sb.Append($"COntractID,Month,Value,{Environment.NewLine}");
             //foreach (var itm in lifetimeEad)
@@ -173,10 +192,6 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     continue;
                 }
 
-                var noOfMonths = 150;// loanRec.LIM_MONTH + 1; //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                //for (int month = 1; month < noOfMonths; month++)
-                //{
-
                 var month = 1;
                 while (0 == 0)
                 {
@@ -194,7 +209,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRecord.ProjectionMonth = month;
                     newRecord.ProjectionValue = ComputeLifetimeValue(c_eadInputs, eadInputRecord, marginalAccumulationFactor, (long)daysPastDue / 30, month, cirIndex, productType);
 
-                    if (newRecord.ProjectionValue == 0 || month==240)
+                    if (newRecord.ProjectionValue <= 0)// || month==240)
                     {
                         break;
                     }
@@ -223,7 +238,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     
                 //}
             }
-            lifetimeEad.AddRange(sub_lifetimeEad);
+            lock(lifetimeEad)
+                lifetimeEad.AddRange(sub_lifetimeEad);
         }
 
         private List<IrFactor> GetMarginalAccumulationFactorResult()
@@ -384,18 +400,18 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 var loanRec = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
                 
-                loanRec.ContractId = loanRec.ContractId ?? "";
+                loanRec.ContractNo = loanRec.ContractNo ?? "";
                 loanRec.AccountNo = loanRec.AccountNo ?? "";
                 loanRec.ProductType = loanRec.ProductType ?? "";
                 loanRec.Segment = loanRec.Segment ?? "";
                 loanRec.OutstandingBalanceLCY = loanRec.OutstandingBalanceLCY ?? 0;
 
-                loanRec.ContractId = loanRec.ContractId.Trim();
+                loanRec.ContractNo = loanRec.ContractNo.Trim();
                 loanRec.AccountNo = loanRec.AccountNo.Trim();
                 loanRec.ProductType = loanRec.ProductType.Trim();
                 loanRec.Segment = loanRec.Segment.Trim();
 
-                loanRec.ContractId = loanRec.ContractId.ToUpper();
+                loanRec.ContractNo = loanRec.ContractNo.ToUpper();
                 loanRec.AccountNo = loanRec.AccountNo.ToUpper();
                 loanRec.ProductType = loanRec.ProductType.ToUpper();
                 loanRec.Segment = loanRec.Segment.ToUpper();
@@ -404,15 +420,21 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 try
                 {
-                    if (loanRec.ContractEndDate != null)
+                    var ContractEndDate = loanRec.ContractEndDate;
+                    if (loanRec.RestructureEndDate != null && loanRec.RestructureIndicator)
                     {
-                        var tmpEndMonth = loanRec.ContractEndDate;
+                        if(!loanRec.RestructureEndDate.ToString().Contains("000"))
+                            ContractEndDate = loanRec.RestructureEndDate;
+                    }
+                    if (ContractEndDate != null)
+                    {
+                        var tmpEndMonth = ContractEndDate;
                         var _EXP_EOMWithExpiryCalibration = EndOfMonth(tmpEndMonth.Value, int.Parse(Math.Ceiling(bt_ead_data.Expired).ToString()));
                         var EOMWithExpiryCalibration = EndOfMonth(tmpEndMonth.Value, int.Parse(Math.Ceiling(bt_ead_data.NonExpired).ToString()));
 
                         var EOM = EndOfMonth(tmpEndMonth.Value, 0);
                         loanRec.ProductType = loanRec.ProductType ?? "";
-                        if (loanRec.ContractEndDate < reportingDate && (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower()))
+                        if (ContractEndDate < reportingDate && (loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_od.ToLower() || loanRec.ProductType.ToLower() == ECLStringConstants.i._productType_card.ToLower()))
                         {
                             if (reportingDate == _EXP_EOMWithExpiryCalibration)
                             {

@@ -25,6 +25,7 @@ namespace IFRS9_ECL.Models.Framework
         public int Month { get; set; }
         public ECL_Scenario Ecl_Scenerio { get; set; }
         public double Value { get; set; }
+        public double LifetimeEad { get; set; }
     }
 
 }

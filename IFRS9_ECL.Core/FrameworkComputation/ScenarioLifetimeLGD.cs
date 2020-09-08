@@ -176,6 +176,28 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //Do Nothing
             }
 
+            //Task t = Task.WhenAll(taskLst);
+
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
+
+
             Console.WriteLine($"Done with All LGD pre Tasks");
 
             //xxxxxxxxxxxxx
@@ -193,6 +215,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //pdMapping = pdMapping.OrderBy(o => o.ContractId).ToList();
             //sicrInput = sicrInput.OrderBy(o => o.ContractId).ToList();
             //stageClassification = stageClassification.OrderBy(o => o.ContractId).ToList();
+            creditIndex = creditIndex.OrderBy(o => o.ProjectionMonth).ToList();
+
+            taskLst = new List<Task>();
+
             var taskLst_ = new List<Task>();
             for (int i = 0; i < threads; i++)
             {
@@ -228,7 +254,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
 
-            //var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
             while (0 < 1)
             {
                 if (taskLst_.All(o => tskStatusLst.Contains(o.Status)))
@@ -237,6 +263,28 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
                 //Do Nothing
             }
+
+            //t = Task.WhenAll(taskLst);
+
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
+
             Log4Net.Log.Info($"ComputeLifetimeLGD Completed: {completedTask}");
 
             //StringBuilder sb = new StringBuilder();
@@ -256,11 +304,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
 
             var _lifetimeLGD = new List<LifetimeLgd>();
+
             foreach (var row in subcontract)
             {
                 try
                 {
-                    Console.WriteLine($"Got LGD_COntract -{row.CONTRACT_NO}");
+                    Log4Net.Log.Info($"Got LGD_COntract -{row.CONTRACT_NO}");
+                    //Console.WriteLine($"Got LGD_COntract -{row.CONTRACT_NO}");
 
                     string contractId = row.CONTRACT_NO;
                     double costOfRecovery = row.COST_OF_RECOVERY;
@@ -278,7 +328,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     }
                     catch (Exception ex)
                     {
-                        if(contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
+                        if (contractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
                         {
                             loanStage = 3;
                         }
@@ -294,16 +344,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     string pdGroup = pdMappingRow.PdGroup ?? "";
                     string segment = pdMappingRow.Segment ?? "";
 
-                    if(contractId== "EXPLOAN|CORPORATE")
-                    {
-                        contractId = "EXPLOAN|CORPORATE";
-                    }
 
-                    if(segment=="" && contractId.StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                    if (segment == "" && contractId.StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
                     {
                         try { segment = contractId.Split('|')[1]; } catch { }
                     }
-                    string productType = pdMappingRow.ProductType??"";
+                    string productType = pdMappingRow.ProductType ?? "";
 
                     //xxxxxxxxxxxxxxxxxxxxxxxxxxxx
                     var sicrInputRow = subsicrInput.FirstOrDefault(x => x.ContractId == contractId);
@@ -337,29 +383,20 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_90;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_90;
-                        //unsecuredRecoveriesBest = 0.2026;
-                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 180)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_180;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_180;
-                        //unsecuredRecoveriesBest = 0.2026;
-                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 270)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_270;
-                        unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_270;
-                        //unsecuredRecoveriesBest = 0.2026;
-                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
                     if (lgdAssumptionColumn == 360)
                     {
                         unsecuredRecoveriesBest = best_downTurn_Assumption.Days_360;
                         unsecuredRecoveriesDownturn = best_downTurn_Assumption.Downturn_Days_360;
-                        //unsecuredRecoveriesBest = 0.2026;
-                        //unsecuredRecoveriesDownturn = 0.1863;
                     }
 
                     var month = 0;
@@ -369,19 +406,26 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     double month1pdValueOptimistic = ComputeLifetimeRedefaultPdValuePerMonth(sublifetimePdOptimistic, pdGroup, 1);
                     double month1pdValueDownturn = ComputeLifetimeRedefaultPdValuePerMonth(sublifetimePdDownturn, pdGroup, 1);
 
-                    while (0 == 0)
+                    var eadForContractMaxMonth = sublifetimeEAD.Where(o => o.ContractId == contractId).Max(p => p.ProjectionMonth);
+                    //while (0 == 0)
+                    //{
+
+                    for (int i = 0; i <= eadForContractMaxMonth; i++)
                     {
-                        double monthLifetimeEAD = GetLifetimeEADPerMonth(sublifetimeEAD, contractId, month);  //Excel lifetimeEAD!F
+                        var monthLifetimeEADObj = GetLifetimeEADPerMonth(sublifetimeEAD, contractId, month);  //Excel lifetimeEAD!F
 
-                        if (monthLifetimeEAD == 0)
+                        var monthLifetimeEAD = 0.0;
+                        if (monthLifetimeEADObj!=null)
                         {
-                            break;
+                            monthLifetimeEAD = monthLifetimeEADObj.ProjectionValue;
                         }
+                        
 
-                        creditIndex = creditIndex.OrderBy(o => o.ProjectionMonth).ToList();
-                        double monthCreditIndexBest = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Best);           // Excel $O$3
-                        double monthCreditIndexOptimistic = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Optimistic);
-                        double monthCreditIndexDownturn = GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Downturn);
+
+                        var cIndex = GetCreditIndexPerMonth(creditIndex, month);
+                        double monthCreditIndexBest = cIndex.BestEstimate;          // Excel $O$3
+                        double monthCreditIndexOptimistic = cIndex.Optimistic; //GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Optimistic);
+                        double monthCreditIndexDownturn = cIndex.Downturn;// GetCreditIndexPerMonth(creditIndex, month, ECL_Scenario.Downturn);
 
                         double sumLifetimePdsBest = ComputeLifetimeRedefaultPdValuePerMonth(sublifetimePdBest, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
                         double sumLifetimePdsOptimistic = ComputeLifetimeRedefaultPdValuePerMonth(sublifetimePdOptimistic, pdGroup, month);   //Excel Sum(OFFSET(PD_BE, $C8-1, 1, 1, O$7))
@@ -509,6 +553,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                         newRowBest.Ecl_Scenerio = ECL_Scenario.Best;
                         newRowBest.Value = lifetimeLgdValueBest;
+                        newRowBest.LifetimeEad = monthLifetimeEAD;
                         _lifetimeLGD.Add(newRowBest);
 
                         var newRowOptimistic = new LifetimeLgd();
@@ -528,6 +573,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                         newRowOptimistic.Month = month;
                         newRowOptimistic.Ecl_Scenerio = ECL_Scenario.Optimistic;
                         newRowOptimistic.Value = lifetimeLgdValueOptimistic;
+                        newRowOptimistic.LifetimeEad = monthLifetimeEAD;
                         _lifetimeLGD.Add(newRowOptimistic);
 
 
@@ -550,10 +596,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                         newRowDownturn.Ecl_Scenerio = ECL_Scenario.Downturn;
                         newRowDownturn.Value = lifetimeLgdValueDownturn;
+                        newRowDownturn.LifetimeEad = monthLifetimeEAD;
 
-                        if (month == 240)
+                        if (newRowBest.Value <= 0 && newRowOptimistic.Value <= 0 && newRowDownturn.Value <= 0)
                         {
-                            break;
+                            //break;
                         }
                         //Console.WriteLine($"{month} - {newRowDownturn.Value}");
 
@@ -561,6 +608,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                         month++;
                     }
+
+                    //}
                 }
                 catch (Exception ex)
                 {
@@ -568,8 +617,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
 
             }
-
-            lifetimeLGD.AddRange(_lifetimeLGD);
+            lock(lifetimeLGD)
+                lifetimeLGD.AddRange(_lifetimeLGD);
         }
 
 
@@ -612,29 +661,39 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             return pds.Aggregate(0.0, (acc, x) => acc + x);
         }
 
-        private double GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month, ECL_Scenario _scenario)
+        //private double GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month, ECL_Scenario _scenario)
+        //{
+
+        //    var _creditIndx = creditIndex.FirstOrDefault(x => x.ProjectionMonth == (month > 60 ? 60 : month));
+
+        //    if (_scenario == ECL_Scenario.Best)
+        //        return _creditIndx.BestEstimate;
+
+        //    if (_scenario == ECL_Scenario.Downturn)
+        //        return _creditIndx.Downturn;
+
+        //    if (_scenario == ECL_Scenario.Optimistic)
+        //        return _creditIndx.Optimistic;
+
+        //    return 0;
+        //}
+        private CreditIndex_Output GetCreditIndexPerMonth(List<CreditIndex_Output> creditIndex, int month)
         {
 
             var _creditIndx = creditIndex.FirstOrDefault(x => x.ProjectionMonth == (month > 60 ? 60 : month));
 
-            if (_scenario == ECL_Scenario.Best)
-                return _creditIndx.BestEstimate;
+            if (_creditIndx != null)
+                return _creditIndx;
 
-            if (_scenario == ECL_Scenario.Downturn)
-                return _creditIndx.Downturn;
-
-            if (_scenario == ECL_Scenario.Optimistic)
-                return _creditIndx.Optimistic;
-
-            return 0;
+            return new CreditIndex_Output { BestEstimate=0, Downturn=0, Optimistic=0, ProjectionMonth= month };
         }
 
-        private double GetLifetimeEADPerMonth(List<LifetimeEad> lifetimeEAD, string contractId, int month)
+        private LifetimeEad GetLifetimeEADPerMonth(List<LifetimeEad> lifetimeEAD, string contractId, int month)
         {
             //return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue;
             //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            try { return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month).ProjectionValue; }
-            catch { return 0; }
+            try { return lifetimeEAD.FirstOrDefault(x => x.ContractId == contractId && x.ProjectionMonth == month); }
+            catch { return new LifetimeEad { ProjectionValue=0 }; }
 
         }
 
@@ -663,13 +722,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 eclAssumptions.Add(DataAccess.i.ParseDataToObject(new EclAssumptions(), dr));
             }
-
+            Log4Net.Log.Info("LGD_Franework Assumption");
             return eclAssumptions;
         }
 
         protected List<PdMappings> GetPdIndexMappingResult()
         {
             _pdMapping = new PDMapping(this._eclId, this._eclType);
+            Log4Net.Log.Info("LGD_PDMapping");
             return _pdMapping.GetPdMapping();
         }
         protected List<LgdInputAssumptions_UnsecuredRecovery> GetLgdAssumptionsData()
@@ -682,7 +742,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             var rcvCaliRate = new CalibrationInput_LGD_RecoveryRate_Processor().GetLGDRecoveryRateData(this._eclId, this._eclType);
 
             //foreach (DataRow dr in dt.Rows)
-            var rcvCaliRate_ = 1.0;
+            var rcvCaliRate_ = 0.0;
             for (int i = 0; i < 3; i++)
             {
                 var _lgdAssumption = new LgdInputAssumptions_UnsecuredRecovery();
@@ -751,6 +811,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected List<SicrInputs> GetSicrResult()
         {
             _sicrInputs = new SicrInputWorkings(this._eclId, this._eclType);
+            Log4Net.Log.Info("LGD_SICR");
             return _sicrInputs.GetSircInputResult();
         }
 
@@ -786,8 +847,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
-            Log4Net.Log.Info("Completed pass data to object");
-
+            Log4Net.Log.Info($"LGD_LifetimePD - {_scenario}");
             return lifetimePd;
         }
         protected List<LifeTimeObject> GetScenarioRedfaultLifetimePdResult(ECL_Scenario _scenario)
@@ -815,19 +875,23 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
-            Log4Net.Log.Info("Completed pass data to object");
+            Log4Net.Log.Info($"LGD_RedefaultLifetimePD - {_scenario}");
 
             return lifetimePd;
         }
         protected List<CreditIndex_Output> GetCreditRiskResult()
         {
             _creditIndex = new CreditIndex(this._eclId, this._eclType);
-            return _creditIndex.GetCreditIndexResult();
+            var data= _creditIndex.GetCreditIndexResult();
+            Log4Net.Log.Info($"LGD_CreditRiskResult");
+            return data;
         }
         protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs, ECL_Scenario _scenario)
         {
             _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(_scenario, this._eclId, this._eclType);
-            return _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook, eadInputs);
+            var data= _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook, eadInputs);
+            Log4Net.Log.Info($"LGD_Lifetim_Collateral - {_scenario}");
+            return data;
         }
     }
 }

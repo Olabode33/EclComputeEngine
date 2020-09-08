@@ -71,6 +71,28 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
                 //Do Nothing
             }
+
+            //Task t = Task.WhenAll(taskLst);
+
+            //try
+            //{
+            //    t.Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log4Net.Log.Error(ex);
+            //}
+            //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+            //if (t.Status == TaskStatus.RanToCompletion)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to completion");
+            //}
+            //if (t.Status == TaskStatus.Faulted)
+            //{
+            //    Log4Net.Log.Info($"All Task ran to fault");
+            //}
+
             Log4Net.Log.Info($"Marginal Discount Task Completed: {completedTask}");
 
             return cummulativeDiscountFactor;
@@ -90,8 +112,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 itms.Add(dataRow);
             }
-
-            cummulativeDiscountFactor.AddRange(itms);
+            lock(cummulativeDiscountFactor)
+                cummulativeDiscountFactor.AddRange(itms);
         }
 
         public List<IrFactor> ComputeMarginalDiscountFactor()
@@ -100,12 +122,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             try
             {
                 
-
                 var eirProjection = GetEirProjectionData();
-
+                var eirProjectionCount = GetEirProjectionCount();
 
                 var groups = eirProjection.Select(o => o.eir_group).Distinct();
-
 
                 int rank = 1;
                 double prevMonthValue = 0.0;
@@ -121,29 +141,31 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     marginalDiscountFactor.Add(month0Record);
 
                     var _eirProjection = eirProjection.Where(o => o.eir_group == grp).OrderBy(p => p.months).ToList();
-                    var maxMonth= _eirProjection.Count + (_eirProjection.Count*0.5);
+                    var maxMonth= eirProjectionCount + (eirProjectionCount * 0.5);
                     for (int month = 1; month < maxMonth; month++)
                     {
                         var row = new EIRProjections();
-                        if (_eirProjection.Count >= month)
-                        {
-                            row = _eirProjection[month - 1];
-                        }
-                        else
-                        {
-                            row = _eirProjection.LastOrDefault();
-                        }
+                        //if (_eirProjection.Count >= month)
+                        //{
+                        //    row = _eirProjection[month - 1];
+                        //}
+                        //else
+                        //{
+                        //    row = _eirProjection.LastOrDefault();
+                        //}
+                        row = _eirProjection.FirstOrDefault();
 
                         //********************************************************************
                         prevMonthValue = marginalDiscountFactor.FirstOrDefault(x => x.EirGroup == row.eir_group
-                                                                                               && x.ProjectionMonth == row.months).ProjectionValue;
+                                                                                               && x.ProjectionMonth == month-1).ProjectionValue;
+                        //&& x.ProjectionMonth == row.months).ProjectionValue;
 
 
                         month0Record = new IrFactor();
                         month0Record.EirGroup = row.eir_group;
                         month0Record.Rank = rank;
                         month0Record.ProjectionMonth = month;
-                        month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE, _eirProjection.Count);
+                        month0Record.ProjectionValue = ComputeProjectionValue(row.value, month, prevMonthValue, EIR_TYPE, eirProjectionCount);
                         marginalDiscountFactor.Add(month0Record);
 
                         rank += 1;
@@ -185,6 +207,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             }
 
             return eIRProjections;
+        }
+
+        private int GetEirProjectionCount()
+        {
+            var qry = Queries.EAD_GetEIRProjectionsCount(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+            
+            return Convert.ToInt32(dt.Rows[0][0]);
         }
 
         public double ComputeProjectionValue(double projectionValue, int month, double prevValue, string type = CIR_TYPE, double lim_months=1)

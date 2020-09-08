@@ -25,7 +25,7 @@ namespace IFRS9_ECL.Core.Report
         public static int startCellIndex = 0;
         public bool GenerateEclReport(EclType eclType, Guid eclId)
         {
-            var rd=GetResultDetail(eclType, eclId, new List<Loanbook_Data>());
+            var rd=GetResultDetail(eclType, eclId, new List<Loanbook_Data>(),0);
             var rs=GetResultSummary(eclType, eclId, rd);
             var dataTable = new DataTable();
             var fi = new FileInfo(@"C:\Users\Dev-Sys\Desktop\ETI_template.xlsx");
@@ -1314,10 +1314,13 @@ namespace IFRS9_ECL.Core.Report
         ResultDetail rd = new ResultDetail();
         EclType _eclType;
         Guid _eclId;
-        public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook)
+        double ccf_obe = 0.5;
+        public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook, double ccf_obe)
         {
             this._eclType = eclType;
             this._eclId = eclId;
+
+            this.ccf_obe = ccf_obe;
 
             var _eclId = eclId.ToString();
             var _eclType = eclType.ToString();
@@ -1355,7 +1358,8 @@ namespace IFRS9_ECL.Core.Report
             
             temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
 
-            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
+            //            qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
+            qry = $"select Stage, FinalEclValue, Scenario, ContractId from {_eclTypeTable}ECLFrameworkFinal where {_eclType}EclId = '{_eclId}' and EclMonth=0";
             dt = DataAccess.i.GetData(qry);
 
             foreach(DataRow dr in dt.Rows)
@@ -1419,7 +1423,26 @@ namespace IFRS9_ECL.Core.Report
                     }
                     //Do Nothing
                 }
+                //Task t = Task.WhenAll(taskLst);
 
+                //try
+                //{
+                //    t.Wait();
+                //}
+                //catch (Exception ex)
+                //{
+                //    Log4Net.Log.Error(ex);
+                //}
+                //Log4Net.Log.Info($"All Task status: {t.Status}");
+
+                //if (t.Status == TaskStatus.RanToCompletion)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to completion");
+                //}
+                //if (t.Status == TaskStatus.Faulted)
+                //{
+                //    Log4Net.Log.Info($"All Task ran to fault");
+                //}
 
             }
 
@@ -1476,6 +1499,17 @@ namespace IFRS9_ECL.Core.Report
 
                 var outStandingBal = 0.0;
                 try { outStandingBal = itm.OutstandingBalanceLCY.Value; } catch { };// lstTWEI.FirstOrDefault(o => o.ContractId == itm.ContractId).Value; } catch { }
+                itm.ProductType = string.IsNullOrEmpty(itm.ProductType) ? "" : itm.ProductType;
+                var product_type = itm.ProductType.ToLower();
+                if (product_type.Contains(ECLStringConstants.i._productType_loan.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_od.ToLower()) || product_type.Contains(ECLStringConstants.i.CARDS.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_lease.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_mortgage.ToLower()))
+                {
+                    //do nothing
+                }
+                else
+                {
+                    outStandingBal = outStandingBal * ccf_obe;
+                }
+
 
                 var rddm = new ResultDetailDataMore
                 {

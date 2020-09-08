@@ -73,6 +73,8 @@ namespace IFRS9_ECL.Core.Calibration
                 worksheet.DeleteRow(dt.Rows.Count + 1+48, rows - (dt.Rows.Count + 1));
                 // loop through the worksheet rows
 
+                //var result_=worksheet.Cells[3, 1,34,3].Value;
+
 
                 package.Workbook.CalcMode = ExcelCalcMode.Automatic;
 

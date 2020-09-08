@@ -13,6 +13,7 @@ namespace IFRS9_ECL.Models
         public DateTime ReportingDate { get; set; }
         public int Status { get; set; }
         public int EclType { get; set; }
+        public long OrganizationUnitId { get; set; }
         public EclType eclType { get; set; }
 
     }
