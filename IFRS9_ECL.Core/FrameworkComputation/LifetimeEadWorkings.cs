@@ -65,6 +65,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         List<IrFactor> marginalAccumulationFactor = new List<IrFactor>();
         List<Refined_Raw_Retail_Wholesale> refined_Raw_Data = new List<Refined_Raw_Retail_Wholesale>();
         List<LifetimeEad> lifetimeEad = new List<LifetimeEad>();
+        double maxLimMonth = 0.0;
         public List<LifetimeEad> ComputeLifetimeEad(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs)
         {
 
@@ -78,9 +79,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             Console.WriteLine($"Got refined_Raw_Data");
             //var contractData = _processECL_LGD.GetLgdContractData(loanbook);
             var loanbook_contractNo = refined_Raw_Data.Select(o => o.contract_no).ToList();
+            maxLimMonth = loanbook.Max(o => o.LIM_MONTH);
+
 
             var contract_nos = eadInputs.Where(n=>loanbook_contractNo.Contains(n.Contract_no)).Select(o => o.Contract_no).Distinct().ToList();
-
+            
 
             if (1!=1)//loanbook.Count <= 1000)
             {
@@ -89,7 +92,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             }
             //var checker = loanbook.Count / 60;
 
-            var threads = loanbook.Count / 500;
+            var threads = contract_nos.Count / 500;
 
             
             
@@ -167,7 +170,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 //}
                 Console.WriteLine($"FEAD - {contract_no}");
                 var c_eadInputs = eadInputs.Where(c => c.Contract_no == contract_no).OrderBy(o=>o.Month).ToList();
-
+                
                 string contractId = contract_no;
 
                 int cirIndex = 1;
@@ -405,6 +408,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 loanRec.ProductType = loanRec.ProductType ?? "";
                 loanRec.Segment = loanRec.Segment ?? "";
                 loanRec.OutstandingBalanceLCY = loanRec.OutstandingBalanceLCY ?? 0;
+                loanRec.DaysPastDue = loanRec.DaysPastDue ?? 0;
+                loanRec.CreditLimit = loanRec.CreditLimit ?? 0;
+                loanRec.OriginalBalanceLCY = loanRec.OriginalBalanceLCY ?? 0;
+                loanRec.OutstandingBalanceACY = loanRec.OutstandingBalanceACY ?? 0;
+                loanRec.IPTOPeriod = loanRec.IPTOPeriod ?? 0;
+                loanRec.IPTOPeriod = loanRec.IPTOPeriod ?? 0;
 
                 loanRec.ContractNo = loanRec.ContractNo.Trim();
                 loanRec.AccountNo = loanRec.AccountNo.Trim();
@@ -415,6 +424,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 loanRec.AccountNo = loanRec.AccountNo.ToUpper();
                 loanRec.ProductType = loanRec.ProductType.ToUpper();
                 loanRec.Segment = loanRec.Segment.ToUpper();
+                
+
 
                 double noOfMonths = 0;
 
