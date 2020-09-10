@@ -105,7 +105,7 @@ namespace IFRS9_ECL.Util
 
 
         public string CustomerNo_array { get { return "CustomerNo_array"; } }
-
+        public string AccountNo_array { get { return "AccountNo_array"; } }
 
         ///this is called EXP_OD_PERFORMACE_PAST_EXPIRY on the excel and it is obtained from the EAD calibration. It will be obtained from the DB
 
@@ -135,6 +135,10 @@ namespace IFRS9_ECL.Util
             if (affliateId==41)
             {
                 return 0.0280579042261724;
+            }
+            if (affliateId == 5)
+            {
+                return 0.217333590280369;
             }
             return 0.00470275844438257;// 0.21733359; //******************************
         }

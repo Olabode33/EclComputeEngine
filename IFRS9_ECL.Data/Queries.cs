@@ -72,7 +72,7 @@ namespace IFRS9_ECL.Data
         }
         public static string GetPDRedefaultFactor(Guid eclId, string eclType)
         {
-            return $"select top 1 Redefault_Factor, Cure_Rate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 Redefault_Factor, Cure_Rate,Commercial_CureRate, Consumer_CureRate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
 
         public static string Affiliate_MacroeconomicVariable(long affiliateId)
@@ -87,8 +87,15 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_EAD_CCF(Guid calibrationId)
         {
-            return $"select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from ( select Id=-1, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationInput_EAD_CCF_Summary  where CalibrationID = '{calibrationId.ToString()}' union all select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationHistory_EAD_CCF_Summary where AffiliateId = (select OrganizationUnitId from CalibrationRunEadCcfSummary where Id = '{calibrationId}'))s";//  order by cast(Account_No as numeric), Snapshot_Date"; //order by Snapshot_Date desc; //order by Snapshot_Date desc
+            return $"select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from ( select Id=-1, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationInput_EAD_CCF_Summary  where CalibrationID = '{calibrationId.ToString()}' union all select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationHistory_EAD_CCF_Summary where AffiliateId = (select OrganizationUnitId from CalibrationRunEadCcfSummary where Id = '{calibrationId}'))";
         }
+
+        public static string CalibrationResult_IVReceivables(Guid calibrationId, double totalExposure, double totalImpairment, double additionalProvision, double coverage, double optimisticExposure, double baseExposure, double downturnExposure, double eCLTotalExposure, double optimisticImpairment, double baseImpairment, double downturnImpairment, double eCLTotalImpairment, double optimisticCoverageRatio, double baseCoverageRatio, double downturnCoverageRatio, double totalCoverageRatio)
+        {
+            return $"delete from ReceivablesResults where RegisterId ='{calibrationId.ToString()}'; insert into ReceivablesResults(totalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatiototalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatio, RegisterId) " +
+                $"values ({totalExposure}, {totalImpairment}, {additionalProvision}, {coverage}, {optimisticExposure}, {optimisticExposure}, {baseExposure}, {downturnExposure}, {eCLTotalExposure}, {optimisticImpairment}, {baseImpairment} , {downturnImpairment}, {eCLTotalImpairment}, {optimisticCoverageRatio}, {baseCoverageRatio}, {baseCoverageRatio}, {downturnCoverageRatio}, {totalCoverageRatio} ";
+        }
+
         public static string CalibrationResult_EAD_CCF_Summary_Update(Guid calibrationId, double? oD_TotalLimitOdDefaultedLoan, double? oD_BalanceAtDefault, double? oD_Balance12MonthBeforeDefault, double? oD_TotalConversation, double? oD_CCF, double? card_TotalLimitOdDefaultedLoan, double? card_BalanceAtDefault, double? card_Balance12MonthBeforeDefault, double? card_TotalConversation, double? card_CCF, double? overall_TotalLimitOdDefaultedLoan, double? overall_BalanceAtDefault, double? overall_Balance12MonthBeforeDefault, double? overall_TotalConversation, double? overall_CCF)
         {
             return $"delete from CalibrationResult_EAD_CCF_Summary where CalibrationID ='{calibrationId.ToString()}'; insert into CalibrationResult_EAD_CCF_Summary(OD_TotalLimitOdDefaultedLoan, OD_BalanceAtDefault, OD_Balance12MonthBeforeDefault, OD_TotalConversation, OD_CCF, Card_TotalLimitOdDefaultedLoan, Card_BalanceAtDefault, Card_Balance12MonthBeforeDefault, Card_TotalConversation, Card_CCF, Overall_TotalLimitOdDefaultedLoan, " +
@@ -136,6 +143,23 @@ namespace IFRS9_ECL.Data
         public static string CalibrationInput_PD_CR_DR(Guid calibrationId)
         {
             return $"select Id=-1, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating,Segment from CalibrationInput_PD_CR_DR where CalibrationID ='{calibrationId}' union all select Id, Customer_No,Account_No,Contract_No,Product_Type,Days_Past_Due,Classification,Outstanding_Balance_Lcy,Contract_Start_Date,Contract_End_Date,RAPP_Date,Current_Rating,Segment from CalibrationHistory_PD_CR_DR where AffiliateId =(select OrganizationUnitId from CalibrationRunPdCrDrs where Id='{calibrationId}')  order by Account_No,Contract_No,RAPP_Date"; //RAPP_Date desc
+        }
+
+        public static string Calibration_ReceivablesRegisters()
+        {
+            return $"select top 1 * from ReceivablesRegisters where Status=2";
+        }
+        public static string CalibrationInput_IVReceivables_CurrentPeriodDates(Guid calibrationId)
+        {
+            return $"select * from CurrentPeriodDates where RegisterId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_IVReceivables_ReceivablesInputs(Guid calibrationId)
+        {
+            return $"select * from ReceivablesInputs where RegisterId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_IVReceivables_ReceivablesForecasts(Guid calibrationId)
+        {
+            return $"select * from ReceivablesForecasts where RegisterId ='{calibrationId}'";
         }
 
         public static string CalibrationResult_LGD_RecoveryRate_Update(Guid calibrationId, double? overall_Exposure_At_Default, double? overall_PvOfAmountReceived, double? overall_Count, double? overall_RecoveryRate, double? corporate_Exposure_At_Default, double? corporate_PvOfAmountReceived, double? corporate_Count, double? corporate_RecoveryRate, double? commercial_Exposure_At_Default, double? commercial_PvOfAmountReceived, double? commercial_Count, double? commercial_RecoveryRate, double? consumer_Exposure_At_Default, double? consumer_PvOfAmountReceived, double? consumer_Count, double? consumer_RecoveryRate)
@@ -196,7 +220,7 @@ namespace IFRS9_ECL.Data
         }
         public static string EclsRegister(string eclType, string eclId)
         {
-            return $"select top 1 Id, convert(date, ReportingDate) ReportingDate, IsApproved, Status, EclType=-1 from {eclType.ToString()}Ecls where Id='{eclId}'";
+            return $"select top 1 Id, convert(date, ReportingDate) ReportingDate, IsApproved, Status, EclType=-1, OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId}'";
         }
         public static string UpdateIntTableServiceId(string TableName, int serviceId, int recordId)
         {
@@ -206,7 +230,7 @@ namespace IFRS9_ECL.Data
         {
             return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}' and ServiceId =0";
         }
-        public static string ClearAllEclLogs(string eclType, string eclId, int status, string exception)
+        public static string UpdateEclStatus(string eclType, string eclId, int status, string exception)
         {
             return $"update {eclType.ToString()}Ecls set status={status}, ExceptionComment='{exception}' where Id ='{eclId}'";
         }
@@ -267,6 +291,10 @@ namespace IFRS9_ECL.Data
             return $"update {tableName} set Status={status}, ExceptionComment='{exceptionComment}' where Id ='{caliId}'";
         }
 
+        public static string CalibrationRegisterUpdate(string caliId, int status, string tableName)
+        {
+            return $"update {tableName} set Status={status} where Id ='{caliId}'";
+        }
 
         public static string MacroRegisterUpdate(int macroId, int status, string exceptionComment)
         {
@@ -275,12 +303,12 @@ namespace IFRS9_ECL.Data
 
         public static string Raw_Data(Guid guid, EclType eclType)
         {
-            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and customerNo in (select customerNo from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}' and contractNo in ('293000107'))";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700'))";// like '%14004156%'";// and ContractNo like ' %701010142124400%'"; //and customerNo like '%14025993%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
+            return $"select * from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{guid.ToString()}'";// and contractNo='A01NSLL191500002'";// and customerNo in (select customerNo from {eclType.ToString()}EclDataLoanBooks where {eclType.ToString()}EclUploadId='{ guid.ToString()}' and contractNo in ('A36NSLL183060001'))";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700'))";// like '%14004156%'";// and ContractNo like ' %701010142124400%'"; //and customerNo like '%14025993%'";//10513603600101  and ContractNo='001SMGA121180002'";// and ContractNo like '%10123600327101%'"; // and customerno = '36019901'// and ContractNo='001BADP173340003' ";
         }
 
         public static string PaymentSchedule(Guid guid, EclType eclType)
         {
-            return $"Select ContractRefNo, StartDate, Component, NoOfSchedules, Frequency, Amount  from {eclType.ToString()}EclDataPaymentSchedules where {eclType.ToString()}EclUploadId='{guid.ToString()}' and COMPONENT!='GH_INTLN'";// and contractRefNo in ('293000107')";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700')"; //
+            return $"Select ContractRefNo, StartDate, Component, NoOfSchedules, Frequency, Amount  from {eclType.ToString()}EclDataPaymentSchedules where {eclType.ToString()}EclUploadId='{guid.ToString()}' and COMPONENT!='GH_INTLN'";// and contractRefNo in ('A01NSLL191500002')";//,'701NTIC173240002','7010121400372000','7030121405800900','703NTIC172710001','703NTIC172300001','701CRLA171390001','703NTIC172790001','703NTIC171840001','701SFLN172480001','703NTIC173040001','701CRLN173130001','703NTIC173000002','701CRLA172720001','701CRLN171950001','703NTIC172910001','701NBDD173210001','701NBDD173250001','703NTIC173000001','702NTIC173620001','703ATIC172710001','703NTIC172970001','701NBDD173340001','701NBDD173250002','702NTIC172840001','701STCI171800002','701NTIC172990001','701NBDD173630001','701LTLA161890001','722NTIC172990001','702NTIC173260001','701ATIC172430001','701NBDD173260001','701NBDD173210002','7010121417860300','702NTIC172830001','7010221402653700','703ATIC173620001','701CRLA173630001','701CTLN152390001','708STCI173630101','701ILTL160550001','705NTIC173110001','701NTIC173180001','701CRLA161760001','7010121401941400','702NTIC173320001','722NTIC173250001','701NTIC173490001','703NBDD173550002','7030121405789000','701CTLN153030001','703NBDD173550001','701LTLA142860001','708STCI173630102','708CRLN171810103','701STCI173630001','703NBDD173550003','702ETLA172850101','7010121400250900','703CRLA172710001','701LTLN131470001','7060181422160700')"; //
         }
 
         public static string LGD_Assumption { get { return "Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, [Cost of Recovery] costOfRecovery from LGD_Assumptions"; } }

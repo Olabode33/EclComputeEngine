@@ -236,7 +236,8 @@ namespace IFRS9_ECL.Core.PDComputation
                     var _itm = projections.OrderBy(p => p.Date).FirstOrDefault(o => o.MacroEconomicVariableId==itm.MacroEconomicVariableId && o.Date.Month== _dt.Month && o.Date.Year== _dt.Year); // == GetLastDayOfMonth(itm.Date.AddMonths(-_bdate))
                     if(_itm==null)
                     {
-                        _itm = projections.Last();
+                        if(projections.Count>0)
+                            _itm = projections.Last();
 
                     }
                     var dr = new IndexForecast();

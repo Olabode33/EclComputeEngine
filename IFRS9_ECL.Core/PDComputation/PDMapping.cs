@@ -333,8 +333,8 @@ namespace IFRS9_ECL.Core.PDComputation
         protected int ComputeRatingUsedPerRecord(Loanbook_Data loanbookRecord)
         {
             loanbookRecord.CurrentRating=loanbookRecord.CurrentRating ?? "1";
-            var current_rating = loanbookRecord.CurrentRating.Replace("+", "").Trim();
-            return int.Parse(current_rating)>10 ? int.Parse(current_rating.Substring(0,1)) : int.Parse(current_rating);
+            var current_rating = loanbookRecord.CurrentRating.Replace("+", "").Replace("-", "").Replace(" ", "").Trim();
+            return int.Parse(current_rating);//>10 ? int.Parse(current_rating.Substring(0,1)) : int.Parse(current_rating);
         }
 
         internal List<PdMappings> GetPdMapping()

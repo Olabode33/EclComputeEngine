@@ -28,5 +28,6 @@ namespace IFRS9_ECL.Models
         public double receivables_fsv { get; set; }
         public double shares_fsv { get; set; }
         public double vehicle_fsv { get; set; }
+        public double total_fsv { get; set; }
     }
 }

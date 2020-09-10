@@ -390,10 +390,14 @@ namespace IFRS9_ECL.Core.Calibration
             DataRow dr = dt.Rows[0];
             var Redefault_Factor = 0.0;
             var Cure_Rate = 0.0;
+            var Commercial_CureRate = 0.0;
+            var Consumer_CureRate = 0.0;
             try { Redefault_Factor= double.Parse(dr["Redefault_Factor"].ToString().Trim()); } catch { Redefault_Factor= 0; }
             try { Cure_Rate = double.Parse(dr["Cure_Rate"].ToString().Trim()); } catch { Cure_Rate = 0; }
+            try { Commercial_CureRate = double.Parse(dr["Commercial_CureRate"].ToString().Trim()); } catch { Commercial_CureRate = 0; }
+            try { Consumer_CureRate = double.Parse(dr["Consumer_CureRate"].ToString().Trim()); } catch { Consumer_CureRate = 0; }
 
-            return new double[] { Redefault_Factor, Cure_Rate };
+            return new double[] { Redefault_Factor, Cure_Rate, Commercial_CureRate, Consumer_CureRate };
         }
 
 

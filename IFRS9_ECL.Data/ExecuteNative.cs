@@ -96,7 +96,7 @@ namespace IFRS9_ECL.Data
                 {
                     dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
                 }
-
+                dt.Columns.Remove("total_fsv");
                 dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
 
 

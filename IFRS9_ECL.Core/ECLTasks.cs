@@ -10,6 +10,7 @@ using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -422,7 +423,11 @@ namespace IFRS9_ECL.Core
 
             for (int i = 0; i < arrayA.Length; i++)
             {
-                result += Convert.ToDouble(arrayA[i]) * Convert.ToDouble(arrayB[i]) + Convert.ToDouble(arrayC[i]);
+                try
+                {
+                    result += Convert.ToDouble(arrayA[i]) * Convert.ToDouble(arrayB[i]) + Convert.ToDouble(arrayC[i]);
+                }
+                catch { }
             }
             return result;
 
@@ -464,8 +469,11 @@ namespace IFRS9_ECL.Core
             //foreach (var itm in lstRaw)
             for (int i = 0; i < lstRaw.Count; i++)
             {
+
+               
+
                 var collateralTable = new LGDCollateralData();
-                
+
 
                 input.debenture_omv = lstRaw[i].DebentureOMV ?? 0;
                 input.cash_omv = lstRaw[i].CashOMV ?? 0;
@@ -492,6 +500,7 @@ namespace IFRS9_ECL.Core
                 input.account_no = lstRaw[i].AccountNo;
 
                 input.pd_x_ead = lGDPreCalc[i].pd_x_ead;//
+                input.project_finance_ind = lGDPreCalc[i].project_finance_ind;//
 
 
                 //lGDPreCalc = GetValue(lstRaw, lGDPreCalc, input.debenture);
@@ -518,6 +527,7 @@ namespace IFRS9_ECL.Core
                 collateralTable.receivables_fsv = 0;
                 collateralTable.shares_fsv = 0;
                 collateralTable.vehicle_fsv = 0;
+                collateralTable.total_fsv = 0;
 
 
 
@@ -544,6 +554,8 @@ namespace IFRS9_ECL.Core
                 var Vehicle_Fsv_array = dictionaryData[ECLStringConstants.i.Vehicle_Fsv_array];
 
                 var CustomerNo_array = dictionaryData[ECLStringConstants.i.CustomerNo_array];
+                var AccountNo_array = dictionaryData[ECLStringConstants.i.CustomerNo_array];
+
                 var ProjectFinance_array = new List<int>();
                 var lstProject_Finance_Ind = lGDPreCalc.Select(o => o.project_finance_ind).ToList();
 
@@ -559,6 +571,36 @@ namespace IFRS9_ECL.Core
                 //collateralTable.contract_no = input.customer_no;
 
                 collateralTable = SumProduct(pd_x_ead_List, collateralTable, Debenture_Omv_array, Cash_Omv_array, Inventory_Omv_array, Plant_Equipment_Omv_array, Residential_Omv_array, Commercial_Omv_array, Receivables_Omv_array, Shares_Omv_array, Vehicle_Omv_array, Debenture_Fsv_array, Cash_Fsv_array, Inventory_Fsv_array, Plant_Equipment_Fsv_array, Residential_Fsv_array, Commercial_Fsv_array, Receivables_Fsv_array, Shares_Fsv_array, Vehicle_Fsv_array, CustomerNo_array, ProjectFinance_array, input);
+
+
+
+                try
+                {
+                    if (lstRaw[i].SpecialisedLending == ECLStringConstants.i.PROJECT_FINANCE)
+                    {
+
+                        var pf_omv = 0.0;
+                        var pf_fsv = 0.0;
+
+                        var lgdItm = lGDPreCalc.FirstOrDefault(o => o.contract_id == input.contractid);
+
+                        var allomvTotal = collaterals.Select(o => o.total_omv== collateralTable.total_omv?"1":"0").ToList();
+                        allomvTotal.Add("1");
+
+                        var allfsvTotal = collaterals.Select(o => o.total_fsv== collateralTable.total_fsv? "1" : "0").ToList();
+                        allfsvTotal.Add("1");
+
+                        pf_omv = collateralTable.total_omv * lgdItm.pd_x_ead / SumProduct(pd_x_ead_List.ToArray(), AccountNo_array.Select(o => o.ToString()).ToArray(), allomvTotal.ToArray());
+                        pf_fsv = collateralTable.total_fsv * lgdItm.pd_x_ead / SumProduct(pd_x_ead_List.ToArray(), AccountNo_array.Select(o => o.ToString()).ToArray(), allfsvTotal.ToArray());
+
+                        collateralTable.vehicle_omv = collateralTable.vehicle_omv + pf_omv;
+                        collateralTable.vehicle_fsv = collateralTable.vehicle_fsv + pf_fsv;
+                        
+                    }
+                }catch(Exception ex)
+                {
+                    Log4Net.Log.Error(ex);
+                }
 
                 collaterals.Add(collateralTable);
             }
@@ -602,15 +644,15 @@ namespace IFRS9_ECL.Core
             collateralTable.shares_omv = computeCollateralVariable(inputs.shares_omv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.shares_omv);
             collateralTable.vehicle_omv = computeCollateralVariable(inputs.vehicle_omv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.vehicle_omv);
 
-            collateralTable.total_omv = collateralTable.debenture_omv +
-                                                 collateralTable.cash_omv +
-                                                 collateralTable.inventory_omv +
-                                                 collateralTable.plant_and_equipment_omv +
-                                                 collateralTable.residential_property_omv +
-                                                 collateralTable.commercial_property_omv +
-                                                 collateralTable.receivables_omv +
-                                                 collateralTable.shares_omv +
-                                                 collateralTable.vehicle_omv;
+            collateralTable.total_omv = inputs.debenture_omv +
+                                                 inputs.cash_omv +
+                                                 inputs.inventory_omv +
+                                                 inputs.plant_and_equipment_omv +
+                                                 inputs.residential_property_omv +
+                                                 inputs.commercial_property_omv +
+                                                 inputs.receivables_omv +
+                                                 inputs.shares_omv +
+                                                 inputs.vehicle_omv;
 
             collateralTable.debenture_fsv = computeCollateralVariable(inputs.debenture_fsv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.debenture_fsv);
             collateralTable.cash_fsv = computeCollateralVariable(inputs.cash_fsv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.cash_fsv);
@@ -621,6 +663,17 @@ namespace IFRS9_ECL.Core
             collateralTable.receivables_fsv = computeCollateralVariable(inputs.receivables_fsv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.receivables_fsv);
             collateralTable.shares_fsv = computeCollateralVariable(inputs.shares_fsv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.shares_fsv);
             collateralTable.vehicle_fsv = computeCollateralVariable(inputs.vehicle_fsv, inputs.pd_x_ead, inputs.project_finance_ind, collateralTable.vehicle_fsv);
+
+
+            collateralTable.total_fsv = inputs.debenture_fsv +
+                                                 inputs.cash_fsv +
+                                                 inputs.inventory_fsv +
+                                                 inputs.plant_and_equipment_fsv +
+                                                 inputs.residential_property_fsv +
+                                                 inputs.commercial_property_fsv +
+                                                 inputs.receivables_fsv +
+                                                 inputs.shares_fsv +
+                                                 inputs.vehicle_fsv;
 
             return collateralTable;
         }
@@ -695,6 +748,7 @@ namespace IFRS9_ECL.Core
             var Vehicle_Fsv_array = new List<int>();
 
             var CustomerNo_array = new List<int>();
+            var AccountNo_array = new List<int>();
 
             ////var ProjectFinance_array = new List<string>();
             ////var projectFinance_raw_lst = lstRaw.Select(x => x.project_finance_ind).ToList();
@@ -744,6 +798,7 @@ namespace IFRS9_ECL.Core
                 Vehicle_Fsv_array.Add(item.VehicleFSV == input.vehicle_fsv ? 1 : 0);
 
                 CustomerNo_array.Add(item.CustomerNo == input.customer_no ? 1:0);
+                AccountNo_array.Add(item.AccountNo == input.account_no ? 1 : 0);
             }
 
             var dic = new Dictionary<string, List<int>>();
@@ -768,6 +823,7 @@ namespace IFRS9_ECL.Core
             dic.Add(ECLStringConstants.i.Vehicle_Fsv_array, Vehicle_Fsv_array);
 
             dic.Add(ECLStringConstants.i.CustomerNo_array, CustomerNo_array);
+            dic.Add(ECLStringConstants.i.AccountNo_array, AccountNo_array);
 
             return dic;
         }
@@ -837,7 +893,7 @@ namespace IFRS9_ECL.Core
 
                     var CCF_OBE = 1.0;
                     try { CCF_OBE = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "ConversionFactorOBE").Value); } catch { }
-
+                    //CCF_OBE = 0.4;
                     double value = obj.outstanding_balance_lcy;// 0;// projection_Calulcation_lifetimeEAD_0(obj.outstanding_balance_lcy, obj.product_type);
                     var product_type = obj.product_type.ToLower();
                     if (product_type.Contains(ECLStringConstants.i._productType_loan.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_od.ToLower()) || product_type.Contains(ECLStringConstants.i.CARDS.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_lease.ToLower()) || product_type.Contains(ECLStringConstants.i._productType_mortgage.ToLower()))
@@ -888,7 +944,16 @@ namespace IFRS9_ECL.Core
                         {
                             if (obj.product_type.ToLower() != ECLStringConstants.i._productType_loan.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_lease.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_mortgage.ToLower())
                             {
-                                value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccfData.Overall_CCF.Value, 0);
+                                ccfData.OD_CCF = ccfData.OD_CCF ?? 0;
+                                var ccf_Value = ccfData.OD_CCF.Value;
+                                if (obj.product_type.ToLower() != ECLStringConstants.i._productType_loan.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_lease.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_mortgage.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_od.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_card.ToLower())
+                                {
+                                    ccfData.Overall_CCF = ccfData.Overall_CCF ?? 0;
+                                    ccf_Value = ccfData.Overall_CCF.Value;
+                                }
+
+
+                                value1 = obj.outstanding_balance_lcy + Math.Max((obj.credit_limit_lcy - obj.outstanding_balance_lcy) * ccf_Value, 0);
 
                                 if (obj.product_type.ToLower() != ECLStringConstants.i._productType_od.ToLower() && obj.product_type.ToLower() != ECLStringConstants.i._productType_card.ToLower())
                                 {
@@ -907,8 +972,8 @@ namespace IFRS9_ECL.Core
                                 double d_value = 0;
                                 try { previousMonth = contract_lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value; } catch { };
 
-                                
-                                string component="";
+
+                                string component = "";
                                 if (ps_proj != null)
                                 {
                                     component = ps_proj.PaymentType;
@@ -919,102 +984,139 @@ namespace IFRS9_ECL.Core
 
                                 double c_value = 0;
                                 try { c_value = cirgroup_cirProjections.FirstOrDefault(o => o.cir_group == cir_group_value && o.months == monthIndex - 1).cir_effective; } catch { }
-                                    component = component ?? "";
-                                    if (component.ToLower() != ECLStringConstants.i._amortise.ToLower())
-                                    {
-                                        int a_value = (monthIndex > obj.rem_interest_moritorium || obj.rem_interest_moritorium == 0) ? 1 : 0;
-                                        int b_value = (obj.interest_divisor != "1") ? 1 : 0;
+                                component = component ?? "";
+                                if (component.ToLower() != ECLStringConstants.i._amortise.ToLower())
+                                {
+                                    int a_value = (monthIndex > obj.rem_interest_moritorium || obj.rem_interest_moritorium == 0) ? 1 : 0;
+                                    int b_value = (obj.interest_divisor != "1") ? 1 : 0;
 
-                                        d_value = a_value * b_value * c_value * previousMonth;
+                                    d_value = a_value * b_value * c_value * previousMonth;
+                                }
+                                else
+                                {
+                                    d_value = c_value * previousMonth;
+                                }
+
+                                overallvalue = previousMonth + d_value;
+
+
+                                double f_value = 0;
+                                try { f_value = contract_paymentScheduleProjection.Where(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Sum(p=>p.Value); } catch { };
+
+                                //outstandingBalance = overallvalue - f_value;
+                                //if (outstandingBalance <= 0)
+                                //continue;
+                                var fxRate = ECLNonStringConstants.i.Local_Currency;
+
+                                try { fxRate = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key.StartsWith("ExchangeRate") && o.InputName.ToUpper()== refined_query.currency.ToUpper()).Value); } catch { }
+                                f_value = f_value * (fxRate==0? ECLNonStringConstants.i.Local_Currency: fxRate);
+
+
+                                double g_value = 0;
+                                obj.interest_divisor = obj.interest_divisor ?? "0";
+                                if (obj.interest_divisor.ToLower() == ECLStringConstants.i._interestDivisior.ToLower())
+                                {
+                                    //x = ($H4=T$3)*SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*($H4+$G4)/T$3
+                                    //obj.months_to_expiry
+                                    if (lifetime_query.LIM_MONTH == monthIndex)
+                                    {
+                                        //get range
+                                        double[] h_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
+                                                                        && o.Month >= 0
+                                                                        && o.Month <= monthIndex)
+                                                                        .Select(x => x.Value)
+                                                                        .ToArray();
+                                        var i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
+                                                                        && o.months > 0
+                                                                        && o.months <= monthIndex)
+                                                                        .Select(x => x.cir_effective)
+                                                                .ToList();
+
+                                        while (i_value.Count() < h_value.Length)
+                                        {
+                                            if (i_value.Count > 0)
+                                                i_value.Add(i_value.Last());
+                                            else
+                                                i_value.Add(0);
+                                        }
+                                        g_value = SumProduct(h_value, i_value.ToArray()) * (lifetime_query.LIM_MONTH + obj.months_in_force) / monthIndex;
+                                    }
+                                }
+                                else
+                                {
+                                    //r = ($N4 <> "AMORTISE")*(MOD((T$3-$J4),$I4)=0)*(T$3>$F4)
+
+                                    var k_value = (component != ECLStringConstants.i._amortise) ? 1 : 0;
+                                    var l_value = (double.Parse(monthIndex.ToString()) - double.Parse(obj.first_interest_month)) % Convert.ToDouble(obj.interest_divisor) == 0 ? 1 : 0;
+                                    //if (monthIndex - Math.Round(double.Parse(obj.first_interest_month)) == 0)
+                                    //{
+                                    //    l_value = Convert.ToDouble(obj.interest_divisor) == 0 ? 1 : 0;
+                                    //}
+                                    //if ((monthIndex - Math.Round(double.Parse(obj.first_interest_month))) == Convert.ToDouble(obj.interest_divisor))
+                                    //{
+                                    //    l_value = Convert.ToDouble(obj.interest_divisor) == 0 ? 1 : 0;
+                                    //}
+                                    var m_value = (monthIndex > obj.rem_interest_moritorium) ? 1 : 0;
+
+                                    double n_value = k_value * l_value * m_value;
+                                    double o_value;
+
+                                    if (monthIndex < Convert.ToDouble(obj.interest_divisor))
+                                    {
+                                        double[] p_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
+                                                                        && o.Month >= 0
+                                                                        && o.Month <= monthIndex)
+                                                                        .Select(x => x.Value)
+                                                                        .ToArray();
+                                        var i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
+                                                                        && o.months >= 0
+                                                                        && o.months < monthIndex)
+                                                                        .Select(x => x.cir_effective)
+                                                                        .ToList();
+
+                                        while (i_value.Count() < p_value.Length)
+                                        {
+                                            if (i_value.Count > 0)
+                                                i_value.Add(i_value.Last());
+                                            else
+                                                i_value.Add(0);
+                                        }
+                                        o_value = SumProduct(p_value, i_value.ToArray());
+                                        //o = SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*$I4/T$3
+                                        o_value = SumProduct(p_value, i_value.ToArray()) * (Convert.ToDouble(obj.interest_divisor) / monthIndex);
                                     }
                                     else
                                     {
-                                        d_value = c_value * previousMonth;
-                                    }
+                                        double[] p_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
+                                                                        && o.Month >= (monthIndex - Convert.ToDouble(obj.interest_divisor))
+                                                                        && o.Month < monthIndex)
+                                                                        .Select(x => x.Value)
+                                                                        .ToArray();
+                                        var i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
+                                                                        && o.months > (monthIndex - Convert.ToDouble(obj.interest_divisor))
+                                                                        && o.months <= monthIndex)
+                                                                        .Select(x => x.cir_effective)
+                                                                        .ToList();
+                                        //o = SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))
 
-                                    overallvalue = previousMonth + d_value;
-
-
-                                    double f_value = 0;
-                                    try { f_value = contract_paymentScheduleProjection.FirstOrDefault(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Value; } catch { };
-
-                                    //outstandingBalance = overallvalue - f_value;
-                                    //if (outstandingBalance <= 0)
-                                        //continue;
-
-                                    f_value = f_value * ECLNonStringConstants.i.Local_Currency;
-
-
-                                    double g_value = 0;
-                                obj.interest_divisor = obj.interest_divisor ?? "";
-                                    if (obj.interest_divisor.ToLower() == ECLStringConstants.i._interestDivisior.ToLower())
-                                    {
-                                        //x = ($H4=T$3)*SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*($H4+$G4)/T$3
-//obj.months_to_expiry
-                                        if (lifetime_query.LIM_MONTH == monthIndex)
+                                        while(i_value.Count()< p_value.Length)
                                         {
-                                            //get range
-                                            double[] h_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
-                                                                            && o.Month >= 0
-                                                                            && o.Month <= monthIndex)
-                                                                            .Select(x => x.Value)
-                                                                            .ToArray();
-                                            double[] i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
-                                                                            && o.months > 0
-                                                                            && o.months <= monthIndex)
-                                                                            .Select(x => x.cir_effective)
-                                                                    .ToArray();
-                                            g_value = SumProduct(h_value, i_value) * (lifetime_query.LIM_MONTH + obj.months_in_force) / monthIndex;
+                                            if (i_value.Count > 0)
+                                                i_value.Add(i_value.Last());
+                                            else
+                                                i_value.Add(0);
                                         }
+                                        o_value = SumProduct(p_value, i_value.ToArray());
                                     }
-                                    else
-                                    {
-                                        //r = ($N4 <> "AMORTISE")*(MOD((T$3-$J4),$I4)=0)*(T$3>$F4)
+                                    //x = r * o
+                                    g_value = n_value * o_value;
+                                }
+                                overallvalue = overallvalue - (f_value + g_value);
+                                //f_value += g_value;
+                                //                                    overallvalue = overallvalue - Math.Max(f_value, 0) * (1 - val);
+                                overallvalue = Math.Max(overallvalue, 0) * (1 - PrePaymentFactor);
 
-                                        var k_value = (component != ECLStringConstants.i._amortise) ? 1 : 0;
-                                        var l_value = (monthIndex - double.Parse(obj.first_interest_month)) % Convert.ToDouble(obj.interest_divisor)==0?1:0;
-                                        var m_value = (monthIndex > obj.rem_interest_moritorium) ? 1 : 0;
 
-                                        double n_value = k_value * l_value * m_value;
-                                        double o_value;
-                                        
-                                        if (monthIndex < Convert.ToDouble(obj.interest_divisor))
-                                        {
-                                            double[] p_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
-                                                                            && o.Month >= 0
-                                                                            && o.Month <= monthIndex)
-                                                                            .Select(x => x.Value)
-                                                                            .ToArray();
-                                            double[] i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
-                                                                            && o.months >= 0
-                                                                            && o.months < monthIndex)
-                                                                            .Select(x => x.cir_effective)
-                                                                            .ToArray();
-                                            //o = SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))*$I4/T$3
-                                            o_value = SumProduct(p_value, i_value) * (Convert.ToDouble(obj.interest_divisor) / monthIndex);
-                                        }
-                                        else
-                                        {
-                                            double[] p_value = contract_lifetimeEadInputs.Where(o => o.Contract_no == contract
-                                                                            && o.Month == monthIndex-1)
-                                                                            .Select(x => x.Value)
-                                                                            .ToArray();
-                                            double[] i_value = cirgroup_cirProjections.Where(o => o.cir_group == cir_group_value
-                                                                            && o.months == monthIndex-1)
-                                                                            .Select(x => x.cir_effective)
-                                                                            .ToArray();
-                                            //o = SUMPRODUCT(OFFSET(T4, 0, -1, 1, -T$3), OFFSET(CIR_EFF_MONTHLY_RANGE, $M4-1, T$3, 1, -T$3))
-                                            o_value = SumProduct(p_value, i_value);
-                                        }
-                                        //x = r * o
-                                        g_value = n_value * o_value;
-                                    }
-                                    overallvalue = overallvalue - (f_value + g_value);
-                                    //f_value += g_value;
-                                    //                                    overallvalue = overallvalue - Math.Max(f_value, 0) * (1 - val);
-                                    overallvalue = Math.Max(overallvalue, 0) * (1 - PrePaymentFactor);
-
-                                   
                                 //}
                                 //else
                                 //{
@@ -1137,7 +1239,7 @@ namespace IFRS9_ECL.Core
                     continue;
 
                 if (!string.IsNullOrEmpty(itm.cir_base_premium))
-                     eir_base_premiums.Add(itm.cir_base_premium);
+                     eir_base_premiums.Add(itm.cir_base_premium.Replace("CIR","EIR"));
 
 
                 if (itm.end_date != null)
@@ -1166,7 +1268,7 @@ namespace IFRS9_ECL.Core
                     Log4Net.Log.Error(ex);
                 }
             }
-
+            eir_base_premiums = eir_base_premiums.OrderBy(o => o).ToList();
             foreach (var group_value in eir_base_premiums)
             {
                 noOfMonths = maxProjectionMonth;
@@ -1184,13 +1286,14 @@ namespace IFRS9_ECL.Core
                                 _ViRVal = double.Parse(ViR.FirstOrDefault(o => o.InputName == temp[1]).Value.Trim());
                             }
                             catch { }
-                            val = Math.Round(_ViRVal * 100, 2); //+ Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)), 1) / 100;
+                            val = _ViRVal;// * 100; //+ Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)), 1) / 100;
                         }
                         else
                         {
                             val = 0;// Convert.ToDouble(ViR) / 100;
                         }
-                        val = val + (Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)) * 0.01);
+                        var subValue = (Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)) * 0.01);
+                        val = val + subValue;
 
                     }
 
@@ -1242,7 +1345,7 @@ namespace IFRS9_ECL.Core
                     Log4Net.Log.Error(ex);
                 }
             }
-
+            cir_base_premiums = cir_base_premiums.OrderBy(o => o).ToList();
             foreach (var group_value in cir_base_premiums)
             {
                 noOfMonths = maxProjectionMonth;
@@ -1252,6 +1355,7 @@ namespace IFRS9_ECL.Core
                     if (group_value != ECLStringConstants.i.ExpiredContractsPrefix)
                     {
                         var temp = group_value.Split(ECLStringConstants.i._splitValue);
+
                         if (temp[1] != ECLStringConstants.i._fixed)
                         {
                             var _ViRVal = 0.0;
@@ -1260,17 +1364,16 @@ namespace IFRS9_ECL.Core
                                 _ViRVal = double.Parse(ViR.FirstOrDefault(o => o.InputName == temp[1]).Value.Trim());
                             }
                             catch { }
-                            val = Math.Round(_ViRVal * 100, 2); //+ Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)), 1) / 100;
+                            val = _ViRVal;// * 100; //+ Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)), 1) / 100;
                         }
                         else
                         {
                             val = 0;// Convert.ToDouble(ViR) / 100;
                         }
-                        try
-                        {
-                            val = val + (Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)) * 0.01);
-                        }
-                        catch { }
+                        var subValue = (Convert.ToDouble(temp[2].Substring(0, temp[2].Length - 1)) * 0.01);
+                        val = val + subValue;
+
+
 
                     }
 
@@ -1347,7 +1450,7 @@ namespace IFRS9_ECL.Core
                         //************************************
                         var endDate_Temp = new DateTime();
                         try { endDate_Temp = Convert.ToDateTime(r.end_date); } catch { }
-                        r.mths_to_expiry = Months_To_Expiry(reportingDate, endDate_Temp, i.product_type, behavioral.Expired).ToString();
+                        r.mths_to_expiry = i.LIM_MONTH.ToString();// Months_To_Expiry(reportingDate, endDate_Temp, i.product_type, behavioral.Expired).ToString();
 
                         r.interest_divisor = Interest_Divisor(i.INTEREST_PAYMENT_STRUCTURE);
 
@@ -1614,8 +1717,9 @@ namespace IFRS9_ECL.Core
                     }
                     else
                     {
-                        value = (Math.Ceiling(mths_in_force / Convert.ToDouble(interest_divisor)) - (mths_in_force) / Convert.ToDouble(interest_divisor)) / Convert.ToDouble(interest_divisor);
+                        value = (Math.Ceiling(mths_in_force / Convert.ToDouble(interest_divisor)) - (mths_in_force) / Convert.ToDouble(interest_divisor));
                     }
+                    value = value * Convert.ToDouble(interest_divisor);
                 }
             }
 
@@ -1644,7 +1748,6 @@ namespace IFRS9_ECL.Core
 
         public List<LGDPrecalculationOutput> LGDPreCalculation(List<Loanbook_Data> lstRaw)
         {
-            
 
             var pd_assumptions = new List<LGD_PD_Assumptions>();
            
@@ -1691,6 +1794,7 @@ namespace IFRS9_ECL.Core
 
             foreach (var itm in lstRaw)
             {
+
                 var input = new LGD_Inputs();
                 input.new_contract_no = itm.ContractId;
                 List<string> newContractID_array = GetValue(ContractID_list, input.new_contract_no);
@@ -1719,11 +1823,11 @@ namespace IFRS9_ECL.Core
                 input.rating_model = itm.RatingModel;
                 input.segment = itm.Segment;
                 input.days_past_due = itm.DaysPastDue.Value;
-                input.current_rating = int.Parse(itm.CurrentRating.Replace("+","").Trim());
+                try { input.current_rating = int.Parse(itm.CurrentRating.Replace("+", "").Replace("-", "").Trim()); } catch { input.current_rating = 1; };
                 input.specialised_lending = itm.SpecialisedLending;
                 var check_customer = itm.CustomerNo;
 
-                input.rating_used = input.current_rating > 10? input.current_rating.ToString().Substring(0, 1) : input.current_rating.ToString();
+                input.rating_used = input.current_rating.ToString(); // > 10? input.current_rating.ToString().Substring(0, 1) : input.current_rating.ToString();
 
                 var ttm_months = TTM_Inputs(input, behavioral);
                 string pd_mapping = PD_Mapping(input, ttm_months);

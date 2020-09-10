@@ -109,6 +109,9 @@
     <Compile Include="Calibration\Entities\EAD_CCF_Summary.cs" />
     <Compile Include="Calibration\Entities\CalibrationInput_LGD_RecoveryRate.cs" />
     <Compile Include="Calibration\Entities\ParameterEstimate.cs" />
+    <Compile Include="Calibration\Entities\IV_Receivables_Models.cs" />
+    <Compile Include="Calibration\ETIReceivables_Processor.cs" />
+    <Compile Include="Calibration\HoldingCo_Processor.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="ECLTasks.cs" />
     <Compile Include="ExcelFormulaUtil.cs" />

@@ -7,7 +7,9 @@ using IFRS9_ECL.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Core
@@ -167,14 +169,54 @@ namespace IFRS9_ECL.Core
 
                     //payment_schedule = payment_schedule.Where(o => o.ContractRefNo == "701SMGA132120001").ToList();
 
+
+
+                    //==============
+
+
+                    payment_schedule = payment_schedule.OrderBy(o => o.ContractRefNo).ToList();
+                    var groupedPS = new List<List<PaymentSchedule>>();
                     var threads = payment_schedule.Count / 500;
                     threads = threads + 1;
+
+                    for (int i = 0; i < threads; i++)
+                    {
+                        groupedPS.Add(payment_schedule.Skip(i * 500).Take(500).ToList());
+                    }
+
+                    var allAccountsGrouped = false;
+
+                    try
+                    {
+                        while (!allAccountsGrouped)
+                        {
+                            allAccountsGrouped = true;
+                            for (int i = 1; i < groupedPS.Count; i++)
+                            {
+                                var lstfromPrev = groupedPS[i - 1].LastOrDefault();
+                                var fstfromCurr = groupedPS[i].FirstOrDefault();
+                                if (lstfromPrev.ContractRefNo == fstfromCurr.ContractRefNo)
+                                {
+                                    groupedPS[i - 1].Add(fstfromCurr);
+                                    groupedPS[i].RemoveAt(0);
+                                    allAccountsGrouped = false;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+
+                    //==============
 
                     var taskLst = new List<Task>();
 
                     for (int i = 0; i < threads; i++)
                     {
-                        var sub_payment_schedule = payment_schedule.Skip(i * 500).Take(500).ToList();
+                        var sub_payment_schedule = groupedPS[i];
 
                         var task = Task.Run(() =>
                         {
@@ -214,9 +256,19 @@ namespace IFRS9_ECL.Core
                         }
                         //Do Nothing
                     }
+
+
+                   
                 }
                 Log4Net.Log.Info("Completed Parsing PaymentSchedule_Projection");
 
+                //var sb = new StringBuilder();
+                //sb.Append($"Contract,StartDate,Component,Month,Value{Environment.NewLine}");
+                //foreach (var itm in paymentScheduleProjections)
+                //{
+                //    sb.Append($"{itm.ContractId},{itm.StartDate},{itm.Component},{itm.Months},{itm.Value}{Environment.NewLine}");
+                //}
+                //File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PS.csv"), sb.ToString());
 
                 var ccfData = new CalibrationInput_EAD_CCF_Summary_Processor().GetCCFData(this._eclId, this._eclType);
 
@@ -356,10 +408,19 @@ namespace IFRS9_ECL.Core
             var _ps = new List<PaymentSchedule>();
 
             //ps = ps.Where(o => o.ContractRefNo == "701CMLN173630102").ToList();
-            foreach (var item in ps)
-            { 
 
-                bool start_month_adjustment = false;
+            bool start_month_adjustment = false;
+
+            var lastContractRefNo = "";
+
+            foreach (var item in ps)
+            {
+                if(item.ContractRefNo!=lastContractRefNo)
+                {
+                    start_month_adjustment = false;
+                    lastContractRefNo = item.ContractRefNo;
+                }
+
                 int frequency_factor;
                 int no_schedules;
                 double amount;
@@ -480,10 +541,10 @@ namespace IFRS9_ECL.Core
                 //{
                 //    monthIndex = 1;
                 //}
-                for (double schedule = start_schedule; schedule <= no_schedules-1; schedule++)
+                for (double schedule = start_schedule; schedule <= no_schedules - 1; schedule++)
                 {
 
-                    var mnth=Math.Ceiling(start_month + (frequency_factor * schedule));
+                    var mnth = Math.Ceiling(start_month + (frequency_factor * schedule));
                     hasItm = hasItm + 1;
 
                     //var __Item = contact_ps.FirstOrDefault(o => o.Months == monthIndex.ToString());
@@ -495,13 +556,19 @@ namespace IFRS9_ECL.Core
                     //}
                     //else
                     //{
-                        item.ContractRefNo = string.IsNullOrEmpty(item.ContractRefNo) ? "" : item.ContractRefNo;
-                        //_ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = monthIndex.ToString(), Value = amount });
+                    item.ContractRefNo = string.IsNullOrEmpty(item.ContractRefNo) ? "" : item.ContractRefNo;
+                    //_ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = monthIndex.ToString(), Value = amount });
+                    if (frequency == ECLScheduleConstants.Bullet)
+                    {
+                        amount = amount * item.NoOfSchedules;
                         _ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = mnth.ToString(), Value = amount });
+                        break;
+                    }
+                    _ps.Add(new PaymentSchedule { ContractId = item.ContractRefNo, PaymentType = item.Component, Months = mnth.ToString(), Value = amount });
                     //}
 
-                    
-                   // monthIndex += frequency_factor;
+
+                    // monthIndex += frequency_factor;
                 }
 
                 if (hasItm == 0)
@@ -512,11 +579,11 @@ namespace IFRS9_ECL.Core
                 }
             }
             
-
             //_ps.GroupBy(t => new { t.ContractRefNo, t.Months }).Select(group => new { Months=group. });
             lock(paymentScheduleProjections)
                 paymentScheduleProjections.AddRange(_ps);
 
+            //paymentScheduleProjections = paymentScheduleProjections.Where(p=>p.Months!="0").OrderBy(o => double.Parse(o.Months)).ToList();
             Log4Net.Log.Info($"PS Count - {counter}");
         }
 

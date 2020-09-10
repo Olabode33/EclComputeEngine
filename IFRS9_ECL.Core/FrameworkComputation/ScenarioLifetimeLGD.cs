@@ -749,16 +749,19 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 if (i == 0)
                 {
+                    _lgdAssumption.Cure_Rate = pdCali[2];
                     rcvCaliRate_ = rcvCaliRate.Commercial_RecoveryRate;
                     _lgdAssumption.Segment_Product_Type = "Commercial";
                 }
                 else if (i == 1)
                 {
+                    _lgdAssumption.Cure_Rate = pdCali[3];
                     rcvCaliRate_ = rcvCaliRate.Consumer_RecoveryRate;
                     _lgdAssumption.Segment_Product_Type = "Consumer";
                 }
                 else if (i == 2)
                 {
+                    _lgdAssumption.Cure_Rate = pdCali[1];
                     rcvCaliRate_ = rcvCaliRate.Corporate_RecoveryRate;
                     _lgdAssumption.Segment_Product_Type = "Corporate";
                 }
@@ -785,7 +788,6 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 _lgdAssumption.Downturn_Days_270 = 1 - ((1 - _lgdAssumption.Days_270) * 0.92 + 0.08);
                 _lgdAssumption.Downturn_Days_360 = 1 - ((1 - _lgdAssumption.Days_360) * 0.92 + 0.08);
 
-                _lgdAssumption.Cure_Rate = pdCali[1];
                 ldg_inputassumption.Add(_lgdAssumption);
             }
 
