@@ -416,5 +416,71 @@ namespace IFRS9_ECL.Data
         {
             return $"select BackwardOffset BackDateQuarters, MacroeconomicVariableId MicroEconomicId from MacroResult_SelectedMacroEconomicVariables where AffiliateId=(select OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}' ) order by Id";
         }
+
+
+        public static string Calibration_HoldingCo_Registers()
+        {
+            return $"select top 1 * from HoldCoRegisters where Status=2";
+        }
+        public static string CalibrationInput_HoldingCo_AssetBooks(Guid calibrationId)
+        {
+            return $"select * from AssetBooks where RegistrationId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_HoldingCo_Parameter(Guid calibrationId)
+        {
+            return $"select * from HoldCoInputParameters where RegistrationId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_HoldingCo_MacroEconomicCreditIndices(Guid calibrationId)
+        {
+            return $"select * from MacroEconomicCreditIndices where RegistrationId ='{calibrationId}'";
+        }
+
+        public static string CalibrationResult_HoldingCo_ResultSummary(Guid calibrationId, double BestEstimateExposure, double OptimisticExposure, double DownturnExposure, 
+                double BestEstimateTotal, double OptimisticTotal, double DownturnTotal, double BestEstimateImpairmentRatio, double OptimisticImpairmentRatio, double DownturnImpairmentRatio, 
+                double Exposure, double Total, double ImpairmentRatio, int Check, double Diff)
+        {
+            return
+                $"delete from [HoldCoResultSummaries] where [RegistrationId] ='{calibrationId.ToString()}'; " +
+                $"INSERT INTO [dbo].[HoldCoResultSummaries] ([id],[CreationTime],[CreatorUserId],[IsDeleted],[BestEstimateExposure],[OptimisticExposure],[DownturnExposure], " +
+                $" [BestEstimateTotal],[OptimisticTotal],[DownturnTotal],[BestEstimateImpairmentRatio],[OptimisticImpairmentRatio],[DownturnImpairmentRatio], " +
+                $" [Exposure],[Total],[ImpairmentRatio],[Check],[Diff],[RegistrationId]) " +
+                $"VALUES (newid(), getdate(), 2, 0, {BestEstimateExposure}, {OptimisticExposure},{DownturnExposure}, " +
+                $" {BestEstimateTotal}, {OptimisticTotal}, '{DownturnTotal}', " +
+                $" {BestEstimateImpairmentRatio}, {OptimisticImpairmentRatio}, {DownturnImpairmentRatio}, " +
+                $" {Exposure}, {Total}, {ImpairmentRatio}, {Check}, '{Diff}', '{calibrationId.ToString()}' ); ";
+        }
+
+        public static string CalibrationResult_HoldingCo_ResultSummaryByStage(Guid calibrationId, double StageOneExposure, double StageTwoExposure, double StageThreeExposure, double TotalExposure, 
+                                                                              double StageOneImpairment, double StageTwoImpairment, double StageThreeImpairment, double TotalImpairment,
+                                                                              double StageOneImpairmentRatio, double StageTwoImpairmentRatio, double StageThreeImpairmentRatio, double TotalImpairmentRatio)
+        {
+            return
+                $"delete from [ResultSummaryByStages] where [RegistrationId] ='{calibrationId.ToString()}'; " +
+                $"INSERT INTO[dbo].[ResultSummaryByStages] ([id],[CreationTime],[CreatorUserId],[IsDeleted], " +
+                $" [StageOneExposure],[StageTwoExposure],[StageThreeExposure],[TotalExposure], " +
+                $" [StageOneImpairment],[StageTwoImpairment],[StageThreeImpairment],[TotalImpairment], " +
+                $" [StageOneImpairmentRatio],[StageTwoImpairmentRatio],[StageThreeImpairmentRatio],[TotalImpairmentRatio],[RegistrationId]) " +
+                $"VALUES (newid(), getdate(), 2, 0 , " +
+                $" {StageOneExposure}, {StageTwoExposure}, {StageThreeExposure}, {TotalExposure}, " +
+                $" {StageOneImpairment}, {StageTwoImpairment}, {StageThreeImpairment}, {TotalImpairment}, " +
+                $" {StageOneImpairmentRatio}, {StageTwoImpairmentRatio}, { StageThreeImpairmentRatio}, {TotalImpairmentRatio}, '{calibrationId.ToString()}'); ";
+
+        }
+
+
+        public static string CalibrationResult_HoldingCo_ResultDetail_Items(Guid calibrationId, string AssetType, string AssetDescription, double Stage, double OutstandingBalance, 
+                                                                       double BestEstimate, double Optimistic, double Downturn, double Impairment)
+        {
+            return
+                $"INSERT INTO[dbo].[HoldCoInterCompanyResults] ([id],[CreationTime],[CreatorUserId],[IsDeleted], " +
+                $" [RegistrationId] ,[AssetType],[AssetDescription],[Stage],[OutstandingBalance],[BestEstimate],[Optimistic],[Downturn],[Impairment]) " +
+                $" VALUES (newid(), getdate(), 2, 0, '{calibrationId.ToString()}', '{AssetType}', '{AssetDescription}', {Stage}, {OutstandingBalance}, {BestEstimate}, {Optimistic}, {Downturn}, {Impairment}); ";
+
+        }
+
+        public static string CalibrationResult_HoldingCo_ResultDetails(Guid calibrationId, StringBuilder qry)
+        {
+            return $"delete from [HoldCoInterCompanyResults] where [RegistrationId] ='{calibrationId.ToString()}'; \n" + qry.ToString() + ";";
+        }
     }
 }

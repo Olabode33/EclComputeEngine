@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Core.Calibration
 {
-    class ETIReceivables_Processor
+    public class ETIReceivables_Processor
     {
         public bool ProcessCalibration(Guid calibrationId)
         {

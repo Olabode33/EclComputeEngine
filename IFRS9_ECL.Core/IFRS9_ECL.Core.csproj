@@ -105,6 +105,12 @@
     <Compile Include="Calibration\Entities\CalibrationResult_PD_CommsCons_MarginalDefaultRate.cs" />
     <Compile Include="Calibration\Entities\EAD_Behavioural_Terms_Data.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_LGD_RecoveryRate.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_InputParameter.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_MacroEconomicCreditIndex.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_ResultSummaryByStage.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_ResultDetail.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_AssetBook.cs" />
+    <Compile Include="Calibration\Entities\HoldCo_ResultSummary.cs" />
     <Compile Include="Calibration\Entities\LGD_HairCut.cs" />
     <Compile Include="Calibration\Entities\EAD_CCF_Summary.cs" />
     <Compile Include="Calibration\Entities\CalibrationInput_LGD_RecoveryRate.cs" />
