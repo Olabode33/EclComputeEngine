@@ -136,7 +136,7 @@ namespace IFRS9_ECL.Util
             {
                 return 0.0280579042261724;
             }
-            if (affliateId == 5)
+            if (affliateId == 5 || affliateId == 46 || affliateId == 47)
             {
                 return 0.217333590280369;
             }

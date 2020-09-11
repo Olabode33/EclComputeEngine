@@ -96,7 +96,7 @@ namespace IFRS9_ECL.Core.PDComputation
             var etiNpl = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_ETI_NPL();
             var historicIndex = new ProcessECL_PD(this._eclId, this._eclType).Get_PDI_HistoricIndex();
             historicIndex = historicIndex.OrderBy(o => o.Date).ToList();
-            double pdTtc = etiNpl.Average(o => o.Series);// ComputePdTtc();
+            double pdTtc = etiNpl.Take(32).Average(o => o.Series);// ComputePdTtc();
 
             var vasicekEtiNplIndex = new List<VasicekEtiNplIndex>();
 

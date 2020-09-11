@@ -217,29 +217,13 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                         break;
                     }
                     sub_lifetimeEad.Add(newRecord);
+
+                    if (month == maxLimMonth)
+                        break;
+
                     month++;
                 }
-                    ////Do computation
-                    //var itm = new LifeTimeProjections();
-                    //if (c_eadInputs.Count > month)
-                    //{
-                    //    itm = c_eadInputs[month];
-
-                    //    var newRecord = new LifetimeEad();
-                    //    newRecord.ContractId = contractId;
-                    //    newRecord.CirIndex = cirIndex;
-                    //    newRecord.ProductType = productType;
-                    //    newRecord.MonthsPastDue = (daysPastDue / 30) ?? 0;
-                    //    newRecord.ProjectionMonth = month;
-                    //    newRecord.ProjectionValue = ComputeLifetimeValue(c_eadInputs, itm, marginalAccumulationFactor, (long)daysPastDue / 30, month, cirIndex, productType);
-                    //    sub_lifetimeEad.Add(newRecord);
-                    //}
-                    //else
-                    //{
-                    //    //itm = c_eadInputs.LastOrDefault();
-                    //}
                     
-                //}
             }
             lock(lifetimeEad)
                 lifetimeEad.AddRange(sub_lifetimeEad);

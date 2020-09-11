@@ -416,5 +416,9 @@ namespace IFRS9_ECL.Data
         {
             return $"select BackwardOffset BackDateQuarters, MacroeconomicVariableId MicroEconomicId from MacroResult_SelectedMacroEconomicVariables where AffiliateId=(select OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}' ) order by Id";
         }
+        public static string Get_AffiliateId(Guid eclId, EclType eclType)
+        {
+            return $"select OrganizationUnitId from {eclType.ToString()}Ecls where Id='{eclId.ToString()}'";
+        }
     }
 }
