@@ -148,6 +148,37 @@ namespace IFRS9_ECL.Core
                 }
 
 
+                var rvImpairment = Queries.Calibration_RvImpairment_Registers();
+                dt = DataAccess.i.GetData(rvImpairment);
+                if (dt.Rows.Count > 0)
+                {
+                    var qry = "";
+                    var caliId = Guid.NewGuid();
+                    try
+                    {
+                        caliId = (Guid)dt.Rows[0]["Id"];
+
+                        qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "LoanImpairmentRegisters");
+                        DataAccess.i.ExecuteQuery(qry);
+
+                        var processor = new RV_Impairment_Processor();
+                        processor.ProcessCalibration(caliId);
+
+                        qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 5, "LoanImpairmentRegisters");
+                        DataAccess.i.ExecuteQuery(qry);
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Log4Net.Log.Info("At RV Impairment Model");
+                        Log4Net.Log.Error(ex);
+                        qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 10, "LoanImpairmentRegisters");
+                        DataAccess.i.ExecuteQuery(qry);
+                    }
+                }
+
+
             }
             catch (Exception ex)
             {

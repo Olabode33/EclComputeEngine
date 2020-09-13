@@ -116,8 +116,15 @@
     <Compile Include="Calibration\Entities\CalibrationInput_LGD_RecoveryRate.cs" />
     <Compile Include="Calibration\Entities\ParameterEstimate.cs" />
     <Compile Include="Calibration\Entities\IV_Receivables_Models.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_CalibrationInput.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_Haircut.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_InputParameter.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_Recovery.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_Result.cs" />
+    <Compile Include="Calibration\Entities\RvImpairment_ScenarioOption.cs" />
     <Compile Include="Calibration\ETIReceivables_Processor.cs" />
     <Compile Include="Calibration\HoldingCo_Processor.cs" />
+    <Compile Include="Calibration\RV_Impairment_Processor.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="ECLTasks.cs" />
     <Compile Include="ExcelFormulaUtil.cs" />

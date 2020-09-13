@@ -482,5 +482,59 @@ namespace IFRS9_ECL.Data
         {
             return $"delete from [HoldCoInterCompanyResults] where [RegistrationId] ='{calibrationId.ToString()}'; \n" + qry.ToString() + ";";
         }
+
+
+
+        /*************** RV Impairment Query *************************/
+        //TODO:: Update Queries
+        public static string Calibration_RvImpairment_Registers()
+        {
+            return $"select top 1 * from [LoanImpairmentRegisters] where Status=2 or status=12";
+        }
+        public static string CalibrationInput_RvImpairment_Recoverys(Guid calibrationId)
+        {
+            return $"select * from LoanImpairmentRecoveries where RegisterId ='{calibrationId}' order by Recovery";
+        }
+        public static string CalibrationInput_RvImpairment_ScenarioOptions(Guid calibrationId)
+        {
+            return $"select * from LoanImpairmentScenarios where RegisterId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_RvImpairment_Haircut(Guid calibrationId)
+        {
+            return $"select * from LoanImpairmentHaircuts where RegisterId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_RvImpairment_Parameters(Guid calibrationId)
+        {
+            return $"select * from LoanImpairmentInputParameters where RegisterId ='{calibrationId}'";
+        }
+        public static string CalibrationInput_RvImpairment_Calibration(Guid calibrationId)
+        {
+            return $"select * from LoanImpairmentKeyParameters where RegisterId ='{calibrationId}' order by Year";
+        }
+        public static string CalibrationInput_RvImpairment_ResultImpairmentOverlay(Guid calibrationId)
+        {
+            return $"select BaseScenarioOverlay, OptimisticScenarioOverlay, DownturnScenarioOverlay from LoanImpairmentModelResults where RegisterId ='{calibrationId}';";
+        }
+
+        public static string CalibrationResult_RvImpairment(Guid calibrationId, double  BaseScenarioExposure, double BaseScenarioFinalImpairment, double BaseScenarioIPO, double  BaseScenarioOverlay, double  BaseScenarioOverrideImpact, double  BaseScenarioPreOverlay, 
+                                                            double DownturnScenarioExposure, double DownturnScenarioFinalImpairment, double DownturnScenarioIPO, double DownturnScenarioOverlay, double DownturnScenarioOverrideImpact, double DownturnScenarioPreOverlay, 
+                                                            double OptimisticScenarioExposure, double OptimisticScenarioFinalImpairment, double OptimisticScenarioIPO, double OptimisticScenarioOverlay, double OptimisticScenarioOverrideImpact, double OptimisticScenarioPreOverlay,
+                                                            double ResultFinalImpairment, double ResultIPO, double ResultOverlay, double ResultOverrideImpact, double ResultPreOverlay, double ResultsExposure)
+        {
+            return
+                $"delete from [LoanImpairmentModelResults] where [RegisterId] ='{calibrationId.ToString()}'; " +
+                $"INSERT INTO [dbo].[LoanImpairmentModelResults] ([Id],[CreationTime],[CreatorUserId],[IsDeleted],[RegisterId], " +
+                $"  [BaseScenarioExposure],[BaseScenarioFinalImpairment],[BaseScenarioIPO],[BaseScenarioOverlay],[BaseScenarioOverrideImpact],[BaseScenarioPreOverlay], " +
+                $"  [DownturnScenarioExposure],[DownturnScenarioFinalImpairment],[DownturnScenarioIPO],[DownturnScenarioOverlay],[DownturnScenarioOverrideImpact],[DownturnScenarioPreOverlay], " +
+                $"  [OptimisticScenarioExposure],[OptimisticScenarioFinalImpairment],[OptimisticScenarioIPO],[OptimisticScenarioOverlay],[OptimisticScenarioOverrideImpact],[OptimisticScenarioPreOverlay], " +
+                $"  [ResultFinalImpairment],[ResultIPO],[ResultOverlay],[ResultOverrideImpact],[ResultPreOverlay],[ResultsExposure]) " +
+                $"VALUES (newid(), getdate(), 2, 0, '{calibrationId.ToString()}', " +
+                $"  {BaseScenarioExposure}, {BaseScenarioFinalImpairment}, {BaseScenarioIPO}, {BaseScenarioOverlay}, {BaseScenarioOverrideImpact}, {BaseScenarioPreOverlay}, " +
+                $"  {DownturnScenarioExposure}, {DownturnScenarioFinalImpairment}, {DownturnScenarioIPO}, {DownturnScenarioOverlay}, {DownturnScenarioOverrideImpact}, {DownturnScenarioPreOverlay}, " +
+                $"  {OptimisticScenarioExposure}, {OptimisticScenarioFinalImpairment}, {OptimisticScenarioIPO}, {OptimisticScenarioOverlay}, {OptimisticScenarioOverrideImpact}, {OptimisticScenarioPreOverlay}, " +
+                $"  {ResultFinalImpairment}, {ResultIPO}, {ResultOverlay}, {ResultOverrideImpact}, {ResultPreOverlay}, {ResultsExposure}); ";
+
+        }
+
     }
 }
