@@ -503,14 +503,14 @@ namespace IFRS9_ECL.Core
                         caliId = (Guid)dt.Rows[0]["Id"];
 
 
-                        qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadBehaviouralTerms", this.serviceId, caliId);
-                        var resp = DataAccess.i.ExecuteQuery(qry);
+                        //qry = Queries.UpdateGuidTableServiceId("CalibrationRunEadBehaviouralTerms", this.serviceId, caliId);
+                        //var resp = DataAccess.i.ExecuteQuery(qry);
 
-                        if (resp == 0)
-                        {
-                            Log4Net.Log.Info($"Another service has picked Behavioural Calibration with ID {caliId.ToString()}.");
-                            return true;
-                        }
+                        //if (resp == 0)
+                        //{
+                        //    Log4Net.Log.Info($"Another service has picked Behavioural Calibration with ID {caliId.ToString()}.");
+                        //    return true;
+                        //}
 
                         qry = Queries.CalibrationRegisterUpdate(caliId.ToString(), 4, "Processing", "CalibrationRunEadBehaviouralTerms");
                         DataAccess.i.ExecuteQuery(qry);
@@ -732,10 +732,10 @@ namespace IFRS9_ECL.Core
                 var affId = (long)dt.Rows[0]["AffiliateId"];
                 macroId = (int)dt.Rows[0]["Id"];
 
-                var qry = Queries.UpdateIntTableServiceId("CalibrationRunMacroAnalysis", this.serviceId, macroId);
-                DataAccess.i.ExecuteQuery(qry);
+                //var qry = Queries.UpdateIntTableServiceId("CalibrationRunMacroAnalysis", this.serviceId, macroId);
+                //DataAccess.i.ExecuteQuery(qry);
 
-                qry = Queries.MacroRegisterUpdate(macroId, 4, "Processing");
+                var qry = Queries.MacroRegisterUpdate(macroId, 4, "Processing");
                 DataAccess.i.ExecuteQuery(qry);
 
                 try

@@ -362,7 +362,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                     //XXXXXXXXXXXXXXXX
                     //var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}{productType.ToLower()}".Replace(" ", "")));
-                    var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower()}"));
+                    var best_downTurn_Assumption = lgdAssumptions.FirstOrDefault(o => o.Segment_Product_Type.ToLower().Contains($"{segment.ToLower().Trim()}"));
                     if (best_downTurn_Assumption == null)
                     {
                         best_downTurn_Assumption = lgdAssumptions.FirstOrDefault();

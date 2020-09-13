@@ -203,16 +203,47 @@ namespace IFRS9_ECL.Core.PDComputation
             //                    .CopyToDataTable();
 
 
+            var qry = Queries.Get_AffiliateId(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+
+            var affiliateId = Convert.ToInt32(dt.Rows[0][0]);
+
+            qry = Queries.Get_AffiliateMEVBackDateValues(this._eclId, this._eclType);
+                dt = DataAccess.i.GetData(qry);
+
             
-            
-                var qry = Queries.Get_AffiliateMEVBackDateValues(this._eclId, this._eclType);
-                var dt = DataAccess.i.GetData(qry);
+
             var MEVBackDate = new List<AffiliateMEVBackDateValues>();
 
             foreach (DataRow dr in dt.Rows)
             {
                 MEVBackDate.Add(DataAccess.i.ParseDataToObject(new AffiliateMEVBackDateValues(), dr));
             }
+
+            var lastMacroVariableId = MEVBackDate.Select(o => o.MicroEconomicId).Distinct().Last();
+
+            projections = projections.OrderByDescending(o => o.Date).ToList();
+
+            for (int i = 0; i < projections.Count; i++)
+            {
+                if ((affiliateId == 5 || affiliateId == 46 || affiliateId == 47) && projections[i].MacroEconomicVariableId == lastMacroVariableId)
+                {
+                    var prevItm = projections.FirstOrDefault(o => o.MacroEconomicVariableId == lastMacroVariableId && o.Date < projections[i].Date);
+                    if(prevItm!=null)
+                    {
+                        projections[i].BestEstimateMacroEconomicValue = projections[i].BestEstimateMacroEconomicValue - prevItm.BestEstimateMacroEconomicValue;
+                        projections[i].OptimisticMacroEconomicValue = projections[i].OptimisticMacroEconomicValue - prevItm.OptimisticMacroEconomicValue;
+                        projections[i].DownturnMacroEconomicValue = projections[i].DownturnMacroEconomicValue - prevItm.DownturnMacroEconomicValue;
+                    }
+                    else
+                    {
+                        projections[i].BestEstimateMacroEconomicValue = 0;
+                        projections[i].OptimisticMacroEconomicValue = 0;
+                        projections[i].DownturnMacroEconomicValue = 0;
+                    }
+                }
+            }
+
 
             var reportingDate= GetReportingDate(_eclType, _eclId);
             //Log4Net.Log.Info("=================");
@@ -233,10 +264,10 @@ namespace IFRS9_ECL.Core.PDComputation
                         _bdate = bdate.BackDateQuarters * 3;
                     }
                     var _dt = itm.Date.AddMonths(-_bdate);
-                    var _itm = projections.OrderBy(p => p.Date).FirstOrDefault(o => o.MacroEconomicVariableId==itm.MacroEconomicVariableId && o.Date.Month== _dt.Month && o.Date.Year== _dt.Year); // == GetLastDayOfMonth(itm.Date.AddMonths(-_bdate))
-                    if(_itm==null)
+                    var _itm = projections.OrderBy(p => p.Date).FirstOrDefault(o => o.MacroEconomicVariableId == itm.MacroEconomicVariableId && o.Date.Month == _dt.Month && o.Date.Year == _dt.Year); // == GetLastDayOfMonth(itm.Date.AddMonths(-_bdate))
+                    if (_itm == null)
                     {
-                        if(projections.Count>0)
+                        if (projections.Count > 0)
                             _itm = projections.Last();
 
                     }
@@ -252,8 +283,10 @@ namespace IFRS9_ECL.Core.PDComputation
 
                     originalData.Add(dr);
 
+
                     //Log4Net.Log.Info($"{dr.Date},{dr.MacroEconomicVariableId},{dr.MacroEconomicValue},{this._Scenario.ToString()}");
                 }
+
             }
 
 

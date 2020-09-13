@@ -242,7 +242,7 @@ namespace IFRS9_ECL.Core
                 data.Add(itm);
             }
             data = data.OrderBy(o => o.Date).ToList();
-            return data.Skip(data.Count-32).Take(32).ToList();
+            return data;//.Take(32).ToList();
         }
 
         //public List<PDI_MacroEcoBest> Get_PDI_MacroEcoBest()
