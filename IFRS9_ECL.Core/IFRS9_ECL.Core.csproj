@@ -94,6 +94,7 @@
     <Compile Include="Calibration\CalibrationInput_LGD_Haricut_Processor.cs" />
     <Compile Include="Calibration\CalibrationInput_LGD_RecoveryRate_Processor.cs" />
     <Compile Include="Calibration\CalibrationInput_EAD_Behavioural_Terms_Processor.cs" />
+    <Compile Include="Calibration\Entities\CalibrationResultHistoric_PD.cs" />
     <Compile Include="Calibration\Entities\CalibrationResult_EAD_Behavioural.cs" />
     <Compile Include="Calibration\Entities\BaseObject.cs" />
     <Compile Include="Calibration\CalibrationInput_EAD_CCF_Summary_Processor.cs" />

@@ -87,13 +87,17 @@ namespace IFRS9_ECL.Data
 
         public static string CalibrationInput_EAD_CCF(Guid calibrationId)
         {
-            return $"select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from ( select Id=-1, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationInput_EAD_CCF_Summary  where CalibrationID = '{calibrationId.ToString()}' union all select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationHistory_EAD_CCF_Summary where AffiliateId = (select OrganizationUnitId from CalibrationRunEadCcfSummary where Id = '{calibrationId}'))";
+            return $"select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from ( select Id=-1, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationInput_EAD_CCF_Summary  where CalibrationID = '{calibrationId.ToString()}' union all select Id, Customer_No,Account_No,Product_Type,Snapshot_Date,Contract_Start_Date,Contract_End_Date,Limit,Outstanding_Balance,Classification,Settlement_Account from CalibrationHistory_EAD_CCF_Summary where AffiliateId = (select OrganizationUnitId from CalibrationRunEadCcfSummary where Id = '{calibrationId}')) s";
         }
 
         public static string CalibrationResult_IVReceivables(Guid calibrationId, double totalExposure, double totalImpairment, double additionalProvision, double coverage, double optimisticExposure, double baseExposure, double downturnExposure, double eCLTotalExposure, double optimisticImpairment, double baseImpairment, double downturnImpairment, double eCLTotalImpairment, double optimisticCoverageRatio, double baseCoverageRatio, double downturnCoverageRatio, double totalCoverageRatio)
         {
-            return $"delete from ReceivablesResults where RegisterId ='{calibrationId.ToString()}'; insert into ReceivablesResults(totalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatiototalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatio, RegisterId) " +
-                $"values ({totalExposure}, {totalImpairment}, {additionalProvision}, {coverage}, {optimisticExposure}, {optimisticExposure}, {baseExposure}, {downturnExposure}, {eCLTotalExposure}, {optimisticImpairment}, {baseImpairment} , {downturnImpairment}, {eCLTotalImpairment}, {optimisticCoverageRatio}, {baseCoverageRatio}, {baseCoverageRatio}, {downturnCoverageRatio}, {totalCoverageRatio} ";
+            return $"delete from ReceivablesResults where RegisterId ='{calibrationId.ToString()}'; " +
+                   $"insert into ReceivablesResults(totalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, " +
+                   $" baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, " +
+                   $" optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatio, RegisterId) " +
+                   $" values ({totalExposure}, {totalImpairment}, {additionalProvision}, {coverage}, {optimisticExposure}, {baseExposure}, {downturnExposure}, {eCLTotalExposure}, " +
+                   $" {optimisticImpairment}, {baseImpairment} , {downturnImpairment}, {eCLTotalImpairment}, {optimisticCoverageRatio}, {baseCoverageRatio}, , {downturnCoverageRatio}, {totalCoverageRatio}, '{calibrationId.ToString()}' ";
         }
 
         public static string CalibrationResult_EAD_CCF_Summary_Update(Guid calibrationId, double? oD_TotalLimitOdDefaultedLoan, double? oD_BalanceAtDefault, double? oD_Balance12MonthBeforeDefault, double? oD_TotalConversation, double? oD_CCF, double? card_TotalLimitOdDefaultedLoan, double? card_BalanceAtDefault, double? card_Balance12MonthBeforeDefault, double? card_TotalConversation, double? card_CCF, double? overall_TotalLimitOdDefaultedLoan, double? overall_BalanceAtDefault, double? overall_Balance12MonthBeforeDefault, double? overall_TotalConversation, double? overall_CCF)
@@ -481,6 +485,26 @@ namespace IFRS9_ECL.Data
         public static string CalibrationResult_HoldingCo_ResultDetails(Guid calibrationId, StringBuilder qry)
         {
             return $"delete from [HoldCoInterCompanyResults] where [RegistrationId] ='{calibrationId.ToString()}'; \n" + qry.ToString() + ";";
+        }
+
+
+        public static string CalibrationResultHistoric_PD_CommsCons(long AffiliateId)
+        {
+            return $"SELECT  Id, Affiliate_ID, Stage, Comm_1, Comm_2, Comm_3, Cons_1, Cons_2, Cons_3 FROM  CalibrationResultHistoric_PD_CommsCons where  Affiliate_ID = {AffiliateId};";
+        }
+        public static string CalibrationResultHistoric_PD_Corporate(long AffiliateId)
+        {
+            return $"SELECT Id ,Affiliate_ID ,RAPPDATE, " +
+                   $" OutstandingBalance_1 ,OutstandingBalance_2 ,OutstandingBalance_3 ,OutstandingBalance_4 ,OutstandingBalance_5 ,OutstandingBalance_6 ,OutstandingBalance_7 ,OutstandingBalance_8 ,OutstandingBalance_9 ,OutstandingBalance_10, " +
+                   $" Balance_1 ,Balance_2 ,Balance_3 ,Balance_4 ,Balance_5 ,Balance_6 ,Balance_7 ,Balance_8 ,Balance_9 ,Balance_10 " +
+                   $" FROM CalibrationResultHistoric_PD_Corporate where Affiliate_ID = {AffiliateId} order by RAPPDATE; ";
+        }
+        public static string CalibrationResultHistoric_PD_Output(long AffiliateId)
+        {
+            return $"SELECT Id, Affiliate_ID, " +
+                   $" Rating_1, Rating_2, Rating_3, Rating_4, Rating_5, Rating_6, Rating_7, Rating_8, Rating_9, Rating_10, " +
+                   $" Rating_Comm, Rating_Cons, Defaulted_Loan, Cured_Loan, Redefaulted_Loans " +
+                   $" FROM  CalibrationResultHistoric_PD_Output where Affiliate_ID = {AffiliateId};";
         }
 
 

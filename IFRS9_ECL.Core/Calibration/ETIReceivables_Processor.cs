@@ -65,12 +65,12 @@ namespace IFRS9_ECL.Core.Calibration
                 worksheet.Cells[11,4].Value = receivableInput.ScenarioBase;
                 worksheet.Cells[14,4].Value = receivableInput.LossDefinition;
                 worksheet.Cells[16, 4].Value = receivableInput.LossRate;
-                worksheet.Cells[18, 4].Value = receivableInput.FLIOverlay;
+                worksheet.Cells[18, 4].Value = receivableInput.FLIOverlay ? "Yes" : "No";
                 worksheet.Cells[20, 4].Value = receivableInput.OverlayOptimistic;
                 worksheet.Cells[20, 5].Value = receivableInput.OverlayBase;
                 worksheet.Cells[20, 6].Value = receivableInput.OverlayDownturn;
                 worksheet.Cells[24, 4].Value = receivableInput.InterceptCoefficient;
-                worksheet.Cells[24, 4].Value = receivableInput.IndexCoefficient;
+                worksheet.Cells[25, 4].Value = receivableInput.IndexCoefficient;
                 worksheet.Cells[26, 4].Value = receivableInput.LossRateCoefficient;
 
                 for (int i = 0; i < dt_CurrentPeriodDates.Rows.Count; i++)
@@ -78,22 +78,22 @@ namespace IFRS9_ECL.Core.Calibration
                     DataRow dr = dt_CurrentPeriodDates.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new ReceivablesCurrentPeriodDates(), dr);
 
-                    worksheet.Cells[i + 29, 3].Value = itm.Account;
-                    worksheet.Cells[i + 29, 4].Value = itm.ZeroTo90;
-                    worksheet.Cells[i + 29, 5].Value = itm.NinetyOneTo180;
-                    worksheet.Cells[i + 29, 6].Value = itm.OneEightyOneTo365;
-                    worksheet.Cells[i + 29, 7].Value = itm.Over365;
+                    worksheet.Cells[i + 30, 3].Value = itm.Account;
+                    worksheet.Cells[i + 30, 4].Value = itm.ZeroTo90;
+                    worksheet.Cells[i + 30, 5].Value = itm.NinetyOneTo180;
+                    worksheet.Cells[i + 30, 6].Value = itm.OneEightyOneTo365;
+                    worksheet.Cells[i + 30, 7].Value = itm.Over365;
                 }
 
                 for (int i = 0; i < dt_ReceivablesForecasts.Rows.Count; i++)
                 {
-                    DataRow dr = dt_CurrentPeriodDates.Rows[i];
+                    DataRow dr = dt_ReceivablesForecasts.Rows[i];
                     var itm = DataAccess.i.ParseDataToObject(new ReceivablesForecasts(), dr);
 
-                    worksheet.Cells[i + 29, 12].Value = itm.Period;
-                    worksheet.Cells[i + 29, 13].Value = itm.Optimistic;
-                    worksheet.Cells[i + 29, 14].Value = itm.Base;
-                    worksheet.Cells[i + 29, 15].Value = itm.Downturn;
+                    try { worksheet.Cells[i + 30, 12].Value = Convert.ToInt32(itm.Period); } catch { }
+                    worksheet.Cells[i + 30, 13].Value = itm.Optimistic;
+                    worksheet.Cells[i + 30, 14].Value = itm.Base;
+                    worksheet.Cells[i + 30, 15].Value = itm.Downturn;
                 }
 
 
