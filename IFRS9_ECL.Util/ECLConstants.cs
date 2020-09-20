@@ -132,9 +132,45 @@ namespace IFRS9_ECL.Util
 
         public double Rho(long affliateId)
         {
-            if (affliateId==41)
+            if (affliateId == 41)
             {
                 return 0.0280579042261724;
+            }
+            if (affliateId == 40)
+            {
+                return 0.0123050933280429;
+            }
+            if (affliateId == 42)
+            {
+                return 0.00502553233340747;
+            }
+            if (affliateId == 32)
+            {
+                return 0.00814438845363994;
+            }
+            if (affliateId == 37)
+            {
+                return 0.0292649231284607;
+            }
+            if (affliateId == 34)
+            {
+                return 0.00227227626225716;
+            }
+            if (affliateId == 36)
+            {
+                return 0.00115086573399722;
+            }
+            if (affliateId == 31)
+            {
+                return 0.0280579042261724;
+            }
+            if (affliateId == 39)
+            {
+                return 0;
+            }
+            if (affliateId == 38)
+            {
+                return 0.00115086573399722;
             }
             if (affliateId == 5 || affliateId == 46 || affliateId == 47)
             {

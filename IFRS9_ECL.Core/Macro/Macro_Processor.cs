@@ -319,6 +319,8 @@ namespace IFRS9_ECL.Core.Calibration
             try{statistics.IndexWeight3 = eIngenValues[2] < 1 ? 0 : eIngenValues[2]; } catch { statistics.IndexWeight3=0; }
              try{statistics.IndexWeight4 = eIngenValues[3] < 1 ? 0 : eIngenValues[3]; } catch { statistics.IndexWeight4 = 0; }
 
+            statistics.IndexWeight3 = 0;
+            statistics.IndexWeight4 = 0;
             // Get Index Data
             var indxData = new List<MacroResult_IndexData>();
             for (int i = 0; i < mcPrincipalComponent.Count; i++)

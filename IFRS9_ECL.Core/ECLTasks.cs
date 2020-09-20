@@ -834,6 +834,8 @@ namespace IFRS9_ECL.Core
             var lifetimeEadInputs = new List<LifeTimeProjections>();
             var lstContractIds = lifeTimeEAD_w.Select(o => o.contract_no).Distinct().ToList();
 
+
+
             try
             {
                 foreach (var contract in lstContractIds)
@@ -923,7 +925,7 @@ namespace IFRS9_ECL.Core
                     var contract_paymentScheduleProjection = _paymentScheduleProjection.Where(o => o.ContractId == realContractId).ToList();
                     contract_paymentScheduleProjection.OrderBy(o => o.NoOfSchedules).ToList();
 
-                    var ps_proj = _paymentScheduleProjection.FirstOrDefault(o => o.ContractId == realContractId);
+                    
 
                     var PrePaymentFactor = 0.0;
                     try { PrePaymentFactor = Convert.ToDouble(_eclEadInputAssumption.FirstOrDefault(o => o.Key == "PrePaymentFactor)").Value); } catch { }
@@ -934,6 +936,16 @@ namespace IFRS9_ECL.Core
                         outstandingBalance = double.Parse(refined_query.OUTSTANDING_BALANCE_LCY);
                     }
                     catch { }
+
+
+                    var ps_projs_contract = new List<PaymentSchedule>();
+
+                    try { ps_projs_contract = contract_paymentScheduleProjection.Where(o => o.ContractId == contract).ToList(); } catch { };
+
+                    var component = "";
+                    if (ps_projs_contract.Count > 0)
+                        component = ps_projs_contract.FirstOrDefault().PaymentType;
+
 
                     for (int monthIndex = 1; monthIndex <= lifetime_query.LIM_MONTH; monthIndex++)
                     {
@@ -968,16 +980,27 @@ namespace IFRS9_ECL.Core
                             }
                             else
                             {
+                                
                                 double previousMonth = 0;
                                 double d_value = 0;
                                 try { previousMonth = contract_lifetimeEadInputs.FirstOrDefault(o => o.Month == (monthIndex - 1) && o.Contract_no == contract).Value; } catch { };
+                                
+                                double f_value = 0;
 
+                                //ps_projs_contract = ps_projs_contract.OrderBy(o => o.Component).ToList();
+                                var ps_projs = ps_projs_contract.Where(o => o.Months == monthIndex.ToString()).ToList();
+                                
+                                f_value = ps_projs.Sum(p => p.Value);
+                                
+                                //string component = "";
+                                //if (ps_projs != null)
+                                //{
+                                //    if(ps_projs.Count>0)
+                                //        component = ps_projs.FirstOrDefault().PaymentType;
 
-                                string component = "";
-                                if (ps_proj != null)
-                                {
-                                    component = ps_proj.PaymentType;
-                                }
+                                //    if(ps_projs.Count==0 && ps_projs_contract.Count>0)
+                                //        component = ps_projs_contract.FirstOrDefault().PaymentType;
+                                //}
 
 
                                 //component = ps_proj.PaymentType;
@@ -1000,9 +1023,7 @@ namespace IFRS9_ECL.Core
                                 overallvalue = previousMonth + d_value;
 
 
-                                double f_value = 0;
-                                try { f_value = contract_paymentScheduleProjection.Where(o => o.ContractId == contract && o.Months == monthIndex.ToString()).Sum(p=>p.Value); } catch { };
-
+                              
                                 //outstandingBalance = overallvalue - f_value;
                                 //if (outstandingBalance <= 0)
                                 //continue;

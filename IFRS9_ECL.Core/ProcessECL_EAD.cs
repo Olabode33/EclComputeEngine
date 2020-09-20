@@ -535,7 +535,7 @@ namespace IFRS9_ECL.Core
 
                 var hasItm = 0;
                 //'Check whether the last schedule in this entry is more months from the reporting date than the max_ttm derived from the loan book snapshot.
-                var contact_ps = _ps.Where(o => o.ContractId == item.ContractRefNo).ToList();
+                //var contact_ps = _ps.Where(o => o.ContractId == item.ContractRefNo).ToList();
                 //monthIndex =  Convert.ToInt32(start_schedule);
                 //if(frequency_factor==1)
                 //{
@@ -583,6 +583,7 @@ namespace IFRS9_ECL.Core
             lock(paymentScheduleProjections)
                 paymentScheduleProjections.AddRange(_ps);
 
+            //var suum = paymentScheduleProjections.Sum(o => o.Value);
             //paymentScheduleProjections = paymentScheduleProjections.Where(p=>p.Months!="0").OrderBy(o => double.Parse(o.Months)).ToList();
             Log4Net.Log.Info($"PS Count - {counter}");
         }

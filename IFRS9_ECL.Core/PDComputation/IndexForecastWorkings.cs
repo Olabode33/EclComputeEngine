@@ -226,7 +226,7 @@ namespace IFRS9_ECL.Core.PDComputation
 
             for (int i = 0; i < projections.Count; i++)
             {
-                if ((affiliateId == 5 || affiliateId == 46 || affiliateId == 47) && projections[i].MacroEconomicVariableId == lastMacroVariableId)
+                if (1!=1)//(affiliateId == 5 || affiliateId == 46 || affiliateId == 47) && projections[i].MacroEconomicVariableId == lastMacroVariableId)
                 {
                     var prevItm = projections.FirstOrDefault(o => o.MacroEconomicVariableId == lastMacroVariableId && o.Date < projections[i].Date);
                     if(prevItm!=null)
