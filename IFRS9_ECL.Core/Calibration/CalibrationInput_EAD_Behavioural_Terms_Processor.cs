@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -45,6 +46,7 @@ namespace IFRS9_ECL.Core.Calibration
 
             var path = $"{Path.Combine(Util.AppSettings.CalibrationModelPath, counter.ToString(), "EAD_Behavioural_Term.xlsx")}";
             var path1 = $"{Path.Combine(baseAffPath, $"{Guid.NewGuid().ToString()}_EAD_Behavioural_Term.xlsx")}";
+            var path2 = $"{Path.Combine(baseAffPath)}";
 
             Log4Net.Log.Info(path);
             if (File.Exists(path1))
@@ -101,13 +103,34 @@ namespace IFRS9_ECL.Core.Calibration
                         worksheet.Cells[i + 2, 10].Value = itm.Contract_Start_Date;
                     if (!itm.Contract_End_Date.ToString().Contains("0001"))
                         worksheet.Cells[i + 2, 11].Value = itm.Contract_End_Date;
-                    worksheet.Cells[i + 2, 12].Value = itm.Restructure_Indicator ?? "";
+                    try { worksheet.Cells[i + 2, 12].Value = Convert.ToDouble(itm.Restructure_Indicator);  } catch { worksheet.Cells[i + 2, 12].Value = 0;  }
                     worksheet.Cells[i + 2, 13].Value = itm.Restructure_Type ?? "";
-                    worksheet.Cells[i + 2, 14].Value = itm.Restructure_Start_Date == null ? "" : itm.Restructure_Start_Date.ToString();
-                    worksheet.Cells[i + 2, 15].Value = itm.Restructure_End_Date == null ? "" : itm.Restructure_End_Date.ToString();
+                    worksheet.Cells[i + 2, 14].Value = itm.Restructure_Start_Date; // == null ? "" : itm.Restructure_Start_Date;
+                    worksheet.Cells[i + 2, 15].Value = itm.Restructure_End_Date; // == null ? "" : itm.Restructure_End_Date;
                 }
+
                 Log4Net.Log.Info("Writing Output File");
                 var fi = new FileInfo(path1);
+
+                if (Directory.Exists(baseAffPath))
+                {
+                    var att1 = fi.Attributes.HasFlag(FileAttributes.ReadOnly);
+                    var attr2 = new DirectoryInfo(baseAffPath).Attributes.HasFlag(FileAttributes.ReadOnly);
+                    var accessControlList = Directory.GetAccessControl(baseAffPath);
+                    var accessRules = accessControlList.GetAccessRules(true, true,
+                                    typeof(System.Security.Principal.SecurityIdentifier));
+                    foreach (FileSystemAccessRule rule in accessRules)
+                    {
+                        if ((FileSystemRights.Write & rule.FileSystemRights) != FileSystemRights.Write)
+                            break;
+
+                        //if (rule.AccessControlType == AccessControlType.Allow)
+                        //    //writeAllow = true;
+                        //else if (rule.AccessControlType == AccessControlType.Deny)
+                        //    writeDeny = true;
+                    }
+                }
+
                 package.SaveAs(fi);
                 Log4Net.Log.Info("Done Writing Output File");
             }

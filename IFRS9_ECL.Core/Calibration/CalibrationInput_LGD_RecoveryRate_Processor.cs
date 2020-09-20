@@ -128,8 +128,8 @@ namespace IFRS9_ECL.Core.Calibration
             Worksheet calculationSheet = theWorkbook.Sheets[2];
             Range sortRange = calculationSheet.Range["A2", "N" + rowCount.ToString()];
             sortRange.Sort(sortRange.Columns[10], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Outstanding balance
-            //sortRange.Sort(sortRange.Columns[9], DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Default date
-            sortRange.Sort(sortRange.Columns[4], DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
+            //sortRange.Sort(sortRange.Columns[9], XlSortOrder.xlAscending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Default date
+            sortRange.Sort(sortRange.Columns[4], XlSortOrder.xlAscending,  DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
 
             //Temp fix for #REF error after deleting rows
             Range tempRange = calculationSheet.Range["A" + (rowCount + 1).ToString(), "N" + (rowCount + 1).ToString()];

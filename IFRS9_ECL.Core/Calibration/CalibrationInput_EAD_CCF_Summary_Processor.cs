@@ -133,12 +133,11 @@ namespace IFRS9_ECL.Core.Calibration
                 Range sortRange = calculationSheet.Range["A2", "J" + rowCount.ToString()];
                 sortRange.Sort(sortRange.Columns[9], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); //Outstanding balance
                 sortRange.Sort(sortRange.Columns[5], XlSortOrder.xlAscending);  //Snapshot date
-                sortRange.Sort(sortRange.Columns[2], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers);  // Account no
+                sortRange.Sort(sortRange.Columns[3], XlSortOrder.xlDescending, DataOption1: XlSortDataOption.xlSortTextAsNumbers);  // Settlement Account
 
 
 
                 //refresh and calculate to modify
-
                 theWorkbook.RefreshAll();
                 excel.Calculate();
 

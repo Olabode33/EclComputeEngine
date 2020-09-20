@@ -1,4 +1,5 @@
-﻿using IFRS9_ECL.Core.Calibration.Input;
+﻿using IFRS9_ECL.Core.Calibration.Entities;
+using IFRS9_ECL.Core.Calibration.Input;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Util;
 using Microsoft.Office.Interop.Excel;
@@ -30,6 +31,13 @@ namespace IFRS9_ECL.Core.Calibration
             
             var qry = Queries.CalibrationInput_PD_CR_DR(calibrationId);
             var _dt = DataAccess.i.GetData(qry);
+
+            qry = Queries.CalibrationResultHistoric_PD_CommsCons(affiliateId);
+            var dt_HistoricCommsCons = DataAccess.i.GetData(qry);
+            qry = Queries.CalibrationResultHistoric_PD_Corporate(affiliateId);
+            var dt_HistoricCorporate = DataAccess.i.GetData(qry);
+            qry = Queries.CalibrationResultHistoric_PD_Output(affiliateId);
+            var dt_HistoricOutput = DataAccess.i.GetData(qry);
 
             //DataView dv = _dt.DefaultView;
             //dv.Sort = "Account_No,Contract_No,RAPP_Date";
@@ -66,10 +74,11 @@ namespace IFRS9_ECL.Core.Calibration
                 //}
 
                 //1 is for header
-                worksheet.DeleteRow(dt.Rows.Count + 2, rows - (dt.Rows.Count + 2)); //TODO::: Enable after testing
+                if (rows > (dt.Rows.Count + 3))
+                    worksheet.DeleteRow(dt.Rows.Count + 3, rows - (dt.Rows.Count + 3)); //TODO::: Enable after testing
                 // loop through the worksheet rows
 
-                package.Workbook.CalcMode = ExcelCalcMode.Automatic;
+                //package.Workbook.CalcMode = ExcelCalcMode.Automatic;
 
                 for (int i = 0; i < dt.Rows.Count; i++)// DataRow dr in dt.Rows)
                 {
@@ -92,6 +101,124 @@ namespace IFRS9_ECL.Core.Calibration
                     worksheet.Cells[i + 3, 10].Value = itm.Contract_End_Date;
                     worksheet.Cells[i + 3, 11].Value = itm.RAPP_Date;
                     worksheet.Cells[i + 3, 12].Value = itm.Segment;
+                }
+
+                //Write Historic Result Cons Comms
+                if (dt_HistoricCommsCons.Rows.Count > 0)
+                {
+                    ExcelWorksheet worksheet_comm_cons = package.Workbook.Worksheets[3];//.FirstOrDefault();
+                    for (int i = 0; i < dt_HistoricCommsCons.Rows.Count; i++)
+                    {
+                        var itm = DataAccess.i.ParseDataToObject(new CalibrationResultHistoric_PD_CommsCons(), dt_HistoricCommsCons.Rows[i]);
+                        int stage = itm.Stage;
+                        switch (stage)
+                        {
+                            case 1:
+                                try { worksheet_comm_cons.Cells[15, 15].Value = itm.Comm_1; } catch { worksheet_comm_cons.Cells[15, 15].Value = 0; }
+                                try { worksheet_comm_cons.Cells[15, 16].Value = itm.Comm_2; } catch { worksheet_comm_cons.Cells[15, 16].Value = 0; }
+                                try { worksheet_comm_cons.Cells[15, 17].Value = itm.Comm_3; } catch { worksheet_comm_cons.Cells[15, 17].Value = 0; }
+                                try { worksheet_comm_cons.Cells[15, 20].Value = itm.Cons_1; } catch { worksheet_comm_cons.Cells[15, 20].Value = 0; }
+                                try { worksheet_comm_cons.Cells[15, 21].Value = itm.Cons_2; } catch { worksheet_comm_cons.Cells[15, 21].Value = 0; }
+                                try { worksheet_comm_cons.Cells[15, 22].Value = itm.Cons_3; } catch { worksheet_comm_cons.Cells[15, 22].Value = 0; }
+                                break;
+                            case 2:
+                                try { worksheet_comm_cons.Cells[16, 15].Value = itm.Comm_1; } catch { worksheet_comm_cons.Cells[16, 15].Value = 0; }
+                                try { worksheet_comm_cons.Cells[16, 16].Value = itm.Comm_2; } catch { worksheet_comm_cons.Cells[16, 16].Value = 0; }
+                                try { worksheet_comm_cons.Cells[16, 17].Value = itm.Comm_3; } catch { worksheet_comm_cons.Cells[16, 17].Value = 0; }
+                                try { worksheet_comm_cons.Cells[16, 20].Value = itm.Cons_1; } catch { worksheet_comm_cons.Cells[16, 20].Value = 0; }
+                                try { worksheet_comm_cons.Cells[16, 21].Value = itm.Cons_2; } catch { worksheet_comm_cons.Cells[16, 21].Value = 0; }
+                                try { worksheet_comm_cons.Cells[16, 22].Value = itm.Cons_3; } catch { worksheet_comm_cons.Cells[16, 22].Value = 0; }
+                                break;
+                            case 3:
+                                try { worksheet_comm_cons.Cells[17, 15].Value = itm.Comm_1; } catch { worksheet_comm_cons.Cells[17, 15].Value = 0; }
+                                try { worksheet_comm_cons.Cells[17, 16].Value = itm.Comm_2; } catch { worksheet_comm_cons.Cells[17, 16].Value = 0; }
+                                try { worksheet_comm_cons.Cells[17, 17].Value = itm.Comm_3; } catch { worksheet_comm_cons.Cells[17, 17].Value = 0; }
+                                try { worksheet_comm_cons.Cells[17, 20].Value = itm.Cons_1; } catch { worksheet_comm_cons.Cells[17, 20].Value = 0; }
+                                try { worksheet_comm_cons.Cells[17, 21].Value = itm.Cons_2; } catch { worksheet_comm_cons.Cells[17, 21].Value = 0; }
+                                try { worksheet_comm_cons.Cells[17, 22].Value = itm.Cons_3; } catch { worksheet_comm_cons.Cells[17, 22].Value = 0; }
+                                break;
+                            default:
+                                break;
+                        }
+                        
+                    }
+                }
+
+                //Write Historic Result Corporate
+                if (dt_HistoricCorporate.Rows.Count > 0)
+                {
+                    ExcelWorksheet worksheet_corp = package.Workbook.Worksheets[2];//.FirstOrDefault();
+                    ///worksheet_corp.Calculate();
+                    for (int i = 0; i < dt_HistoricCorporate.Rows.Count; i++)
+                    {
+                        var itm = DataAccess.i.ParseDataToObject(new CalibrationResultHistoric_PD_Corporate(), dt_HistoricCorporate.Rows[i]);
+                        //Outstanding Balance
+                        for (int row = 5; row < 25; row++)
+                        {
+                            int rappDate = -1;
+                            var t = worksheet_corp.Cells[row, 2].Value;
+                            try { rappDate = Convert.ToInt32(t); } catch { }
+
+                            if (rappDate == itm.RAPPDATE)
+                            {
+                                try { worksheet_corp.Cells[row, 3].Value = itm.OutstandingBalance_1; } catch { worksheet_corp.Cells[row, 3].Value = 0; }
+                                try { worksheet_corp.Cells[row, 4].Value = itm.OutstandingBalance_2; } catch { worksheet_corp.Cells[row, 4].Value = 0; }
+                                try { worksheet_corp.Cells[row, 5].Value = itm.OutstandingBalance_3; } catch { worksheet_corp.Cells[row, 5].Value = 0; }
+                                try { worksheet_corp.Cells[row, 6].Value = itm.OutstandingBalance_4; } catch { worksheet_corp.Cells[row, 6].Value = 0; }
+                                try { worksheet_corp.Cells[row, 7].Value = itm.OutstandingBalance_5; } catch { worksheet_corp.Cells[row, 7].Value = 0; }
+                                try { worksheet_corp.Cells[row, 8].Value = itm.OutstandingBalance_6; } catch { worksheet_corp.Cells[row, 8].Value = 0; }
+                                try { worksheet_corp.Cells[row, 9].Value = itm.OutstandingBalance_7; } catch { worksheet_corp.Cells[row, 9].Value = 0; }
+                                try { worksheet_corp.Cells[row, 10].Value = itm.OutstandingBalance_8; } catch { worksheet_corp.Cells[row, 10].Value = 0; }
+                                try { worksheet_corp.Cells[row, 11].Value = itm.OutstandingBalance_9; } catch { worksheet_corp.Cells[row, 11].Value = 0; }
+                                try { worksheet_corp.Cells[row, 12].Value = itm.OutstandingBalance_10; } catch { worksheet_corp.Cells[row, 12].Value = 0; }
+                            }
+                        }
+                        //Balance Transition to Default
+                        for (int row = 32; row < 52; row++)
+                        {
+                            int rappDate = -1;
+                            var t = worksheet_corp.Cells[row, 2].Value;
+                            try { rappDate = Convert.ToInt32(t); } catch { }
+
+                            if (rappDate == itm.RAPPDATE)
+                            {
+                                try { worksheet_corp.Cells[row, 3].Value = itm.Balance_1; } catch { worksheet_corp.Cells[row, 3].Value = 0; }
+                                try { worksheet_corp.Cells[row, 4].Value = itm.Balance_2; } catch { worksheet_corp.Cells[row, 4].Value = 0; }
+                                try { worksheet_corp.Cells[row, 5].Value = itm.Balance_3; } catch { worksheet_corp.Cells[row, 5].Value = 0; }
+                                try { worksheet_corp.Cells[row, 6].Value = itm.Balance_4; } catch { worksheet_corp.Cells[row, 6].Value = 0; }
+                                try { worksheet_corp.Cells[row, 7].Value = itm.Balance_5; } catch { worksheet_corp.Cells[row, 7].Value = 0; }
+                                try { worksheet_corp.Cells[row, 8].Value = itm.Balance_6; } catch { worksheet_corp.Cells[row, 8].Value = 0; }
+                                try { worksheet_corp.Cells[row, 9].Value = itm.Balance_7; } catch { worksheet_corp.Cells[row, 9].Value = 0; }
+                                try { worksheet_corp.Cells[row, 10].Value = itm.Balance_8; } catch { worksheet_corp.Cells[row, 10].Value = 0; }
+                                try { worksheet_corp.Cells[row, 11].Value = itm.Balance_9; } catch { worksheet_corp.Cells[row, 11].Value = 0; }
+                                try { worksheet_corp.Cells[row, 12].Value = itm.Balance_10; } catch { worksheet_corp.Cells[row, 12].Value = 0; }
+                            }
+                        }
+                    }
+                }
+
+                //Write Historic Result Output
+                if (dt_HistoricOutput.Rows.Count > 0)
+                {
+                    ExcelWorksheet worksheet_output = package.Workbook.Worksheets[0];//.FirstOrDefault();
+                    var itm = DataAccess.i.ParseDataToObject(new CalibrationResultHistoric_PD_Output(), dt_HistoricOutput.Rows[0]);
+
+                    try { worksheet_output.Cells[4, 3].Value = itm.Rating_1; } catch { worksheet_output.Cells[4, 3].Value = 0; }
+                    try { worksheet_output.Cells[5, 3].Value = itm.Rating_2; } catch { worksheet_output.Cells[5, 3].Value = 0; }
+                    try { worksheet_output.Cells[6, 3].Value = itm.Rating_3; } catch { worksheet_output.Cells[6, 3].Value = 0; }
+                    try { worksheet_output.Cells[7, 3].Value = itm.Rating_4; } catch { worksheet_output.Cells[7, 3].Value = 0; }
+                    try { worksheet_output.Cells[8, 3].Value = itm.Rating_5; } catch { worksheet_output.Cells[8, 3].Value = 0; }
+                    try { worksheet_output.Cells[9, 3].Value = itm.Rating_6; } catch { worksheet_output.Cells[9, 3].Value = 0; }
+                    try { worksheet_output.Cells[10, 3].Value = itm.Rating_7; } catch { worksheet_output.Cells[10, 3].Value = 0; }
+                    try { worksheet_output.Cells[11, 3].Value = itm.Rating_8; } catch { worksheet_output.Cells[11, 3].Value = 0; }
+                    try { worksheet_output.Cells[12, 3].Value = itm.Rating_9; } catch { worksheet_output.Cells[12, 3].Value = 0; }
+                    try { worksheet_output.Cells[13, 3].Value = itm.Rating_10; } catch { worksheet_output.Cells[13, 3].Value = 0; }
+                    try { worksheet_output.Cells[14, 3].Value = itm.Rating_Comm; } catch { worksheet_output.Cells[14, 3].Value = 0; }
+                    try { worksheet_output.Cells[15, 3].Value = itm.Rating_Cons; } catch { worksheet_output.Cells[15, 3].Value = 0; }
+
+                    try { worksheet_output.Cells[19, 3].Value = itm.Defaulted_Loan; } catch { worksheet_output.Cells[19, 3].Value = 0; }
+                    try { worksheet_output.Cells[20, 3].Value = itm.Cured_Loan; } catch { worksheet_output.Cells[20, 3].Value = 0; }
+                    try { worksheet_output.Cells[24, 3].Value = itm.Redefaulted_Loans; } catch { worksheet_output.Cells[24, 3].Value = 0; }
                 }
 
                 var fi = new FileInfo(path1);
@@ -129,9 +256,15 @@ namespace IFRS9_ECL.Core.Calibration
 
             //Sort
             Worksheet calculationSheet = theWorkbook.Sheets[2];
-            Range sortRange = calculationSheet.Range["A2", "M" + rowCount.ToString()];
-            sortRange.Sort(sortRange.Columns[13]); // Unique ID
-            //sortRange.Sort(sortRange.Columns[3], DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
+            Range sortRange = calculationSheet.Range["A3", "L" + rowCount.ToString()];
+            //sortRange.Sort(sortRange.Columns[13]); // Unique ID
+            sortRange.Sort(sortRange.Columns[11], XlSortOrder.xlAscending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); // RAPPDATE
+            sortRange.Sort(sortRange.Columns[3], XlSortOrder.xlAscending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Contract no
+            sortRange.Sort(sortRange.Columns[12], XlSortOrder.xlAscending, DataOption1: XlSortDataOption.xlSortTextAsNumbers); // Segment
+
+            //Temp fix for #REF error after deleting rows
+            Range tempRange = calculationSheet.Range["A" + (rowCount + 1).ToString(), "M700000"];
+            tempRange.EntireRow.Delete();
 
 
 
@@ -251,7 +384,7 @@ namespace IFRS9_ECL.Core.Calibration
                                                                     _missingValue);
 
 
-            pdCalculationSheet = theWorkbook.Sheets[2];
+            pdCalculationSheet = theWorkbook.Sheets[3];
             pdCalculationSheet.Cells[83,7] = solverValueG;
             pdCalculationSheet.Cells[83,9] = solverValueI;
             Log4Net.Log.Info("Done updating excel");
