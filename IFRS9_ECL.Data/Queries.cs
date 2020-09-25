@@ -178,17 +178,37 @@ namespace IFRS9_ECL.Data
             return $" insert into CalibrationResult_PD_12Months(Rating, Outstanding_Balance, Redefault_Balance, Redefaulted_Balance, Total_Redefault, Months_PDs_12, Comment, Status, CalibrationId, DateCreated) values({Rating}, {Outstanding_Balance}, {Redefault_Balance}, {Redefaulted_Balance}, {Total_Redefault}, {Months_PDs_12},'', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
 
-        public static string CalibrationResult_PD_CommCons_Update(Guid calibrationId, int Month, double? Comm1, double? Cons1, double? Comm2, double? Cons2)
+        public static string CalibrationResult_PD_CommCons_Update(long AffiliateId, int Month, double? Comm1, double? Cons1, double? Comm2, double? Cons2, double? CummComm1, double? CummCons1, double? CummComm2, double? CummCons2)
         {
-            return $" insert into CalibrationResult_PD_CommsCons_MarginalDefaultRate(Month, Comm1, Cons1, Comm2, Cons2, Comment, Status, CalibrationId, DateCreated) values({Month}, {Comm1}, {Cons1}, {Comm2}, {Cons2}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
+            return $"INSERT INTO [dbo].[PdInputAssumptionNonInternalModels] " +
+                   $"   ([Id],[CreationTime],[CreatorUserId],[LastModificationTime],[LastModifierUserId],[IsDeleted]," +
+                   $"    [Key],[Month],[PdGroup],[MarginalDefaultRate],[CummulativeSurvival],[IsComputed],[CanAffiliateEdit],[RequiresGroupApproval],[Framework],[OrganizationUnitId],[Status])     " +
+                   $"   VALUES (newid() ,getdate() ,2 ,GETDATE() ,2 ,0 ,'NonInternalModelCOMM_STAGE_1DefaultRate' ,{Month} ,'COMM_STAGE_1' ,{Comm1} ,{CummComm1} ,1 ,0 ,1 ,1 ,{AffiliateId} ,2 ); " +
+                   $"INSERT INTO [dbo].[PdInputAssumptionNonInternalModels] " +
+                   $"   ([Id],[CreationTime],[CreatorUserId],[LastModificationTime],[LastModifierUserId],[IsDeleted]," +
+                   $"    [Key],[Month],[PdGroup],[MarginalDefaultRate],[CummulativeSurvival],[IsComputed],[CanAffiliateEdit],[RequiresGroupApproval],[Framework],[OrganizationUnitId],[Status])     " +
+                   $"   VALUES (newid() ,getdate() ,2 ,GETDATE() ,2 ,0 ,'NonInternalModelCOMM_STAGE_2DefaultRate' ,{Month} ,'COMM_STAGE_2' ,{Comm2} ,{CummComm2} ,1 ,0 ,1 ,1 ,{AffiliateId} ,2 ); " +
+                   $"INSERT INTO [dbo].[PdInputAssumptionNonInternalModels] " +
+                   $"   ([Id],[CreationTime],[CreatorUserId],[LastModificationTime],[LastModifierUserId],[IsDeleted]," +
+                   $"    [Key],[Month],[PdGroup],[MarginalDefaultRate],[CummulativeSurvival],[IsComputed],[CanAffiliateEdit],[RequiresGroupApproval],[Framework],[OrganizationUnitId],[Status])     " +
+                   $"   VALUES (newid() ,getdate() ,2 ,GETDATE() ,2 ,0 ,'NonInternalModelCONS_STAGE_1DefaultRate' ,{Month} ,'CONS_STAGE_1' ,{Cons1} ,{CummCons1} ,1 ,0 ,1 ,1 ,{AffiliateId} ,2 ); " +
+                   $"INSERT INTO [dbo].[PdInputAssumptionNonInternalModels] " +
+                   $"   ([Id],[CreationTime],[CreatorUserId],[LastModificationTime],[LastModifierUserId],[IsDeleted]," +
+                   $"    [Key],[Month],[PdGroup],[MarginalDefaultRate],[CummulativeSurvival],[IsComputed],[CanAffiliateEdit],[RequiresGroupApproval],[Framework],[OrganizationUnitId],[Status])     " +
+                   $"   VALUES (newid() ,getdate() ,2 ,GETDATE() ,2 ,0 ,'NonInternalModelCONS_STAGE_2DefaultRate' ,{Month} ,'CONS_STAGE_2' ,{Cons2} ,{CummCons2} ,1 ,0 ,1 ,1 ,{AffiliateId} ,2 ); ";
+
+
+
+            //return $" insert into CalibrationResult_PD_CommsCons_MarginalDefaultRate(Month, Comm1, Cons1, Comm2, Cons2, Comment, Status, CalibrationId, DateCreated) " +
+            //       $" values({Month}, {Comm1}, {Cons1}, {Comm2}, {Cons2}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
 
         public static string CalibrationResult_PD_Update_Summary(Guid calibrationId, string lstQry, string commsCons, double? Normal_12_Months_PD, double? DefaultedLoansA, double? DefaultedLoansB, double? CuredLoansA, double? CuredLoansB, double? Cure_Rate, double? CuredPopulationA, double? CuredPopulationB, double? RedefaultedLoansA, double? RedefaultedLoansB, double? Redefault_Rate, double? Redefault_Factor, 
-                                                                 double? Commercial_CureRate, double? Commercial_RedefaultRate, double? Consumer_CureRate, double? Consumer_RedefaultRate)
+                                                                 double? Commercial_CureRate, double? Commercial_RedefaultRate, double? Consumer_CureRate, double? Consumer_RedefaultRate, long affiliateId)
         {
             return $"delete from CalibrationResult_PD_12Months where CalibrationID ='{calibrationId.ToString()}'; "+
                 $"delete from CalibrationResult_PD_12Months_Summary where CalibrationID ='{calibrationId.ToString()}'; {lstQry} " +
-                $"delete from CalibrationResult_PD_CommsCons_MarginalDefaultRate where CalibrationID ='{calibrationId.ToString()}'; {commsCons} " +
+                $"delete from [PdInputAssumptionNonInternalModels] where OrganizationUnitId ={affiliateId} and Framework = 1; {commsCons} " +
                 $"insert into CalibrationResult_PD_12Months_Summary(Normal_12_Months_PD, DefaultedLoansA, DefaultedLoansB, CuredLoansA, CuredLoansB, Cure_Rate, " +
                 $"CuredPopulationA, CuredPopulationB, RedefaultedLoansA, RedefaultedLoansB, Redefault_Rate, Redefault_Factor, " +
                 $"Commercial_CureRate, Commercial_RedefaultRate, Consumer_CureRate, Consumer_RedefaultRate, " +

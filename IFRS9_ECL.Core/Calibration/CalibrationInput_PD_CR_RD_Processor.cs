@@ -420,12 +420,19 @@ namespace IFRS9_ECL.Core.Calibration
                 var r = new CalibrationResult_PD_CommsCons_MarginalDefaultRate();
 
                 r.Month = i + 1;
-                r.Comm1 = worksheet1.Cells[11 + i, 11].Value;
-                r.Cons1 = worksheet1.Cells[11 + i, 12].Value;
-                r.Comm2 = worksheet1.Cells[11 + i, 13].Value;
-                r.Cons2 = worksheet1.Cells[11 + i, 14].Value;
+                try { r.Comm1 = worksheet1.Cells[11 + i, 11].Value; } catch { r.Comm1 = 0; }
+                try{ r.Cons1 = worksheet1.Cells[11 + i, 12].Value; } catch { r.Cons1 = 0; }
+                try{ r.Comm2 = worksheet1.Cells[11 + i, 13].Value; } catch { r.Comm2 = 0; }
+                try{ r.Cons2 = worksheet1.Cells[11 + i, 14].Value; } catch { r.Cons2 = 0; }
 
-                qry = Queries.CalibrationResult_PD_CommCons_Update(calibrationId, r.Month, r.Comm1, r.Cons1, r.Comm2, r.Cons2);
+                var cummulative = new CalibrationResult_PD_CommsCons_MarginalDefaultRate();
+                cummulative.Month = i + 1;
+                try{ cummulative.Comm1 = worksheet1.Cells[11 + i, 17].Value; } catch { cummulative.Comm1 = 0; }
+                try{ cummulative.Cons1 = worksheet1.Cells[11 + i, 18].Value; } catch { cummulative.Cons1 = 0; }
+                try{ cummulative.Comm2 = worksheet1.Cells[11 + i, 19].Value; } catch { cummulative.Comm2 = 0; }
+                try{ cummulative.Cons2 = worksheet1.Cells[11 + i, 20].Value; } catch { cummulative.Cons2 = 0; }
+
+                qry = Queries.CalibrationResult_PD_CommCons_Update(affiliateId, r.Month, r.Comm1, r.Cons1, r.Comm2, r.Cons2, cummulative.Comm1, cummulative.Cons1, cummulative.Comm2, cummulative.Cons2);
                 commCons.Append(qry);
             }
 
@@ -497,7 +504,7 @@ namespace IFRS9_ECL.Core.Calibration
             //File.Delete(path1);
 
             qry =Queries.CalibrationResult_PD_Update_Summary(calibrationId, sb.ToString(), commCons.ToString(), rs.Normal_12_Months_PD, rs.DefaultedLoansA, rs.DefaultedLoansB, rs.CuredLoansA, rs.CuredLoansB, rs.Cure_Rate, rs.CuredPopulationA, rs.CuredPopulationB, rs.RedefaultedLoansA, rs.RedefaultedLoansB, rs.Redefault_Rate, rs.Redefault_Factor
-                                                             ,rs.Commercial_CureRate, rs.Commercial_RedefaultRate, rs.Consumer_CureRate, rs.Consumer_RedefaultRate);
+                                                             ,rs.Commercial_CureRate, rs.Commercial_RedefaultRate, rs.Consumer_CureRate, rs.Consumer_RedefaultRate, affiliateId);
             DataAccess.i.ExecuteQuery(qry);
 
             return true;
