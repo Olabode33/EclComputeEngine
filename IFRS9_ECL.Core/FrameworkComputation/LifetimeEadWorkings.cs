@@ -527,11 +527,14 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ThenBy(p => p.ContractNo).ToList();
 
             var newLoanBook = new List<Loanbook_Data>();
+
+            //var currencyLst = lstRaw.Select(o => o.Currency).ToList();
             var distinctContracts = lstRaw.Select(o => o.ContractId).Distinct().ToList();
             foreach (var contract in distinctContracts)
             {
                 var new_contract = lstRaw.LastOrDefault(o => o.ContractId == contract);
                 new_contract.OutstandingBalanceLCY = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
+                new_contract.CreditLimit = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.CreditLimit);
                 newLoanBook.Add(new_contract);
             }
             //newLoanBook = lstRaw;
