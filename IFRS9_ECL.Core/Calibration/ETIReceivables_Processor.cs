@@ -161,6 +161,7 @@ namespace IFRS9_ECL.Core.Calibration
             qry = Queries.CalibrationResult_IVReceivables(calibrationId, r.TotalExposure, r.TotalImpairment, r.AdditionalProvision, r.Coverage
                 , r.OptimisticExposure, r.BaseExposure, r.DownturnExposure, r.ECLTotalExposure, r.OptimisticImpairment, r.BaseImpairment, r.DownturnImpairment
                 , r.ECLTotalImpairment, r.OptimisticCoverageRatio, r.BaseCoverageRatio, r.DownturnCoverageRatio, r.TotalCoverageRatio);
+            Log4Net.Log.Info("Receiveables Q: " + qry);
             DataAccess.i.ExecuteQuery(qry);
 
             return true;
