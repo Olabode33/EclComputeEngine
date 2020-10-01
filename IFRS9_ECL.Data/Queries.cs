@@ -93,11 +93,11 @@ namespace IFRS9_ECL.Data
         public static string CalibrationResult_IVReceivables(Guid calibrationId, double totalExposure, double totalImpairment, double additionalProvision, double coverage, double optimisticExposure, double baseExposure, double downturnExposure, double eCLTotalExposure, double optimisticImpairment, double baseImpairment, double downturnImpairment, double eCLTotalImpairment, double optimisticCoverageRatio, double baseCoverageRatio, double downturnCoverageRatio, double totalCoverageRatio)
         {
             return $"delete from ReceivablesResults where RegisterId ='{calibrationId.ToString()}'; " +
-                   $"insert into ReceivablesResults(totalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, " +
+                   $"insert into ReceivablesResults(id, totalExposure, totalImpairment, additionalProvision, coverage, optimisticExposure, " +
                    $" baseExposure, downturnExposure, eCLTotalExposure, optimisticImpairment, baseImpairment, downturnImpairment, eCLTotalImpairment, " +
                    $" optimisticCoverageRatio, baseCoverageRatio, downturnCoverageRatio, totalCoverageRatio, RegisterId) " +
-                   $" values ({totalExposure}, {totalImpairment}, {additionalProvision}, {coverage}, {optimisticExposure}, {baseExposure}, {downturnExposure}, {eCLTotalExposure}, " +
-                   $" {optimisticImpairment}, {baseImpairment} , {downturnImpairment}, {eCLTotalImpairment}, {optimisticCoverageRatio}, {baseCoverageRatio}, , {downturnCoverageRatio}, {totalCoverageRatio}, '{calibrationId.ToString()}' ";
+                   $" values (newid(), {totalExposure}, {totalImpairment}, {additionalProvision}, {coverage}, {optimisticExposure}, {baseExposure}, {downturnExposure}, {eCLTotalExposure}, " +
+                   $" {optimisticImpairment}, {baseImpairment} , {downturnImpairment}, {eCLTotalImpairment}, {optimisticCoverageRatio}, {baseCoverageRatio}, {downturnCoverageRatio}, {totalCoverageRatio}, '{calibrationId.ToString()}') ";
         }
 
         public static string CalibrationResult_EAD_CCF_Summary_Update(Guid calibrationId, double? oD_TotalLimitOdDefaultedLoan, double? oD_BalanceAtDefault, double? oD_Balance12MonthBeforeDefault, double? oD_TotalConversation, double? oD_CCF, double? card_TotalLimitOdDefaultedLoan, double? card_BalanceAtDefault, double? card_Balance12MonthBeforeDefault, double? card_TotalConversation, double? card_CCF, double? overall_TotalLimitOdDefaultedLoan, double? overall_BalanceAtDefault, double? overall_Balance12MonthBeforeDefault, double? overall_TotalConversation, double? overall_CCF)
