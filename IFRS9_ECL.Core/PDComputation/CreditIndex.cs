@@ -52,42 +52,15 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             var creditIndices = ComputeCreditIndex();
 
-            var dt = new DataTable();
-            var c = new CreditIndex_Output();
+            var r = Util.FileSystemStorage<CreditIndex_Output>.WriteCsvData(_eclId, ECLStringConstants.i.PDCreditIndex_Table(_eclType), creditIndices);
 
-            Type myObjOriginalType = c.GetType();
-            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
-
-            for (int i = 0; i < myProps.Length; i++)
-            {
-                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
-            }
-            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
-
-            foreach (var _d in creditIndices)
-            {
-                _d.Id = Guid.NewGuid();
-                dt.Rows.Add(new object[]
-                    {
-                            _d.Id, _d.ProjectionMonth, _d.BestEstimate, _d.Optimistic, _d.Downturn, _eclId
-                    });
-            }
-            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PDCreditIndex_Table(this._eclType));
-
-            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PDCreditIndex_Table(this._eclType)}]";
+            return r? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PDCreditIndex_Table(this._eclType)}]";
         }
 
         public List<CreditIndex_Output> GetCreditIndexResult()
         {
-
-            var qry = Queries.Credit_Index(this._eclId, this._eclType);
-            var _lstRaw = DataAccess.i.GetData(qry);
-
-            var creditIndex = new List<CreditIndex_Output>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                creditIndex.Add(DataAccess.i.ParseDataToObject(new CreditIndex_Output(), dr));
-            }
+            var creditIndex = Util.FileSystemStorage<CreditIndex_Output>.ReadCsvData(this._eclId, ECLStringConstants.i.PDCreditIndex_Table(this._eclType));
+           
             return creditIndex;
         }
 

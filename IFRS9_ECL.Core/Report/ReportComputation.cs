@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Core.FrameworkComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models.ECL_Result;
+using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using OfficeOpenXml;
@@ -1354,18 +1355,51 @@ namespace IFRS9_ECL.Core.Report
                 $"   try_convert(float, isnull((select [Value] from {_eclType}EclAssumptions where {_eclType}EclId = '{_eclId}' and AssumptionGroup = 1 and  [Key]='DownturnScenarioLikelihood'), 0)) UserInput_EclD";
 
             dt=DataAccess.i.GetData(qry);
-
             
             temp_header = DataAccess.i.ParseDataToObject(rde, dt.Rows[0]);
 
-                        qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
-            //qry = $"select Stage, FinalEclValue, Scenario, ContractId from {_eclTypeTable}ECLFrameworkFinal where {_eclType}EclId = '{_eclId}' and EclMonth=0";
-            dt = DataAccess.i.GetData(qry);
 
-            foreach(DataRow dr in dt.Rows)
+            var lstFrameworkFinal = Util.FileSystemStorage<FinalEcl>.ReadCsvData(this._eclId, ECLStringConstants.i.FrameworkResult(this._eclType));
+            var lstFrameworkFinalOverride = new List<FinalEcl>();
+            try
+            {
+                lstFrameworkFinalOverride = Util.FileSystemStorage<FinalEcl>.ReadCsvData(this._eclId, ECLStringConstants.i.FrameworkResultOverride(this._eclType));
+            }
+            catch { }
+
+
+            //qry = $"select f.Stage, f.FinalEclValue, f.Scenario, f.ContractId, fo.Stage StageOverride, fo.FinalEclValue FinalEclValueOverride, fo.Scenario ScenarioOverride, fo.ContractId ContractIOverride from {_eclTypeTable}ECLFrameworkFinal f left join {_eclTypeTable}ECLFrameworkFinalOverride fo on (f.contractId=fo.contractId and f.EclMonth=fo.EclMonth and f.Scenario=fo.Scenario) where f.{_eclType}EclId = '{_eclId}' and f.EclMonth=0";
+            //qry = $"select Stage, FinalEclValue, Scenario, ContractId from {_eclTypeTable}ECLFrameworkFinal where {_eclType}EclId = '{_eclId}' and EclMonth=0";
+            //dt = DataAccess.i.GetData(qry);
+
+            
+            for(var i=0; i<lstFrameworkFinal.Count; i++)
             {
                 var tfer = new TempFinalEclResult();
-                lstTfer.Add(DataAccess.i.ParseDataToObject(tfer, dr));
+                tfer.ContractId = lstFrameworkFinal[i].ContractId;
+                tfer.FinalEclValue = lstFrameworkFinal[i].FinalEclValue;
+                tfer.Scenario = lstFrameworkFinal[i].eCL_Scenario;
+                tfer.Stage = lstFrameworkFinal[i].Stage;
+
+                tfer.ContractIdOverride = lstFrameworkFinal[i].ContractId;
+                tfer.FinalEclValueOverride = lstFrameworkFinal[i].FinalEclValue;
+                tfer.ScenarioOverride = lstFrameworkFinal[i].eCL_Scenario;
+                tfer.StageOverride = lstFrameworkFinal[i].Stage;
+
+                if (lstFrameworkFinalOverride.Count > 0)
+                {
+                    try
+                    {
+                        tfer.ContractIdOverride = lstFrameworkFinalOverride[i].ContractId;
+                        tfer.FinalEclValueOverride = lstFrameworkFinalOverride[i].FinalEclValue;
+                        tfer.ScenarioOverride = lstFrameworkFinalOverride[i].eCL_Scenario;
+                        tfer.StageOverride = lstFrameworkFinalOverride[i].Stage;
+                    }
+                    catch { }
+                }
+
+
+                lstTfer.Add(tfer);
             }
 
             //qry = $"select distinct Contract_no ContractId, [Value] from {_eclTypeTable}EadLifetimeProjections where {_eclType}EclId='{_eclId}' and Month=0";

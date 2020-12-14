@@ -136,18 +136,9 @@ namespace IFRS9_ECL.Core.PDComputation
 
         public List<SicrInputs> GetSircInputResult()
         {
-            var qry = Queries.PD_GetSIRCInputResult(this._eclId, _eclType);
-            var dt = DataAccess.i.GetData(qry);
-            var lifeTimeProjections = new List<SicrInputs>();
+            var sicrData = FileSystemStorage<SicrInputs>.ReadCsvData(this._eclId, ECLStringConstants.i.PdMappings_Table(this._eclType));
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                var itm = DataAccess.i.ParseDataToObject(new SicrInputs(), dr);
-                itm.ContractId = itm.ContractId;
-                lifeTimeProjections.Add(itm);
-            }
-            
-            return lifeTimeProjections;
+            return sicrData;
         }
 
 

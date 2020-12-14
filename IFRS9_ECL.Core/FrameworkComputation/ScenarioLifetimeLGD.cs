@@ -826,60 +826,46 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         protected List<LifeTimeObject> GetScenarioLifetimePdResult(ECL_Scenario _scenario)
         {
 
-            var qry = "";
+            var lifetimePd = new List<LifeTimeObject>();
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeBests_Table(this._eclType), this._eclId, this._eclType);
+                    lifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdLifetimeBests_Table(this._eclType));
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType), this._eclId, this._eclType);
+                    lifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType));
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdLifetimeDownturns_Table(this._eclType), this._eclId, this._eclType);
+                    lifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdLifetimeDownturns_Table(this._eclType));
                     break;
                 default:
                     return null;
-            }
-
-            var _lstRaw = DataAccess.i.GetData(qry);
-
-            var lifetimePd = new List<LifeTimeObject>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
             }
             Log4Net.Log.Info($"LGD_LifetimePD - {_scenario}");
             return lifetimePd;
+
         }
         protected List<LifeTimeObject> GetScenarioRedfaultLifetimePdResult(ECL_Scenario _scenario)
         {
-            var qry = "";
+
+            var redefaultLifetimePd = new List<LifeTimeObject>();
             switch (_scenario)
             {
                 case ECL_Scenario.Best:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeBests_Table(this._eclType), this._eclId, this._eclType);
+                    redefaultLifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdRedefaultLifetimeBests_Table(this._eclType));
                     break;
                 case ECL_Scenario.Optimistic:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeOptimistics_Table(this._eclType), this._eclId, this._eclType);
+                    redefaultLifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdRedefaultLifetimeOptimistics_Table(this._eclType));
                     break;
                 case ECL_Scenario.Downturn:
-                    qry = Queries.LifetimePD_Query(ECLStringConstants.i.PdRedefaultLifetimeDownturns_Table(this._eclType), this._eclId, this._eclType);
+                    redefaultLifetimePd = FileSystemStorage<LifeTimeObject>.ReadCsvData(this._eclId, ECLStringConstants.i.PdRedefaultLifetimeDownturns_Table(this._eclType));
                     break;
                 default:
                     return null;
             }
-
-            var _lstRaw = DataAccess.i.GetData(qry);
-
-            var lifetimePd = new List<LifeTimeObject>();
-            foreach (DataRow dr in _lstRaw.Rows)
-            {
-                lifetimePd.Add(DataAccess.i.ParseDataToObject(new LifeTimeObject(), dr));
-            }
             Log4Net.Log.Info($"LGD_RedefaultLifetimePD - {_scenario}");
+            return redefaultLifetimePd;
 
-            return lifetimePd;
         }
         protected List<CreditIndex_Output> GetCreditRiskResult()
         {

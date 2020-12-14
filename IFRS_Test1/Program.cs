@@ -1,6 +1,7 @@
 ﻿using IFRS9_ECL.Core;
 using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.Report;
+using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.ECL_Result;
 using IFRS9_ECL.Util;
 using System;
@@ -92,7 +93,7 @@ namespace IFRS_Test1
         }
         static void Main(string[] args)
         {
-           
+
             var cc = new Random().Next(10, 100) *0.01;// / 100;
             Console.WriteLine(cc);
             //DeployServices();

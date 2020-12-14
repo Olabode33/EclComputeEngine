@@ -17,7 +17,6 @@ namespace IFRS9_ECL.Models.PD
 
     public class PdMappings
     {
-        public Guid Id { get; set; }
         public string ContractId { get; set; }
         public string AccountNo { get; set; }
         public string ProductType { get; set; }
@@ -47,24 +46,23 @@ namespace IFRS9_ECL.Models.PD
 
     public class SicrInputs
     {
-       // public Guid Id { get; set; }
         public string ContractId { get; set; }
-        //public int RestructureIndicator { get; set; }
-        //public int RestructureRisk { get; set; }
-        //public int WatchlistIndicator { get; set; }
-        //public int CurrentRating { get; set; }
+        public string AccountNo { get; set; }
+        public string ProductType { get; set; }
+        public string PdGroup { get; set; }
+        public int TtmMonths { get; set; }
+        public int MaxDpd { get; set; }
+        public int MaxClassificationScore { get; set; }
         public double Pd12Month { get; set; }
         public double LifetimePd { get; set; }
         public double RedefaultLifetimePd { get; set; }
         public int Stage1Transition { get; set; }
         public int Stage2Transition { get; set; }
         public int DaysPastDue { get; set; }
-        //public int OriginationRating { get; set; }
-        //public double Origination12MonthPd { get; set; }
-        //public double OriginationLifetimePd { get; set; }
-        //public DateTime ImpairedDate { get; set; }
-        //public DateTime DefaultDate { get; set; }
-        //public Guid WholesaleEclId { get; set; }
+        public string RatingModel { get; set; }
+        public string Segment { get; set; }
+        public int RatingUsed { get; set; }
+        public int ClassificationScore { get; set; }
     }
 
     /// <summary>

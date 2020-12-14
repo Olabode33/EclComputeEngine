@@ -287,15 +287,8 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<CIRProjections> GetCirProjectionData()
         {
-            var qry = Queries.EadCirProjections(this._eclId, this._eclType);
-            var dt = DataAccess.i.GetData(qry);
-            var cirProjectionData = new List<CIRProjections>();
-
-            foreach (DataRow dr in dt.Rows)
-            {
-                cirProjectionData.Add(DataAccess.i.ParseDataToObject(new CIRProjections(), dr));
-            }
-            return cirProjectionData;
+            var r = FileSystemStorage<CIRProjections>.ReadCsvData(this._eclId, ECLStringConstants.i.EadCirProjections_Table(this._eclType));
+            return r;
         }
 
         
@@ -307,14 +300,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         public List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
         {
-            var qry = Queries.EAD_GetLifeTimeProjections(this._eclId, this._eclType);
-            var dt = DataAccess.i.GetData(qry);
-            var lifeTimeProjections = new List<LifeTimeProjections>();
+            var r = Util.FileSystemStorage<LifeTimeProjections>.ReadCsvData(this._eclId, ECLStringConstants.i.EadLifetimeProjections_Table(this._eclType));
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                lifeTimeProjections.Add(DataAccess.i.ParseDataToObject(new LifeTimeProjections(), dr));
-            }
+            var lifeTimeProjections = r;
+
             var lstContractId = loanbook.Select(o => o.ContractId).ToList();
             Log4Net.Log.Info("Completed GetTempEadInputData");
             return lifeTimeProjections.Where(o => lstContractId.Contains(o.Contract_no)).ToList();
@@ -382,7 +371,22 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
 
             var _eclTask = new ECLTasks();
-            
+
+            //var lstRaw_Temp = (from DataRow dr in _lstRaw.Rows
+            //               select new Loanbook_Data()
+            //               {
+            //                   ContractNo =  dr["ContractNo"]!= DBNull.Value? (string)dr["ContractNo"]:"",
+            //                   AccountNo = dr["AccountNo"] != DBNull.Value ? (string)dr["ContractNo"] : "",
+            //                   ProductType = dr["ProductType"] != DBNull.Value ? (string)dr["ProductType"] : "",
+            //                   Segment = dr["Segment"] != DBNull.Value ? (string)dr["Segment"] : "",
+            //                   OutstandingBalanceLCY = dr["OutstandingBalanceLCY"] != DBNull.Value ? (double)dr["OutstandingBalanceLCY"] : 0.0,
+            //                   DaysPastDue = dr["DaysPastDue"] != DBNull.Value ? (double)dr["DaysPastDue"] : 0.0,
+            //                   CreditLimit = dr["CreditLimit"] != DBNull.Value ? (double)dr["CreditLimit"] : 0.0,
+            //                   OriginalBalanceLCY = dr["OriginalBalanceLCY"] != DBNull.Value ? (double)dr["OriginalBalanceLCY"] : 0.0,
+            //                   OutstandingBalanceACY = dr["OutstandingBalanceACY"] != DBNull.Value ? (double)dr["OutstandingBalanceACY"] : 0.0,
+            //                   IPTOPeriod = dr["IPTOPeriod"] != DBNull.Value ? (int)dr["IPTOPeriod"] : 0,
+            //               }).ToList();
+
             foreach (DataRow dr in _lstRaw.Rows)
             {
                 var loanRec = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);

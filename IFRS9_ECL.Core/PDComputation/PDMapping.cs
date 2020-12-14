@@ -123,12 +123,6 @@ namespace IFRS9_ECL.Core.PDComputation
             foreach (var loanbookRecord in sub_LoanBook)
             {
 
-
-                //if (loanbookRecord.ContractId.Contains("10123603239201"))
-                //{
-                //    var cc = 33;
-                //}
-
                 var mappingRow = new PdMappings();
 
                 try
@@ -171,40 +165,9 @@ namespace IFRS9_ECL.Core.PDComputation
                 pdMappingTable[i].Stage2Transition = sicrinput.Stage2Transition;
             }
 
-            var c = new PdMappings();
-                
-            Type myObjOriginalType = c.GetType();
-            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
-
-            var dt = new DataTable();
-
-            for (int i = 0; i < myProps.Length; i++)
-            {
-                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
-            }
-            //dt.Columns.Add($"{eclType.ToString()}EclId", typeof(Guid));
-            dt.Columns.Remove("AccountNo");
-            dt.Columns.Remove("ProductType");
-            dt.Columns.Remove("RatingModel");
-            dt.Columns.Remove("RatingUsed");
-            dt.Columns.Remove("ClassificationScore");
-            dt.Columns.Remove("Segment");
-            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
-
-            foreach (var _d in pdMappingTable)
-            {
-                _d.Id = Guid.NewGuid();
-
-                dt.Rows.Add(new object[]
-                    {
-                            _d.Id, _d.ContractId, _d.PdGroup, _d.TtmMonths, _d.MaxDpd, _d.MaxClassificationScore, _d.Pd12Month, _d.LifetimePd, _d.RedefaultLifetimePd, _d.Stage1Transition, _d.Stage2Transition, _d.DaysPastDue, _eclId
-                    });
-            }
-
-
-            var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.PdMappings_Table(this._eclType));
-
-            return r > 0 ? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PdMappings_Table(this._eclType)}]";
+            var r = FileSystemStorage<PdMappings>.WriteCsvData(_eclId, ECLStringConstants.i.PdMappings_Table(this._eclType), pdMappingTable);
+            
+            return r? "" : $"Could not Bulk Insert [{ECLStringConstants.i.PdMappings_Table(this._eclType)}]";
 
         }
 
@@ -339,17 +302,8 @@ namespace IFRS9_ECL.Core.PDComputation
 
         internal List<PdMappings> GetPdMapping()
         {
-            var qry = Queries.PdMapping(this._eclId, this._eclType);
-            var _PdMapping = DataAccess.i.GetData(qry);
+            var pdMapping = FileSystemStorage<PdMappings>.ReadCsvData(this._eclId, ECLStringConstants.i.PdMappings_Table(this._eclType));
 
-            var pdMapping = new List<PdMappings>();
-            foreach (DataRow dr in _PdMapping.Rows)
-            {
-                var itm = DataAccess.i.ParseDataToObject(new PdMappings(), dr);
-                itm.ContractId = itm.ContractId;
-                pdMapping.Add(itm);
-            }
-            Console.WriteLine($"Got LGD GetPdMapping");
             return pdMapping;
         }
     }

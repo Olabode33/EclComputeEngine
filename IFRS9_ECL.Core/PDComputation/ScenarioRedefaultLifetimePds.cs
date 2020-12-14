@@ -65,10 +65,9 @@ namespace IFRS9_ECL.Core.PDComputation
             {
                 tableName = ECLStringConstants.i.PdRedefaultLifetimeOptimistics_Table(this._eclType);
             }
+            var r = FileSystemStorage<LifeTimeObject>.WriteCsvData(_eclId, tableName, output);
 
-            var r = DataAccess.i.ExecuteBulkCopy(dt, tableName);
-
-            return r > 0 ? "" : $"Could not Bulk Insert [{tableName}]";
+            return r? "" : $"Could not Bulk Insert [{tableName}]";
 
         }
 

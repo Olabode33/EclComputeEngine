@@ -155,19 +155,6 @@ namespace IFRS9_ECL.Core
 
             var d = obj.ComputeFinalEcl(lifetimeEad, lifetimeLGD, eadInput, cummulativeDiscountFactor, lifetimePds, stageClassification);
 
-            var c = new FinalEcl();
-
-            Type myObjOriginalType = c.GetType();
-            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
-
-            var dt = new DataTable();
-            for (int i = 0; i < myProps.Length; i++)
-            {
-                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
-            }
-            dt.Columns.Add($"Scenario", typeof(int));
-            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
-
             var _scenerio = 0;
             if (this._Scenario == ECL_Scenario.Best)
             {
@@ -184,25 +171,21 @@ namespace IFRS9_ECL.Core
 
             foreach (var _d in d)
             {
-                _d.Id = Guid.NewGuid();
-                dt.Rows.Add(new object[]
-                    {
-                            _d.Id, _d.ContractId, _d.EclMonth, _d.MonthlyEclValue, _d.FinalEclValue, _d.Stage, _scenerio, this._eclId
-                    });
+                _d.eCL_Scenario = _scenerio;
             }
             var qry=Queries.EclOverrideExist(this._eclId, this._eclType);
             var cnt = DataAccess.i.getCount(qry);
             if(cnt>0)
             {
+                var r = Util.FileSystemStorage<FinalEcl>.WriteCsvData(this._eclId, ECLStringConstants.i.FrameworkResultOverride(this._eclType), d);
                 //Save to Framwork Override table
-                Log4Net.Log.Info($"Inserting into override table {dt.Rows.Count}");
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.FrameworkResultOverride(this._eclType));
+                Log4Net.Log.Info($"Inserting into override table {d.Count}");
             }
             else
             {
+                var r = Util.FileSystemStorage<FinalEcl>.WriteCsvData(this._eclId, ECLStringConstants.i.FrameworkResult(this._eclType), d);
                 //save to Framework table
-                Log4Net.Log.Info($"Inserting into Non override table {dt.Rows.Count}");
-                var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.FrameworkResult(this._eclType));
+                Log4Net.Log.Info($"Inserting into Non override table {d.Count}");
             }
             
 

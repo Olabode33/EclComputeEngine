@@ -29,29 +29,29 @@ namespace IFRS9_ECL.Data
 
         public static string GetEADBehaviouralData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}')  and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select top 1 Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}')  and Status=7)";
         }
         public static string GetEADCCFData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_CCF_Summary where CalibrationID=(select Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_CCF_Summary where CalibrationID=(select top 1 Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetLGDHaircutSummaryData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select top 1 Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
 
         public static string GetLGDRecoveryRateData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select top 1 Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetPD12MonthsPD(Guid eclId, string eclType)
         {
-            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Months where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Months where CalibrationID=(select top 1 Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         
         public static string GetPDIndexData(Guid eclId, string eclType)
         {
-            return $"select Period, Index, StandardIndex, BfNpl from MacroResult_IndexData where MacroId=(select Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Period, Index, StandardIndex, BfNpl from MacroResult_IndexData where MacroId=(select top 1 Id from CalibrationRunMacroAnalysis where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
         }
         public static string GetPDStatistics(Guid eclId, string eclType)
         {
@@ -128,10 +128,7 @@ namespace IFRS9_ECL.Data
                 $"values ({Debenture}, {Cash}, {Inventory}, {Plant_And_Equipment}, {Residential_Property}, {Commercial_Property}, {Receivables}, {Shares}, {Vehicle}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
         }
 
-        public static string ClearAllEclLogs(string eclType, string eclId)
-        {
-            return $"delete from {eclType}EadCirProjections where {eclType}EclId='{eclId}'; delete from {eclType}EadEirProjections where {eclType}EclId='{eclId}'; delete from {eclType}EadLifetimeProjections where {eclType}EclId='{eclId}'; delete from {eclType}LGDAccountData where {eclType}EclId='{eclId}'; delete from {eclType}LGDCollateral where {eclType}EclId='{eclId}'; delete from {eclType}PDCreditIndex where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeBests where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeDownturns where {eclType}EclId='{eclId}'; delete from {eclType}PdLifetimeOptimistics where {eclType}EclId='{eclId}'; delete from {eclType}PdMappings where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeBests where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeDownturns where {eclType}EclId='{eclId}'; delete from {eclType}PdRedefaultLifetimeOptimistics where {eclType}EclId='{eclId}'; delete from {eclType}ECLFrameworkFinal where {eclType}EclId='{eclId}'; delete from {eclType}ECLFrameworkFinalOverride where {eclType}EclId='{eclId}';";
-        }
+
 
         public static string CalibrationResult_HairCut_UpdateFinal(Guid calibrationId, string subQry)
         {
@@ -252,7 +249,7 @@ namespace IFRS9_ECL.Data
         }
         public static string UpdateGuidTableServiceId(string TableName, int serviceId, Guid recordId)
         {
-            return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}' and ServiceId =0";
+            return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}' and (ServiceId =0 or (ServiceId>0 and Status=12))";
         }
         public static string UpdateEclStatus(string eclType, string eclId, int status, string exception)
         {
@@ -337,42 +334,6 @@ namespace IFRS9_ECL.Data
 
         public static string LGD_Assumption { get { return "Select [collateral value] collateral_value,debenture, cash, inventory, plant_and_equipment, residential_property, commercial_property, shares, vehicle, [Cost of Recovery] costOfRecovery from LGD_Assumptions"; } }
 
-        public static string EAD_GetEIRProjections(Guid eclId, EclType eclType)
-        {
-            return $"select eir_group,month months,value from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}' and Month=0";
-        }
-        public static string EAD_GetEIRProjectionsCount(Guid eclId, EclType eclType)
-        {
-            return $"select max(month) Cnt from {eclType.ToString()}EadEirProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
-        }
-
-
-        public static string EAD_GetLifeTimeProjections(Guid eclId, EclType eclType)
-        {
-            return $"select Contract_no, Eir_Group, Cir_Group, Month, Value from {eclType.ToString()}EadLifetimeProjections where {eclType.ToString()}EclId='{eclId.ToString()}'";
-        }
-
-        public static string PD_GetSIRCInputResult(Guid eclId, EclType eclType)
-        {
-            return $"select ContractId, Pd12Month, LifetimePd, RedefaultLifetimePd, Stage1Transition, Stage2Transition, DaysPastDue from {eclType.ToString()}PdMappings where {eclType.ToString()}EclId ='{eclId.ToString()}' order by ContractId";
-        }
-
-        public static string LGD_LgdAccountDatas(Guid eclId, EclType eclType)
-        {
-            //xxxxxxxxxxxxxxxxxxxxxx
-            return $"select Id, CONTRACT_NO, TTR_YEARS, COST_OF_RECOVERY, GUARANTOR_PD, GUARANTOR_LGD, GUARANTEE_VALUE, GUARANTEE_LEVEL from {eclType.ToString()}LGDAccountData where {eclType.ToString()}EclId ='{eclId.ToString()}'";
-        }
-
-        public static string Credit_Index(Guid eclId, EclType eclType)
-        {
-            return $"select Id, ProjectionMonth,BestEstimate, Optimistic, Downturn, {eclType.ToString()}EclId from {ECLStringConstants.i.PDCreditIndex_Table(eclType)} where {eclType.ToString()}EclId='{eclId.ToString()}'";
-        }
-
-        public static string LGD_LgdCollateralDatas(Guid eclId, EclType eclType)
-        {
-            return $"select Id, contract_no, customer_no, debenture_omv, cash_omv, inventory_omv, plant_and_equipment_omv, residential_property_omv, commercial_property_omv, receivables_omv, shares_omv, vehicle_omv, total_omv, debenture_fsv, cash_fsv, inventory_fsv, plant_and_equipment_fsv, residential_property_fsv, commercial_property_fsv, receivables_fsv, shares_fsv, vehicle_fsv from {eclType.ToString()}LGDCollateral where {eclType.ToString()}EclId ='{eclId}'";
-        }
-
         public static string EclOverridesFsv(Guid eclId, EclType eclType)
         {
             return $"select * from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
@@ -396,20 +357,11 @@ namespace IFRS9_ECL.Data
         }
 
 
-        public static string EadCirProjections(Guid eclId, EclType eclType)
-        {
-            return $"select cir_group, month months, value, cir_effective from {eclType.ToString()}EadCirProjections where {eclType.ToString()}EclId ='{eclId}'";
-        }
 
         public static string LgdCollateralProjection(Guid eclId, int collateralProjectionType, EclType eclType)
         {
             //return $"select CollateralProjectionType, Debenture, Cash, Inventory, Plant_And_Equipment, Residential_Property, Commercial_Property, Receivables, Shares, Vehicle, Month from {eclType.ToString()}LgdCollateralProjection where {eclType.ToString()}EclId = '{eclId}' and CollateralProjectionType={collateralProjectionType}";
             return $"select  [Key], [Value], LgdGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId ='{eclId}' and LgdGroup = {collateralProjectionType}";
-        }
-
-        public static string PdMapping(Guid eclId, EclType eclType)
-        {
-            return $"select p.Id, p.ContractId, l.AccountNo, l.ProductType, p.PdGroup, p.TtmMonths, p.MaxDpd, p.MaxClassificationScore, p.Pd12Month, p.LifetimePd, p.RedefaultLifetimePd, p.Stage1Transition, p.Stage2Transition, p.DaysPastDue, l.RatingModel, l.Segment, RatingUsed=0, ClassificationScore=0,  p.{eclType.ToString()}EclId from {eclType.ToString()}PdMappings p left join {eclType.ToString()}EclDataLoanBooks l on (SUBSTRING(p.ContractId,CHARINDEX('|', p.ContractId)+1, LEN(p.ContractId) - CHARINDEX('|', p.ContractId) )=l.contractno and p.WholesaleEclId = l.WholesaleEclUploadId) where p.{eclType.ToString()}EclId ='{eclId}'";// and l.ContractNo not like '%EXP%'";
         }
 
         public static string LGD_InputAssumptions_UnsecuredRecovery(Guid eclId, EclType eclType)

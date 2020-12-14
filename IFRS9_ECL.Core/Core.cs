@@ -411,6 +411,18 @@ namespace IFRS9_ECL.Core
                 {
                     if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
                     {
+                        foreach(var itm in taskLst)
+                        {
+                            if(itm.Status!=TaskStatus.RanToCompletion)
+                            {
+                                Log4Net.Log.Info("Did not run to Completion");
+                                Log4Net.Log.Error(itm.Exception);
+                            }
+                            else
+                            {
+                                Log4Net.Log.Info("Ran to Completion");
+                            }
+                        }
                         break;
                     }
                     //Do Nothing
@@ -451,12 +463,13 @@ namespace IFRS9_ECL.Core
                     qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "");
                     DataAccess.i.ExecuteQuery(qry);
                 }
+                Log4Net.Log.Info($"Main Task Completed. Report output to start {DateTime.Now}");
                 //Exporting Reports
                 var rpt = new ExcelReport().GenerateResult(masterGuid.ToString(), lifetimeEad, lifetimeLGD);
 
                 //Delete Logs in table
-                    qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString());
-                    DataAccess.i.ExecuteQuery(qry);
+                    //qry = Queries.ClearAllEclLogs(eclRegister.eclType.ToString(), eclRegister.Id.ToString());
+                    //DataAccess.i.ExecuteQuery(qry);
 
                 Log4Net.Log.Info($"End Time {DateTime.Now}");
                 return true;

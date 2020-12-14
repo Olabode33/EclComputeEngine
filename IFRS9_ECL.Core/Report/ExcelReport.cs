@@ -120,15 +120,17 @@ namespace IFRS9_ECL.Core.Report
 
         private void Read_PD_Mapping(string eclId)
         {
-            var qry = $"SELECT ContractId,PdGroup,TtmMonths,MaxDpd,MaxClassificationScore,Pd12Month,LifetimePd,RedefaultLifetimePd,Stage1Transition,Stage2Transition,DaysPastDue from WholesalePdMappings where WholesaleEclId='{eclId}'";
-            var dt = Data.DataAccess.i.GetData(qry);
-            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
-            if (Directory.Exists(basepath))
-            {
-                Directory.CreateDirectory(basepath);
-            }
-            var fpath = Path.Combine(basepath, $"PD_Mapping.csv");
-            ToCSV(dt, fpath);
+            // all commented because the file is already generated as is during PDMapping processing. check the storage path using ECL ID
+
+            //var qry = $"SELECT ContractId,PdGroup,TtmMonths,MaxDpd,MaxClassificationScore,Pd12Month,LifetimePd,RedefaultLifetimePd,Stage1Transition,Stage2Transition,DaysPastDue from WholesalePdMappings where WholesaleEclId='{eclId}'";
+            //var dt = Data.DataAccess.i.GetData(qry);
+            //var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            //if (Directory.Exists(basepath))
+            //{
+            //    Directory.CreateDirectory(basepath);
+            //}
+            //var fpath = Path.Combine(basepath, $"PD_Mapping.csv");
+            //ToCSV(dt, fpath);
         }
 
         private void Read_LGD_CollateralData(string eclId)
@@ -147,15 +149,17 @@ namespace IFRS9_ECL.Core.Report
 
         private void Read_LGD_AccountData(string eclId)
         {
-            var qry = $"SELECT CONTRACT_NO,TTR_YEARS,COST_OF_RECOVERY,GUARANTOR_PD,GUARANTOR_LGD,GUARANTEE_VALUE,GUARANTEE_LEVEL FROM WholesaleLGDAccountData where WholesaleEclId='{eclId}'";
-            var dt = Data.DataAccess.i.GetData(qry);
-            var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
-            if (Directory.Exists(basepath))
-            {
-                Directory.CreateDirectory(basepath);
-            }
-            var fpath = Path.Combine(basepath, $"LGD_AccountData.csv");
-            ToCSV(dt, fpath);
+            // all commented because the file is already generated as is during LGD processing. check the storage path using ECL ID
+
+            //var qry = $"SELECT CONTRACT_NO,TTR_YEARS,COST_OF_RECOVERY,GUARANTOR_PD,GUARANTOR_LGD,GUARANTEE_VALUE,GUARANTEE_LEVEL FROM WholesaleLGDAccountData where WholesaleEclId='{eclId}'";
+            //var dt = Data.DataAccess.i.GetData(qry);
+            //var basepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, eclId);
+            //if (Directory.Exists(basepath))
+            //{
+            //    Directory.CreateDirectory(basepath);
+            //}
+            //var fpath = Path.Combine(basepath, $"LGD_AccountData.csv");
+            //ToCSV(dt, fpath);
         }
 
         private void ToCSV(DataTable dtDataTable, string strFilePath)
@@ -287,15 +291,8 @@ namespace IFRS9_ECL.Core.Report
                 Directory.CreateDirectory(basepath);
             }
 
-            var qry = $"select Contract_no, Month, Value, Eir_Group, Cir_Group from WholesaleEadLifetimeProjections where WholesaleEclId='{eclId}'";
-
-            var dt = Data.DataAccess.i.GetData(qry);
-
-            var eadInput = new List<LifeTimeProjections>();
-            foreach (DataRow dr in dt.Rows)
-            {
-                eadInput.Add(Data.DataAccess.i.ParseDataToObject(new LifeTimeProjections(), dr));
-            }
+            var eadInput = Util.FileSystemStorage<LifeTimeProjections>.ReadCsvData(new Guid(eclId), ECLStringConstants.i.EadLifetimeProjections_Table(EclType.Wholesale));
+            
             var maxMonth = eadInput.Max(o => o.Month);
             eadInput = eadInput.OrderBy(o => o.Contract_no).ThenBy(p => p.Month).ThenBy(q => q.Value).ToList();
             var sb = new StringBuilder();

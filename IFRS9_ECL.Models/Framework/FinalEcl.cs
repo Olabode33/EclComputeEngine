@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +9,11 @@ namespace IFRS9_ECL.Models.Framework
 {
     public class FinalEcl
     {
-        public Guid Id { get; set; }
         public string ContractId { get; set; }
         public int EclMonth { get; set; }
         public double MonthlyEclValue { get; set; }
         public double FinalEclValue { get; set; }
         public int Stage { get; set; }
+        public int eCL_Scenario { get; set; }
     }
 }

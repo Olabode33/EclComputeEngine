@@ -123,7 +123,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 
                 var eirProjection = GetEirProjectionData();
-                var eirProjectionCount = GetEirProjectionCount();
+                var eirProjectionCount = eirProjection.Max(o => o.months);
 
                 var groups = eirProjection.Select(o => o.eir_group).Distinct();
 
@@ -197,25 +197,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
         private List<EIRProjections> GetEirProjectionData()
         {
-            var qry=Queries.EAD_GetEIRProjections(this._eclId, this._eclType);
-            var dt=DataAccess.i.GetData(qry);
-            var eIRProjections = new List<EIRProjections>();
-
-            foreach (DataRow dr in dt.Rows)
-            {
-                eIRProjections.Add(DataAccess.i.ParseDataToObject(new EIRProjections(), dr));
-            }
-
-            return eIRProjections;
+            var r = FileSystemStorage<EIRProjections>.ReadCsvData(this._eclId, ECLStringConstants.i.EadEirProjections_Table(this._eclType));
+            return r;
         }
 
-        private int GetEirProjectionCount()
-        {
-            var qry = Queries.EAD_GetEIRProjectionsCount(this._eclId, this._eclType);
-            var dt = DataAccess.i.GetData(qry);
+        //private int GetEirProjectionCount()
+        //{
+        //    var qry = Queries.EAD_GetEIRProjectionsCount(this._eclId, this._eclType);
+        //    var dt = DataAccess.i.GetData(qry);
             
-            return Convert.ToInt32(dt.Rows[0][0]);
-        }
+        //    return Convert.ToInt32(dt.Rows[0][0]);
+        //}
 
         public double ComputeProjectionValue(double projectionValue, int month, double prevValue, string type = CIR_TYPE, double lim_months=1)
         {

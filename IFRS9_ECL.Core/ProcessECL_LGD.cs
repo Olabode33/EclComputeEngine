@@ -101,6 +101,7 @@ namespace IFRS9_ECL.Core
 
         private bool RunLGDJob(List<Loanbook_Data> lstRaw, Guid _eclId, EclType _eclType)
         {
+
             //lstRaw = lstRaw.Where(o => o.ContractNo.Contains("182NIFC162940002") || o.ContractId.Contains("182NIFC162940002")).ToList();
             //Next Line to be removed
             //lstRaw = lstRaw.Where(o => o.ContractStartDate == null && o.ContractEndDate == null).Take(5).ToList();
@@ -134,15 +135,8 @@ namespace IFRS9_ECL.Core
 
         public List<LGDAccountData> GetLgdContractData(List<Loanbook_Data> loanbook)
         {
-            var qry = Queries.LGD_LgdAccountDatas(_eclId, _eclType);
-            var dt = DataAccess.i.GetData(qry);
-            var lgdAccountData = new List<LGDAccountData>();
+            var lgdAccountData = Util.FileSystemStorage<LGDAccountData>.ReadCsvData(this._eclId, ECLStringConstants.i.LGDAccountData_Table(this._eclType));
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                var lgdItm=DataAccess.i.ParseDataToObject(new LGDAccountData(), dr);
-                lgdAccountData.Add(lgdItm);
-            }
             var contract_Ids = loanbook.Select(o => o.ContractId).ToList();
             var filteredList = lgdAccountData.Where(o=> contract_Ids.Contains(o.CONTRACT_NO)).ToList();
             foreach(var itm in filteredList)
@@ -154,15 +148,9 @@ namespace IFRS9_ECL.Core
 
         public List<LGDCollateralData> GetLGDCollateralData()
         {
-            var qry = Queries.LGD_LgdCollateralDatas(_eclId, _eclType);
-            var dt = DataAccess.i.GetData(qry);
-            var lgdCollateralData = new List<LGDCollateralData>();
 
-            foreach (DataRow dr in dt.Rows)
-            {
-                lgdCollateralData.Add(DataAccess.i.ParseDataToObject(new LGDCollateralData(), dr));
-            }
-
+            var lgdCollateralData = Util.FileSystemStorage<LGDCollateralData>.ReadCsvData(this._eclId, ECLStringConstants.i.LGDCollateral_Table(this._eclType));
+            
             return lgdCollateralData;
         }
         /// <summary>

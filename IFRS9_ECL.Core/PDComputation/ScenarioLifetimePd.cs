@@ -29,27 +29,7 @@ namespace IFRS9_ECL.Core.PDComputation
         public string Run()
         {
             var output = ComputeLifetimePd();
-            var dt = new DataTable();
-
-            var c = new LifeTimeObject();
-
-            Type myObjOriginalType = c.GetType();
-            PropertyInfo[] myProps = myObjOriginalType.GetProperties();
-
-            for (int i = 0; i < myProps.Length; i++)
-            {
-                dt.Columns.Add(myProps[i].Name, myProps[i].PropertyType);
-            }
-            dt.Columns.Add($"{this._eclType.ToString()}EclId", typeof(Guid));
-
-            foreach (var _d in output)
-            {
-                _d.Id = Guid.NewGuid();
-                dt.Rows.Add(new object[]
-                    {
-                            _d.Id, _d.PdGroup, _d.Month, _d.Value, _eclId
-                    });
-            }
+           
             var tableName = "";
 
             if(_scenario== ECL_Scenario.Best)
@@ -65,9 +45,9 @@ namespace IFRS9_ECL.Core.PDComputation
                 tableName = ECLStringConstants.i.PdLifetimeOptimistics_Table(this._eclType);
             }
 
-            var r = DataAccess.i.ExecuteBulkCopy(dt, tableName);
-
-            return r > 0 ? "" : $"Could not Bulk Insert [{tableName}]";
+            var r = Util.FileSystemStorage<LifeTimeObject>.WriteCsvData(this._eclId, tableName, output);
+            
+            return r? "" : $"Could not Bulk Insert [{tableName}]";
         }
 
         public List<LifeTimeObject> ComputeLifetimePd()
