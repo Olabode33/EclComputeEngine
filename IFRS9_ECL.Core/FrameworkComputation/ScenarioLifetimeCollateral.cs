@@ -32,33 +32,80 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             _updatedFSVsWorkings = new UpdatedFSVsWorkings(eclId, this._eclType);
             _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, this._eclType);
         }
-        //protected List<LifeTimeProjections> GetTempEadInputData(List<Loanbook_Data> loanbook)
-        //{
-        //    return this._lifetimeEad.GetTempEadInputData(loanbook);
-        //}
-        public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs)//, 
-        {
-            var lifetimeCollateral = new List<LifetimeCollateral>();
 
-            var contractData = GetContractData(loanbook);
+
+
+
+        List<LifetimeCollateral> lifetimeCollateral = new List<LifetimeCollateral>();
+        List<IrFactor> marginalDiscountFactor = new List<IrFactor>();
+        List<LgdCollateralProjection> collateralProjections = new List<LgdCollateralProjection>();
+        List<updatedFSV> updatedFsv = new List<updatedFSV>();
+        public List<LifetimeCollateral> ComputeLifetimeCollateral(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs, List<LGDAccountData> contractData)//, 
+        {
+            
             Log4Net.Log.Info($"Get COntract at ComputeLifetimeCollateral {contractData.Count}");
-            var marginalDiscountFactor = GetMarginalDiscountFactor();
+            marginalDiscountFactor = GetMarginalDiscountFactor();
             Log4Net.Log.Info($"Get marginalDiscountFactor at ComputeLifetimeCollateral {marginalDiscountFactor.Count}");
             //var eadInputs = GetTempEadInputData(loanbook);
-            var collateralProjections = GetScenarioCollateralProjection();
+            collateralProjections = GetScenarioCollateralProjection();
             Log4Net.Log.Info($"Get collateralProjections at ComputeLifetimeCollateral {collateralProjections.Count}");
-            var updatedFsv = GetUpdatedFsvResult();
+            updatedFsv = GetUpdatedFsvResult();
             Log4Net.Log.Info($"Get updatedFsv at ComputeLifetimeCollateral {updatedFsv.Count}");
             var actual_eadInputContractData = eadInputs.Select(o => o.Contract_no).Distinct().ToList();
             
-            contractData = contractData.Where(o => actual_eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
+            //contractData = contractData.Where(o => actual_eadInputContractData.Contains(o.CONTRACT_NO)).ToList();
 
             Log4Net.Log.Info($"starting Loop at ComputeLifetimeCollateral");
+
+
+
+
+            var threads = contractData.Count / 500;
+            threads = threads + 1;
+
+            var taskLst = new List<Task>();
+
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted, TaskStatus.Canceled };
+
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_contractData = contractData.Skip(i * 500).Take(500).ToList();
+                var sub_contractData_contractno = sub_contractData.Select(o => o.CONTRACT_NO).ToList();
+                var sub_eadInputs = eadInputs.Where(o => sub_contractData_contractno.Contains(o.Contract_no)).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    SubComputeLifetimeCollateral(sub_contractData, sub_eadInputs);
+                });
+
+                taskLst.Add(task);
+            }
+
+
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+
+            Log4Net.Log.Info($"Done ComputeLifetimeCollateral");
+
+            return lifetimeCollateral;
+        }
+
+
+        private void SubComputeLifetimeCollateral(List<LGDAccountData> contractData, List<LifeTimeProjections> sub_eadInputs)
+        {
+            var sublifetimeCollateral = new List<LifetimeCollateral>();
+
             foreach (var row in contractData)
             {
                 //Log4Net.Log.Info($"LP {row.CONTRACT_NO}");
                 string contractId = row.CONTRACT_NO;
-                string eirGroup = eadInputs.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
+                string eirGroup = sub_eadInputs.FirstOrDefault(x => x.Contract_no == contractId).Eir_Group;
                 long eirIndex = 0;
                 try
                 {
@@ -68,7 +115,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 long ttrMonth = Convert.ToInt64(Math.Round(row.TTR_YEARS * 12, 0));
                 var tempFsv = updatedFsv.FirstOrDefault(x => x.ContractNo == contractId);
                 double[] fsvArray = new double[9];
-                if(tempFsv==null)
+                if (tempFsv == null)
                 {
                     fsvArray[0] = 0;
                     fsvArray[1] = 0;
@@ -96,7 +143,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
                 var maxMonth = row.LIM_MONTHS + (row.LIM_MONTHS * 0.5);
 
-                if(eirGroup==ECLStringConstants.i.ExpiredContractsPrefix)
+                if (eirGroup == ECLStringConstants.i.ExpiredContractsPrefix)
                 {
                     maxMonth = 627;// 161;
                 }
@@ -116,12 +163,11 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     newRow.ProjectionMonth = month;
                     newRow.ProjectionValue = value;
 
-                    lifetimeCollateral.Add(newRow);
+                    sublifetimeCollateral.Add(newRow);
                 }
             }
-            Log4Net.Log.Info($"Done ComputeLifetimeCollateral");
-
-            return lifetimeCollateral;
+            lock (lifetimeCollateral)
+                lifetimeCollateral.AddRange(sublifetimeCollateral);
         }
 
         private double GetSumProductValue(List<LgdCollateralProjection> collateralProjections, long ttrMonth, double[] fsvArray, long month)

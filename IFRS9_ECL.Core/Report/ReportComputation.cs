@@ -26,7 +26,7 @@ namespace IFRS9_ECL.Core.Report
         public static int startCellIndex = 0;
         public bool GenerateEclReport(EclType eclType, Guid eclId)
         {
-            var rd=GetResultDetail(eclType, eclId, new List<Loanbook_Data>(),0);
+            var rd=GetResultDetail(eclType, eclId, new List<Loanbook_Data>(),0,false);
             var rs=GetResultSummary(eclType, eclId, rd);
             var dataTable = new DataTable();
             var fi = new FileInfo(@"C:\Users\Dev-Sys\Desktop\ETI_template.xlsx");
@@ -1316,7 +1316,7 @@ namespace IFRS9_ECL.Core.Report
         EclType _eclType;
         Guid _eclId;
         double ccf_obe = 0.5;
-        public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook, double ccf_obe)
+        public ResultDetail GetResultDetail(EclType eclType, Guid eclId, List<Loanbook_Data> loanbook, double ccf_obe, bool overrideExist)
         {
             this._eclType = eclType;
             this._eclId = eclId;
@@ -1413,9 +1413,10 @@ namespace IFRS9_ECL.Core.Report
 
             rd.ResultDetailDataMore = new List<ResultDetailDataMore>();
 
-            ovrde = GetOverrideDataResult(eclId, eclType);
-
-
+            if(overrideExist)
+            {
+                ovrde = GetOverrideDataResult(eclId, eclType);
+            }
 
             if (1!=1)//loanbook.Count <= 1000)
             {
@@ -1566,7 +1567,9 @@ namespace IFRS9_ECL.Core.Report
                     Overrides_TTR_Years = 0,
                     Overrides_Overlay = 0,
                     Impairment_ModelOutput = 0,
-                    Overrides_Impairment_Manual = 0
+                    Overrides_Impairment_Manual = 0,
+                    OriginalOutstandingBalance = itm.OutstandingBalanceLCY ?? 0
+
                 };
                 var ovrd = ovrde.FirstOrDefault(o => o.ContractId == rddm.ContractNo);
                 if (ovrd != null)
@@ -1692,7 +1695,7 @@ namespace IFRS9_ECL.Core.Report
                     {
                             Id, _d.Stage, _d.Outstanding_Balance, _d.ECL_Best_Estimate, _d.ECL_Optimistic, _d.ECL_Downturn, _d.Impairment_ModelOutput,
                             _d.Overrides_Stage, _d.Overrides_TTR_Years, _d.Overrides_FSV, _d.Overrides_Overlay, _d.Overrides_ECL_Best_Estimate, _d.Overrides_ECL_Optimistic, _d.Overrides_ECL_Downturn, _d.Overrides_Impairment_Manual, _d.ContractNo, _d.AccountNo,
-                            _d.CustomerNo, _d.Segment, _d.ProductType, _d.Sector, this._eclId
+                            _d.CustomerNo, _d.Segment, _d.ProductType, _d.Sector, _d.OriginalOutstandingBalance, this._eclId
                     });
             }
 

@@ -51,7 +51,9 @@ namespace IFRS9_ECL.Core
 
                     for (int i = 0; i < threads; i++)
                     {
-                        groupedLoanBook.Add(loanbooks.Skip(i * 500).Take(500).ToList());
+                        var sub_items = loanbooks.Skip(i * 500).Take(500).ToList();
+                        if (sub_items.Count > 0)
+                            groupedLoanBook.Add(sub_items);
                     }
 
                     var allAccountsGrouped = false;

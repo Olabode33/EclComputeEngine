@@ -4,7 +4,7 @@ using System.Text;
 
 namespace IFRS9_ECL.Models
 {
-    public class Refined_Raw_Retail_Wholesale
+    public class Refined_Raw_Wholesale
     {
             public string contract_no {get; set;}
             public string segment {get; set;}

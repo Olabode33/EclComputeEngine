@@ -27,6 +27,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         ProcessECL_LGD _processECL_LGD;
         int MPD_Default_Criteria = 3;
         DateTime reportingDate;
+        ECLTasks _eclTask = new ECLTasks();
+        List<Loanbook_Data> lstRaw = new List<Loanbook_Data>();
+        List<Loanbook_Data> newLoanBook = new List<Loanbook_Data>();
+
         public LifetimeEadWorkings(Guid eclId, EclType eclType)
         {
             this._eclId = eclId;
@@ -63,7 +67,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         List<LifeTimeProjections> eadInputs = new List<LifeTimeProjections>();
         List<SicrInputs> sircInputs = new List<SicrInputs>();
         List<IrFactor> marginalAccumulationFactor = new List<IrFactor>();
-        List<Refined_Raw_Retail_Wholesale> refined_Raw_Data = new List<Refined_Raw_Retail_Wholesale>();
+        List<Refined_Raw_Wholesale> refined_Raw_Data = new List<Refined_Raw_Wholesale>();
         List<LifetimeEad> lifetimeEad = new List<LifetimeEad>();
         double maxLimMonth = 0.0;
         public List<LifetimeEad> ComputeLifetimeEad(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs)
@@ -72,17 +76,17 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             this.eadInputs = eadInputs;// GetTempEadInputData(loanbook);
             sircInputs = GetSircInputResult();
-            Console.WriteLine($"Got EAD_StatgeClassification");
+            Log4Net.Log.Info($"Got EAD_StatgeClassification");
             marginalAccumulationFactor = GetMarginalAccumulationFactorResult();
-            Console.WriteLine($"Got marginalAccumulationFactor");
+            Log4Net.Log.Info($"Got marginalAccumulationFactor");
             refined_Raw_Data = GetRefinedLoanBookData(loanbook);
-            Console.WriteLine($"Got refined_Raw_Data");
+            Log4Net.Log.Info($"Got refined_Raw_Data");
             //var contractData = _processECL_LGD.GetLgdContractData(loanbook);
             var loanbook_contractNo = refined_Raw_Data.Select(o => o.contract_no).ToList();
             maxLimMonth = loanbook.Max(o => o.LIM_MONTH);
 
 
-            var contract_nos = eadInputs.Where(n=>loanbook_contractNo.Contains(n.Contract_no)).Select(o => o.Contract_no).Distinct().ToList();
+            var contract_nos = eadInputs.Select(o => o.Contract_no).Distinct().ToList();//.Where(n=>loanbook_contractNo.Contains(n.Contract_no)).Select(o => o.Contract_no).Distinct().ToList();
             
 
             if (1!=1)//loanbook.Count <= 1000)
@@ -304,12 +308,12 @@ namespace IFRS9_ECL.Core.FrameworkComputation
 
             var lifeTimeProjections = r;
 
-            var lstContractId = loanbook.Select(o => o.ContractId).ToList();
+            //var lstContractId = loanbook.Select(o => o.ContractId).ToList();
             Log4Net.Log.Info("Completed GetTempEadInputData");
-            return lifeTimeProjections.Where(o => lstContractId.Contains(o.Contract_no)).ToList();
+            return lifeTimeProjections;//.Where(o => lstContractId.Contains(o.Contract_no)).ToList();
         }
 
-        public List<Refined_Raw_Retail_Wholesale> GetRefinedLoanBookData(List<Loanbook_Data> loanbook)
+        public List<Refined_Raw_Wholesale> GetRefinedLoanBookData(List<Loanbook_Data> loanbook)
         {
             
             //var qry = Queries.Raw_Data(this._eclId, this._eclType);
@@ -320,23 +324,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             {
                 lstRaw = new List<Loanbook_Data>();
             }
-            //if(lstRaw.Count==0)
-            //{
-            //    Log4Net.Log.Info("Started");
-            //    var _lstRaw = DataAccess.i.GetData(qry);
-            //    Log4Net.Log.Info("Selected Raw Data from table");
-
-            //    foreach (DataRow dr in _lstRaw.Rows)
-            //    {
-            //        lstRaw.Add(DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr));
-            //    }
-            //}
             
-            
-
             var refined_lstRaw = new ECLTasks(this._eclId, this._eclType).GenerateContractIdandRefinedData(lstRaw);
 
-            return refined_lstRaw;//.Where(o=>!o.contract_no.Contains("EXP")).ToList();
+            return refined_lstRaw;
         }
 
         private DateTime EndOfMonth(DateTime myDate, int numberOfMonths)
@@ -364,33 +355,159 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             Log4Net.Log.Info("Started");
             var _lstRaw = DataAccess.i.GetData(qry);
             Log4Net.Log.Info("Selected Raw Data from table");
-            var lstRaw = new List<Loanbook_Data>();
+            Console.WriteLine($"Started after Select - {DateTime.Now}");
 
             var bt_ead = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             var bt_ead_data=bt_ead.GetBehaviouralData(this._eclId, this._eclType);
 
+            
+            var threads = _lstRaw.Rows.Count / 500;
+            threads = threads + 1;
 
-            var _eclTask = new ECLTasks();
+            var taskLst = new List<Task>();
 
-            //var lstRaw_Temp = (from DataRow dr in _lstRaw.Rows
-            //               select new Loanbook_Data()
-            //               {
-            //                   ContractNo =  dr["ContractNo"]!= DBNull.Value? (string)dr["ContractNo"]:"",
-            //                   AccountNo = dr["AccountNo"] != DBNull.Value ? (string)dr["ContractNo"] : "",
-            //                   ProductType = dr["ProductType"] != DBNull.Value ? (string)dr["ProductType"] : "",
-            //                   Segment = dr["Segment"] != DBNull.Value ? (string)dr["Segment"] : "",
-            //                   OutstandingBalanceLCY = dr["OutstandingBalanceLCY"] != DBNull.Value ? (double)dr["OutstandingBalanceLCY"] : 0.0,
-            //                   DaysPastDue = dr["DaysPastDue"] != DBNull.Value ? (double)dr["DaysPastDue"] : 0.0,
-            //                   CreditLimit = dr["CreditLimit"] != DBNull.Value ? (double)dr["CreditLimit"] : 0.0,
-            //                   OriginalBalanceLCY = dr["OriginalBalanceLCY"] != DBNull.Value ? (double)dr["OriginalBalanceLCY"] : 0.0,
-            //                   OutstandingBalanceACY = dr["OutstandingBalanceACY"] != DBNull.Value ? (double)dr["OutstandingBalanceACY"] : 0.0,
-            //                   IPTOPeriod = dr["IPTOPeriod"] != DBNull.Value ? (int)dr["IPTOPeriod"] : 0,
-            //               }).ToList();
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted, TaskStatus.Canceled };
 
-            foreach (DataRow dr in _lstRaw.Rows)
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_LoanBook = _lstRaw.AsEnumerable().Skip(i * 500).Take(500).ToList();
+
+                //var contractIds = sub_LoanBook.Select(o => o.ContractNo).ToList();
+                //var sub_payment_schedule = payment_schedule.Where(o => contractIds.Contains(o.ContractRefNo)).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunLoanBookReadJob(sub_LoanBook, bt_ead, bt_ead_data);
+                });
+
+                taskLst.Add(task);
+            }
+            Log4Net.Log.Info($"Select Loanbook data Total Task : {taskLst.Count()}");
+
+
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+            Console.WriteLine($"Done with all Task {taskLst.Count} - {DateTime.Now}");
+            //            lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ThenBy(p => p.ContractNo).ToList();
+            lstRaw = lstRaw.OrderBy(o => o.ContractId).ToList();
+
+
+
+
+
+
+
+
+            var groupedLoanBook = new List<List<Loanbook_Data>>();
+            threads = lstRaw.Count / 500;
+            threads = threads + 1;
+
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_items = lstRaw.Skip(i * 500).Take(500).ToList();
+                if (sub_items.Count > 0)
+                    groupedLoanBook.Add(sub_items);
+            }
+            
+
+            var allAccountsGrouped = false;
+
+            try
+            {
+                while (!allAccountsGrouped)
+                {
+                    allAccountsGrouped = true;
+                    for (int i = 1; i < groupedLoanBook.Count; i++)
+                    {
+                        var lstfromPrev = groupedLoanBook[i - 1].LastOrDefault();
+                        var fstfromCurr = groupedLoanBook[i].FirstOrDefault();
+                        if (lstfromPrev.ContractId == fstfromCurr.ContractId)
+                        {
+                            groupedLoanBook[i - 1].Add(fstfromCurr);
+                            groupedLoanBook[i].RemoveAt(0);
+                            allAccountsGrouped = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+
+
+
+
+
+            taskLst = new List<Task>();
+
+            for (int i = 0; i < groupedLoanBook.Count; i++)
+            {
+                var sub_lstRaw = groupedLoanBook[i];
+
+                //var contractIds = sub_LoanBook.Select(o => o.ContractNo).ToList();
+                //var sub_payment_schedule = payment_schedule.Where(o => contractIds.Contains(o.ContractRefNo)).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    RunLoanBookDistinctFilterJob(sub_lstRaw);
+                });
+
+                taskLst.Add(task);
+            }
+
+
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+
+
+            //newLoanBook = lstRaw;
+
+            //Console.WriteLine($"Done with all conversion Output Cunt: {newLoanBook.Select(o=>o.ContractId).Distinct().Count()} MainList Count : {lstRaw.Select(o=>o.ContractId).Distinct().Count()} Raw Count : {_lstRaw.Rows.Count} - {DateTime.Now}");
+            
+            return newLoanBook;
+        }
+
+        private void RunLoanBookDistinctFilterJob(List<Loanbook_Data> sub_lstRaw)
+        {
+            var sub_newLoanBook = new List<Loanbook_Data>();
+
+            //var currencyLst = lstRaw.Select(o => o.Currency).ToList();
+            var sub_distinctContracts = sub_lstRaw.Select(o => o.ContractId).Distinct().ToList();
+
+
+            foreach (var contract in sub_distinctContracts)
+            {
+                var new_contract = sub_lstRaw.LastOrDefault(o => o.ContractId == contract);
+                new_contract.OutstandingBalanceLCY = sub_lstRaw.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
+                new_contract.CreditLimit = sub_lstRaw.Where(o => o.ContractId == contract).Sum(o => o.CreditLimit);
+                sub_newLoanBook.Add(new_contract);
+            }
+            lock(newLoanBook)
+                newLoanBook.AddRange(sub_newLoanBook);
+        }
+
+        private void RunLoanBookReadJob(List<DataRow> _lstRaw, CalibrationInput_EAD_Behavioural_Terms_Processor bt_ead, CalibrationResult_EAD_Behavioural bt_ead_data)
+        {
+            var sub_lstRaw = new List<Loanbook_Data>();
+
+            foreach (DataRow dr in _lstRaw)
             {
                 var loanRec = DataAccess.i.ParseDataToObject(new Loanbook_Data(), dr);
-                
+
                 loanRec.ContractNo = loanRec.ContractNo ?? "";
                 loanRec.AccountNo = loanRec.AccountNo ?? "";
                 loanRec.ProductType = loanRec.ProductType ?? "";
@@ -412,7 +529,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 loanRec.AccountNo = loanRec.AccountNo.ToUpper();
                 loanRec.ProductType = loanRec.ProductType.ToUpper();
                 loanRec.Segment = loanRec.Segment.ToUpper();
-                
+
 
 
                 double noOfMonths = 0;
@@ -422,7 +539,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     var ContractEndDate = loanRec.ContractEndDate;
                     if (loanRec.RestructureEndDate != null && loanRec.RestructureIndicator)
                     {
-                        if(!loanRec.RestructureEndDate.ToString().Contains("000"))
+                        if (!loanRec.RestructureEndDate.ToString().Contains("000"))
                             ContractEndDate = loanRec.RestructureEndDate;
                     }
                     if (ContractEndDate != null)
@@ -458,7 +575,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                                     if (reportingDate > EOMWithExpiryCalibration)
                                         noOfMonths = Math.Round(Financial.YearFrac(EOMWithExpiryCalibration, reportingDate, DayCountBasis.ActualActual) * 12, 0);
                                     else
-                                        noOfMonths = Math.Round(Financial.YearFrac(reportingDate,EOMWithExpiryCalibration, DayCountBasis.ActualActual) * 12, 0);
+                                        noOfMonths = Math.Round(Financial.YearFrac(reportingDate, EOMWithExpiryCalibration, DayCountBasis.ActualActual) * 12, 0);
                                 }
                             }
                             else
@@ -468,7 +585,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                                 else
                                 {
                                     if (reportingDate > EOM)
-                                        noOfMonths = Math.Round(Financial.YearFrac(EOM,reportingDate, DayCountBasis.ActualActual) * 12, 0);
+                                        noOfMonths = Math.Round(Financial.YearFrac(EOM, reportingDate, DayCountBasis.ActualActual) * 12, 0);
                                     else
                                     {
                                         noOfMonths = Math.Round(Financial.YearFrac(reportingDate, EOM, DayCountBasis.ActualActual) * 12, 0);
@@ -476,74 +593,31 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                                 }
 
                             }
-                            if(noOfMonths < 1.0)
+                            if (noOfMonths < 1.0)
                             {
                                 noOfMonths = 0;
                             }
                         }
                     }
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     var kk = ex;
                 }
 
-                //if (loanRec.RestructureEndDate != null && loanRec.RestructureIndicator)
-                //{
-                //    try
-                //    {
-                //        double noOfDays = (loanRec.RestructureEndDate.Value - reportingDate).Days;
-                //        noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        noOfMonths = 1;
-                //        Log4Net.Log.Error(ex);
-                //        //Log4Net.Log.Error(ex.ToString());
-                //    }
-                //}
-                //else
-                //{
-                //    try
-                //    {
-                //        double noOfDays = (loanRec.ContractEndDate.Value - reportingDate).Days;
-                //        noOfMonths = Math.Ceiling(noOfDays * 12 / 365);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        noOfMonths = 1;
-                //        Log4Net.Log.Error(ex);
-                //        //Log4Net.Log.Error(ex.ToString());
-                //    }
-                //}
-
-                //if(loanRec.ContractNo=="")
                 loanRec.LIM_MONTH = noOfMonths;
 
                 loanRec.ContractId = _eclTask.GenerateContractId(loanRec);
-                if(loanRec.ContractId.ToUpper().StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
+                if (loanRec.ContractId.ToUpper().StartsWith(ECLStringConstants.i.ExpiredContractsPrefix))
                 {
                     loanRec.LIM_MONTH = 0;
                 }
                 //if (loanRec.ContractId.Contains(ECLStringConstants.i.ExpiredContractsPrefix))
-                    lstRaw.Add(loanRec);
+                sub_lstRaw.Add(loanRec);
             }
-            
-            lstRaw = lstRaw.OrderBy(o => o.CustomerNo).ThenBy(p=>p.AccountNo).ThenBy(p => p.ContractNo).ToList();
+            lock (lstRaw)
+                lstRaw.AddRange(sub_lstRaw);
 
-            var newLoanBook = new List<Loanbook_Data>();
-
-            //var currencyLst = lstRaw.Select(o => o.Currency).ToList();
-            var distinctContracts = lstRaw.Select(o => o.ContractId).Distinct().ToList();
-            foreach (var contract in distinctContracts)
-            {
-                var new_contract = lstRaw.LastOrDefault(o => o.ContractId == contract);
-                new_contract.OutstandingBalanceLCY = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.OutstandingBalanceLCY);
-                new_contract.CreditLimit = lstRaw.Where(o => o.ContractId == contract).Sum(o => o.CreditLimit);
-                newLoanBook.Add(new_contract);
-            }
-            //newLoanBook = lstRaw;
-
-            return newLoanBook;
         }
 
         protected double ComputeLifetimeValue(List<LifeTimeProjections> eadInputRecords, double eadInputRecord, List<IrFactor> accumlationFactor, long monthsPastDue, int months, int cirIndex, string productType)

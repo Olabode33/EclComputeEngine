@@ -30,6 +30,7 @@ namespace IFRS9_ECL.Models.ECL_Result
         public string Segment { get; set; }
         public string ProductType { get; set; }
         public string Sector { get; set; }
+        public double OriginalOutstandingBalance { get; set; } 
 
     }
 

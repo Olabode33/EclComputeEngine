@@ -13,7 +13,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 
 namespace IFRS9_ECL.Core
 {
@@ -87,16 +87,91 @@ namespace IFRS9_ECL.Core
         }
 
 
-
-        public List<Refined_Raw_Retail_Wholesale> GenerateContractIdandRefinedData(List<Loanbook_Data> lstRaw)
+        List<Refined_Raw_Wholesale> refineds = new List<Refined_Raw_Wholesale>();
+        public List<Refined_Raw_Wholesale> GenerateContractIdandRefinedData(List<Loanbook_Data> lstRaw)
         {
-            var refineds = new List<Refined_Raw_Retail_Wholesale>();
-            int i = 0;
+
+            var groupedLoanBook = new List<List<Loanbook_Data>>();
+            var threads = lstRaw.Count / 500;
+            threads = threads + 1;
+
+            for (int i = 0; i < threads; i++)
+            {
+                var sub_items = lstRaw.Skip(i * 500).Take(500).ToList();
+                if (sub_items.Count > 0)
+                    groupedLoanBook.Add(sub_items);
+            }
+
+
+            var allAccountsGrouped = false;
+
+            try
+            {
+                while (!allAccountsGrouped)
+                {
+                    allAccountsGrouped = true;
+                    for (int i = 1; i < groupedLoanBook.Count; i++)
+                    {
+                        var lstfromPrev = groupedLoanBook[i - 1].LastOrDefault();
+                        var fstfromCurr = groupedLoanBook[i].FirstOrDefault();
+                        if (lstfromPrev.ContractId == fstfromCurr.ContractId)
+                        {
+                            groupedLoanBook[i - 1].Add(fstfromCurr);
+                            groupedLoanBook[i].RemoveAt(0);
+                            allAccountsGrouped = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+
+
+            var taskLst = new List<Task>();
+
+            for (int i = 0; i < groupedLoanBook.Count; i++)
+            {
+                var sub_lstRaw = groupedLoanBook[i];
+
+                //var contractIds = sub_LoanBook.Select(o => o.ContractNo).ToList();
+                //var sub_payment_schedule = payment_schedule.Where(o => contractIds.Contains(o.ContractRefNo)).ToList();
+
+                var task = Task.Run(() =>
+                {
+                    SubGenerateContractIdandRefinedData(sub_lstRaw);
+                });
+
+                taskLst.Add(task);
+            }
+
+
+            var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
+            while (0 < 1)
+            {
+                if (taskLst.All(o => tskStatusLst.Contains(o.Status)))
+                {
+                    break;
+                }
+                //Do Nothing
+            }
+
+
+
+
+            return refineds;
+        }
+
+
+        private void SubGenerateContractIdandRefinedData(List<Loanbook_Data> lstRaw)
+        {
+            var subrefineds = new List<Refined_Raw_Wholesale>();
             foreach (var rr in lstRaw)
             {
-                i++;
-                //Log4Net.Log.Info(i);
-                var refined = new Refined_Raw_Retail_Wholesale { BASE_RATE="0", contract_no="", credit_limit_lcy=0, currency="", CURRENT_CONTRACTUAL_INTEREST_RATE="0", EIR="", INTEREST_PAYMENT_STRUCTURE="", INTEREST_RATE_TYPE="", INTRODUCTORY_PERIOD="", IPT_O_PERIOD="", LIM_MONTH=0, original_bal_lcy="0", ORIGINATION_CONTRACTUAL_INTEREST_RATE="0", OUTSTANDING_BALANCE_LCY="0", POST_IP_CONTRACTUAL_INTEREST_RATE="0", PRINCIPAL_PAYMENT_STRUCTURE="", product_type="", RESTRUCTURE_INDICATOR=0, segment="" };
+
+                var refined = new Refined_Raw_Wholesale { BASE_RATE = "0", contract_no = "", credit_limit_lcy = 0, currency = "", CURRENT_CONTRACTUAL_INTEREST_RATE = "0", EIR = "", INTEREST_PAYMENT_STRUCTURE = "", INTEREST_RATE_TYPE = "", INTRODUCTORY_PERIOD = "", IPT_O_PERIOD = "", LIM_MONTH = 0, original_bal_lcy = "0", ORIGINATION_CONTRACTUAL_INTEREST_RATE = "0", OUTSTANDING_BALANCE_LCY = "0", POST_IP_CONTRACTUAL_INTEREST_RATE = "0", PRINCIPAL_PAYMENT_STRUCTURE = "", product_type = "", RESTRUCTURE_INDICATOR = 0, segment = "" };
                 refined.contract_no = rr.ContractId;// GenerateContractId(rr);
 
                 var filtLstRaw = lstRaw.FirstOrDefault(o => o.ContractId == refined.contract_no);
@@ -114,7 +189,7 @@ namespace IFRS9_ECL.Core
                 }
                 var checkNumber = int.TryParse(subContractNo, out int n);
 
-                if (filtLstRaw!=null)
+                if (filtLstRaw != null)
                     if (refined.contract_no.StartsWith(ECLStringConstants.i.ExpiredContractsPrefix, StringComparison.InvariantCultureIgnoreCase) && !checkNumber)
                     {
 
@@ -152,14 +227,12 @@ namespace IFRS9_ECL.Core
                         refined.LIM_MONTH = filtLstRaw.LIM_MONTH;
                     }
 
-                refineds.Add(refined);
+                subrefineds.Add(refined);
             }
 
-
-            
-            return refineds;
+            lock (refineds)
+                refineds.AddRange(subrefineds);
         }
-
 
         internal List<CoR> CalculateCoR_Main(List<LGDPrecalculationOutput> lGDPreCalc, List<Loanbook_Data> loanbook_Data, List<LGDCollateralData> lstCollateral)
         {
@@ -829,7 +902,7 @@ namespace IFRS9_ECL.Core
         }
 
 
-        internal void EAD_LifeTimeProjections(List<Refined_Raw_Retail_Wholesale> refined_lstRaw, List<LifeTimeEADs> lifeTimeEAD_w, List<CIRProjections> cirProjections, List<PaymentSchedule> _paymentScheduleProjection, CalibrationResult_EAD_CCF_Summary ccfData)
+        internal void EAD_LifeTimeProjections(List<Refined_Raw_Wholesale> refined_lstRaw, List<LifeTimeEADs> lifeTimeEAD_w, List<CIRProjections> cirProjections, List<PaymentSchedule> _paymentScheduleProjection, CalibrationResult_EAD_CCF_Summary ccfData)
         {
             var lifetimeEadInputs = new List<LifeTimeProjections>();
             var lstContractIds = lifeTimeEAD_w.Select(o => o.contract_no).Distinct().ToList();
@@ -1408,7 +1481,7 @@ namespace IFRS9_ECL.Core
 
         }
 
-        internal List<LifeTimeEADs> GenerateLifeTimeEAD(List<Refined_Raw_Retail_Wholesale> r_lst)
+        internal List<LifeTimeEADs> GenerateLifeTimeEAD(List<Refined_Raw_Wholesale> r_lst)
         {
             var rs = new List<LifeTimeEADs>();
 
@@ -1541,7 +1614,7 @@ namespace IFRS9_ECL.Core
             return Math.Round(value1 - value2, 3);
         }
 
-        private double Remaining_IP(Refined_Raw_Retail_Wholesale i, DateTime reportingDate)
+        private double Remaining_IP(Refined_Raw_Wholesale i, DateTime reportingDate)
         {
 
             double value = 0;

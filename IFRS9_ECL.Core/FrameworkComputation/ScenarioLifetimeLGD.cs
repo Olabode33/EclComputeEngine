@@ -148,19 +148,20 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //    redefaultPdDownturn = GetScenarioRedfaultLifetimePdResult(ECL_Scenario.Downturn);
             //});
             //taskLst.Add(task13);
+
             var task14 = Task.Run(() =>
             {
-                lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best);
+                lifetimeCollateralBest = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Best, contractData);
             });
             taskLst.Add(task14);
             var task15 = Task.Run(() =>
             {
-                lifetimeCollateralOptimistic = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Optimistic);
+                lifetimeCollateralOptimistic = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Optimistic, contractData);
             });
             taskLst.Add(task15);
             var task16 = Task.Run(() =>
             {
-                lifetimeCollateralDownturn = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Downturn);
+                lifetimeCollateralDownturn = GetScenarioLifetimeCollateralResult(loanbook, eadInputs, ECL_Scenario.Downturn, contractData);
             });
             taskLst.Add(task16);
 
@@ -198,7 +199,7 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //}
 
 
-            Console.WriteLine($"Done with All LGD pre Tasks");
+            Log4Net.Log.Info($"Done with All LGD pre Tasks");
 
             //xxxxxxxxxxxxx
             //try { Convert.ToInt32(impairmentAssumptions.FirstOrDefault(x => x.Key == ImpairmentRowKeys.ForwardTransitionStage2to3).Value); } catch { }
@@ -217,34 +218,15 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //stageClassification = stageClassification.OrderBy(o => o.ContractId).ToList();
             creditIndex = creditIndex.OrderBy(o => o.ProjectionMonth).ToList();
 
-            taskLst = new List<Task>();
 
             var taskLst_ = new List<Task>();
             for (int i = 0; i < threads; i++)
             {
+                Log4Net.Log.Info($"{i}-1");
                 var subcontract = contractData.Skip(i * 500).Take(500).ToList();
-                var subcontractIds = subcontract.Select(o => o.CONTRACT_NO).ToList();
-                var subpdMapping = pdMapping.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var subsicrInput = sicrInput.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                 var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var sublifetimeEAD = lifetimeEAD.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var sublifetimeCollateralBest = lifetimeCollateralBest.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var sublifetimeCollateralOptimistic = lifetimeCollateralOptimistic.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-                var sublifetimeCollateralDownturn = lifetimeCollateralDownturn.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
-
-                var pdGroups = subpdMapping.Select(o => o.PdGroup).ToList();
-                var sublifetimePdBest = lifetimePdBest.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-                var sublifetimePdOptimistic = lifetimePdOptimistic.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-                var sublifetimePdDownturn = lifetimePdDownturn.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-
-                var subredefaultPdBest = redefaultPdBest.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-                var subredefaultPdOptimistic = redefaultPdOptimistic.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-                var subredefaultPdDownturn = redefaultPdDownturn.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
-
-
                 var task = Task.Run(() =>
                 {
-                    RunLGDJob(subcontract, subpdMapping, subsicrInput, substageClassification, sublifetimeEAD, sublifetimeCollateralBest, sublifetimeCollateralOptimistic, sublifetimeCollateralDownturn, sublifetimePdBest, sublifetimePdOptimistic, sublifetimePdDownturn, subredefaultPdBest, subredefaultPdOptimistic, subredefaultPdDownturn);
+                    RunLGDJob(subcontract, pdMapping, sicrInput, stageClassification, lifetimeEAD, lifetimeCollateralBest, lifetimeCollateralOptimistic, lifetimeCollateralDownturn, lifetimePdBest, lifetimePdOptimistic, lifetimePdDownturn, redefaultPdBest, redefaultPdOptimistic, redefaultPdDownturn);
                 });
                 taskLst_.Add(task);
             }
@@ -296,20 +278,54 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             //}
             //File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LGDOutput.csv"), sb.ToString());
 
-
+            Log4Net.Log.Info($"lifetimeLGD Count: {lifetimeLGD.Count()}");
             return lifetimeLGD;
         }
 
-        private void RunLGDJob(List<LGDAccountData> subcontract, List<PdMappings> subpdMapping, List<SicrInputs> subsicrInput, List<StageClassification> substageClassification, List<LifetimeEad> sublifetimeEAD, List<LifetimeCollateral> sublifetimeCollateralBest, List<LifetimeCollateral> sublifetimeCollateralOptimistic, List<LifetimeCollateral> sublifetimeCollateralDownturn, List<LifeTimeObject> sublifetimePdBest, List<LifeTimeObject> sublifetimePdOptimistic, List<LifeTimeObject> sublifetimePdDownturn, List<LifeTimeObject> subredefaultPdBest, List<LifeTimeObject> subredefaultPdOptimistic, List<LifeTimeObject> subredefaultPdDownturn)
+        private void RunLGDJob(List<LGDAccountData> subcontract, List<PdMappings> pdMapping, List<SicrInputs> sicrInput, List<StageClassification> stageClassification, List<LifetimeEad> lifetimeEAD, List<LifetimeCollateral> lifetimeCollateralBest, List<LifetimeCollateral> lifetimeCollateralOptimistic, List<LifetimeCollateral> lifetimeCollateralDownturn, List<LifeTimeObject> lifetimePdBest, List<LifeTimeObject> lifetimePdOptimistic, List<LifeTimeObject> lifetimePdDownturn, List<LifeTimeObject> redefaultPdBest, List<LifeTimeObject> redefaultPdOptimistic, List<LifeTimeObject> redefaultPdDownturn)
         {
 
-            var _lifetimeLGD = new List<LifetimeLgd>();
+            Log4Net.Log.Info($"2");
+            var subcontractIds = subcontract.Select(o => o.CONTRACT_NO).ToList();
+            Log4Net.Log.Info($"3");
+            var subpdMapping = pdMapping.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"4");
+            var subsicrInput = sicrInput.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"5");
+            var substageClassification = stageClassification.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"6");
+            var sublifetimeEAD = lifetimeEAD.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"7");
+            var sublifetimeCollateralBest = lifetimeCollateralBest.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"8");
+            var sublifetimeCollateralOptimistic = lifetimeCollateralOptimistic.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"9");
+            var sublifetimeCollateralDownturn = lifetimeCollateralDownturn.Where(o => subcontractIds.Contains(o.ContractId)).ToList();
+            Log4Net.Log.Info($"10");
 
+            var pdGroups = subpdMapping.Select(o => o.PdGroup).ToList();
+            Log4Net.Log.Info($"11");
+            var sublifetimePdBest = lifetimePdBest.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"12");
+            var sublifetimePdOptimistic = lifetimePdOptimistic.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"13");
+            var sublifetimePdDownturn = lifetimePdDownturn.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"14");
+
+            var subredefaultPdBest = redefaultPdBest.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"15");
+            var subredefaultPdOptimistic = redefaultPdOptimistic.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"16");
+            var subredefaultPdDownturn = redefaultPdDownturn.Where(o => pdGroups.Contains(o.PdGroup)).ToList();
+            Log4Net.Log.Info($"17");
+
+            var _lifetimeLGD = new List<LifetimeLgd>();
+            Log4Net.Log.Info($"Getting LGD_COntract for Task");
             foreach (var row in subcontract)
             {
                 try
                 {
-                    Log4Net.Log.Info($"Got LGD_COntract -{row.CONTRACT_NO}");
+                    
                     //Console.WriteLine($"Got LGD_COntract -{row.CONTRACT_NO}");
 
                     string contractId = row.CONTRACT_NO;
@@ -617,7 +633,9 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                 }
 
             }
-            lock(lifetimeLGD)
+            
+
+            lock (lifetimeLGD)
                 lifetimeLGD.AddRange(_lifetimeLGD);
         }
 
@@ -806,15 +824,16 @@ namespace IFRS9_ECL.Core.FrameworkComputation
                     _ldg_inputassumption.Add(itm);
                 }
             }
-            Console.WriteLine($"Got ldg_inputassumption");
+            Log4Net.Log.Info($"Got ldg_inputassumption");
             return ldg_inputassumption;
         }
 
         protected List<SicrInputs> GetSicrResult()
         {
             _sicrInputs = new SicrInputWorkings(this._eclId, this._eclType);
+            var sicr= _sicrInputs.GetSircInputResult();
             Log4Net.Log.Info("LGD_SICR");
-            return _sicrInputs.GetSircInputResult();
+            return sicr;
         }
 
         protected List<StageClassification> GetStagingClassificationResult(List<Loanbook_Data> loanbook)
@@ -874,10 +893,10 @@ namespace IFRS9_ECL.Core.FrameworkComputation
             Log4Net.Log.Info($"LGD_CreditRiskResult");
             return data;
         }
-        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs, ECL_Scenario _scenario)
+        protected List<LifetimeCollateral> GetScenarioLifetimeCollateralResult(List<Loanbook_Data> loanbook, List<LifeTimeProjections> eadInputs, ECL_Scenario _scenario, List<LGDAccountData> contractData)
         {
             _scenarioLifetimeCollateral = new ScenarioLifetimeCollateral(_scenario, this._eclId, this._eclType);
-            var data= _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook, eadInputs);
+            var data= _scenarioLifetimeCollateral.ComputeLifetimeCollateral(loanbook, eadInputs, contractData);
             Log4Net.Log.Info($"LGD_Lifetim_Collateral - {_scenario}");
             return data;
         }

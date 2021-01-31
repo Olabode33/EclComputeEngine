@@ -22,7 +22,7 @@ namespace IFRS9_ECL.Core
 
         
         List<LifeTimeEADs> lifetimeEADs = new List<LifeTimeEADs>();
-        List<Refined_Raw_Retail_Wholesale> refined_lstRaws = new List<Refined_Raw_Retail_Wholesale>();
+        List<Refined_Raw_Wholesale> refined_lstRaws = new List<Refined_Raw_Wholesale>();
         
         List<PaymentSchedule> paymentScheduleProjections = new List<PaymentSchedule>();
         DateTime reportingDate = new DateTime();
@@ -181,7 +181,9 @@ namespace IFRS9_ECL.Core
 
                     for (int i = 0; i < threads; i++)
                     {
-                        groupedPS.Add(payment_schedule.Skip(i * 500).Take(500).ToList());
+                        var sub_items = payment_schedule.Skip(i * 500).Take(500).ToList();
+                        if (sub_items.Count > 0)
+                            groupedPS.Add(sub_items);
                     }
 
                     var allAccountsGrouped = false;

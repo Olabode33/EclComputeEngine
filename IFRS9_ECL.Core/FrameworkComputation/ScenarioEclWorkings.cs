@@ -218,33 +218,6 @@ namespace IFRS9_ECL.Core.FrameworkComputation
         {
             var monthlyEcl = new List<FinalEcl>();
 
-
-            // lifetimeLgds = lifetimeLgds.Where(x => x.Month != 0).ToList();
-
-            // var allContracts = lifetimeLgds.Select(o => o.ContractId).ToList();
-
-            //var allContracts = lifetimeLgds.Select(o => o.ContractId).ToList();
-
-            //foreach (var _contractId in allContracts)
-            //{
-            //    var contract_lifetimeLgds = lifetimeLgds.Where(o => o.ContractId == _contractId).ToList();
-            //    var contract_lifetimeEads = lifetimeEads.Where(o => o.ContractId == _contractId).ToList();
-            //    foreach (var row in contract_lifetimeLgds)
-            //    {
-            //        string contractId = row.ContractId;
-            //        string pdGroup = row.PdIndex;
-            //        int month = row.Month;
-
-            //        double monthlyEclValue = ComputeMonthlyEclValue(lifetimePds, contract_lifetimeEads, row, contractId, pdGroup, month);
-
-            //        var newRow = new FinalEcl();
-            //        newRow.ContractId = contractId;
-            //        newRow.EclMonth = month;
-            //        newRow.MonthlyEclValue = monthlyEclValue;
-
-            //        monthlyEcl.Add(newRow);
-            //    }
-            //}
             foreach (var row in lifetimeLgds)
             {
                 string contractId = row.ContractId;

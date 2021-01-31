@@ -40,19 +40,12 @@ namespace IFRS9_ECL.Core
 
         }
 
-        public string ProcessTask(List<Loanbook_Data> loanbook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<StageClassification> stageClassifcation)
+        public string ProcessTask(List<Loanbook_Data> loanbook, List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<StageClassification> stageClassifcation, bool overrideExist)
         {
 
             var lifetimePds = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType).Get_LifetimePd_And_RedefaultLifetimePD_Result();
 
             //var stageClassifcation = stageClassifcation;// GetStageClassification(loanbook);
-
-            if (1 != 1)// loanbook.Count <= 1000)
-            {
-                RunFrameWorkJob(lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput, lifetimePds, stageClassifcation);
-                return "";
-            }
-            //var checker = loanbook.Count / 60;
 
             var threads = loanbook.Count / 500;
 
@@ -65,13 +58,10 @@ namespace IFRS9_ECL.Core
             {
                 var sub_LoanBook = loanbook.Skip(i * 500).Take(500).ToList();
                 var contractNo = sub_LoanBook.Select(o => o.ContractId).ToList();
-                var sub_stageClassification = stageClassifcation.Where(o => contractNo.Contains(o.ContractId)).ToList();
-                var sub_lifetimeEad = lifetimeEad.Where(o => contractNo.Contains(o.ContractId)).ToList();
-                var sub_lifetimeLGD = lifetimeLGD.Where(o => contractNo.Contains(o.ContractId)).ToList();
-                var sub_eadInput = eadInput.Where(o => contractNo.Contains(o.Contract_no)).ToList();
+
                 var task = Task.Run(() =>
                 {
-                    RunFrameWorkJob(sub_lifetimeEad, sub_lifetimeLGD, cummulativeDiscountFactor, sub_eadInput, lifetimePds, sub_stageClassification);
+                    RunFrameWorkJob(lifetimeEad, lifetimeLGD, cummulativeDiscountFactor, eadInput, lifetimePds, stageClassifcation, overrideExist, contractNo);
                 });
                 taskLst.Add(task);
             }
@@ -91,27 +81,7 @@ namespace IFRS9_ECL.Core
                 //Do Nothing
             }
 
-            //Task t = Task.WhenAll(taskLst);
-
-            //try
-            //{
-            //    t.Wait();
-            //}
-            //catch (Exception ex)
-            //{
-            //    Log4Net.Log.Error(ex);
-            //}
-            //Log4Net.Log.Info($"All Task status: {t.Status}");
-
-            //if (t.Status == TaskStatus.RanToCompletion)
-            //{
-            //    Log4Net.Log.Info($"All Task ran to completion");
-            //}
-            //if (t.Status == TaskStatus.Faulted)
-            //{
-            //    Log4Net.Log.Info($"All Task ran to fault");
-            //}
-
+           
             return "";
 
         }
@@ -131,7 +101,7 @@ namespace IFRS9_ECL.Core
         }
         
 
-        public string ProcessResultDetails(List<Loanbook_Data> loanbook)
+        public string ProcessResultDetails(List<Loanbook_Data> loanbook, bool overrideExist)
         {
             var _eclEadInputAssumption=GetECLEADInputAssumptions();
             var CCF_OBE = 0.5;
@@ -143,17 +113,21 @@ namespace IFRS9_ECL.Core
             DataAccess.i.ExecuteQuery(qry);
 
             // Gennerate Result Details
-            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook, CCF_OBE);
+            var rd = new ReportComputation().GetResultDetail(this._eclType, this._eclId, loanbook, CCF_OBE, overrideExist);
            
             return "";
         }
 
-        private void RunFrameWorkJob(List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<LifeTimeObject> lifetimePds, List<StageClassification> stageClassification)
+        private void RunFrameWorkJob(List<LifetimeEad> lifetimeEad, List<LifetimeLgd> lifetimeLGD, List<IrFactor> cummulativeDiscountFactor, List<LifeTimeProjections> eadInput, List<LifeTimeObject> lifetimePds, List<StageClassification> stageClassification, bool overrideExist, List<string> contractNo)
         {
+            var sub_stageClassification = stageClassification.Where(o => contractNo.Contains(o.ContractId)).ToList();
+            var sub_lifetimeEad = lifetimeEad.Where(o => contractNo.Contains(o.ContractId)).ToList();
+            var sub_lifetimeLGD = lifetimeLGD.Where(o => contractNo.Contains(o.ContractId)).ToList();
+            var sub_eadInput = eadInput.Where(o => contractNo.Contains(o.Contract_no)).ToList();
 
             var obj = new ScenarioEclWorkings(this._eclId, this._Scenario, this._eclType);
 
-            var d = obj.ComputeFinalEcl(lifetimeEad, lifetimeLGD, eadInput, cummulativeDiscountFactor, lifetimePds, stageClassification);
+            var d = obj.ComputeFinalEcl(sub_lifetimeEad, sub_lifetimeLGD, sub_eadInput, cummulativeDiscountFactor, lifetimePds, sub_stageClassification);
 
             var _scenerio = 0;
             if (this._Scenario == ECL_Scenario.Best)
@@ -173,9 +147,7 @@ namespace IFRS9_ECL.Core
             {
                 _d.eCL_Scenario = _scenerio;
             }
-            var qry=Queries.EclOverrideExist(this._eclId, this._eclType);
-            var cnt = DataAccess.i.getCount(qry);
-            if(cnt>0)
+            if(overrideExist)
             {
                 var r = Util.FileSystemStorage<FinalEcl>.WriteCsvData(this._eclId, ECLStringConstants.i.FrameworkResultOverride(this._eclType), d);
                 //Save to Framwork Override table
