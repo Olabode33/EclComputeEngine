@@ -48,6 +48,7 @@ namespace Ecobank.IFRS9.ECL.Service13
             Log4Net.Log.Info("Entering Core");
             core.ProcessRunTask(13);
 
+
             Log4Net.Log.Info("Task Completed!");
 
             timer1.Enabled = true;

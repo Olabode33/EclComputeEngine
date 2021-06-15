@@ -23,7 +23,10 @@ namespace IFRS9_ECL.Core
         public bool ProcessRunTask(int serviceId)
         {
             this.serviceId = serviceId;
-            ProcessECLRunTask();
+            //ProcessECLRunTask();
+            var autoCore = new AutomationCore();
+            autoCore.ProcessRunTask(serviceId);
+
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
 
@@ -196,7 +199,9 @@ namespace IFRS9_ECL.Core
             this.serviceId = serviceId;
             ProcessCalibrationRunTask();
             ProcessMacroRunTask();
-            ProcessECLRunTask();
+            //ProcessECLRunTask();
+            var autoCore = new AutomationCore();
+            autoCore.ProcessRunTask(serviceId);
             return true;
         }
 

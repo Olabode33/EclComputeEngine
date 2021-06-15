@@ -36,6 +36,34 @@ namespace IFRS9_ECL.Util
             }
             return lst;
         }
+        public static List<T> ReadCsvData(string fileName)
+        {
+            var lst = new List<T>();
+            using (TextReader reader = File.OpenText(fileName))
+            {
+                CsvReader csv = new CsvReader(reader, new System.Globalization.CultureInfo("en"));
+                csv.Configuration.Delimiter = ";";
+
+                csv.Configuration.MissingFieldFound = null;
+                csv.Configuration.HasHeaderRecord = false;
+                var _lst = csv.GetRecords<T>();
+                lst = _lst.ToList();
+            }
+            return lst;
+        }
+
+        public static bool WriteCsvData(string fileName, List<T> data)
+        {
+            using (TextWriter writer = File.CreateText(fileName))
+            {
+                CsvWriter csv = new CsvWriter(writer, new System.Globalization.CultureInfo("en"));
+                csv.Configuration.Delimiter = ";";
+                csv.Configuration.HasHeaderRecord = false;
+
+                csv.WriteRecords(data);
+            }
+            return true;
+        }
 
         public static bool WriteCsvData(Guid eclId, string fileName, List<T> data)
         {

@@ -62,6 +62,31 @@ namespace IFRS9_ECL.Util
         public static string ServiceLogFile { get { return ConfigurationManager.AppSettings["ServiceLogFile"]; } }
         public static string ServiceFolder { get { return ConfigurationManager.AppSettings["ServiceFolder"]; } }
 
+        public static string ECLBasePath = ConfigurationManager.AppSettings["ECLBasePath"];
 
+        public static string SheetPassword = "ARQ_IFRS9";
+        public static string DumbContract= "DumbContract";
+        public static int BatchSize=1000;
+
+        public static string ECLServer2 { get { return ConfigurationManager.AppSettings["ECLServer2"]; } }
+        public static string ECLServer3 { get { return ConfigurationManager.AppSettings["ECLServer3"]; } }
+        public static string ECLServer4 { get { return ConfigurationManager.AppSettings["ECLServer4"]; } }
+        public static string ECLServer5 { get { return ConfigurationManager.AppSettings["ECLServer5"]; } }
+        public static string Drive { get { return ConfigurationManager.AppSettings["Drive"]; } }
+
+        public static readonly string new_ = "new_";
+        public static readonly string csv = "csv";
+        public static readonly string xlsb = "xlsb";
+        public static readonly string processing_ = "processing_";
+        public static readonly string complete_ = "complete_";
+        public static readonly string error_ = "error_";
+        public static readonly int ServerCallWaitTime = 20000;
+
+        public static readonly string ModelInputFileEto = "InputFile.txt";
+
+
+
+
+        public static double BatchSizeDouble { get { return Convert.ToDouble(BatchSize); } }
     }
 }

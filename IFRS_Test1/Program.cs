@@ -1,5 +1,6 @@
 ﻿using IFRS9_ECL.Core;
 using IFRS9_ECL.Core.Calibration;
+using IFRS9_ECL.Core.ECLProcessor.Entities;
 using IFRS9_ECL.Core.Report;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.ECL_Result;
@@ -94,13 +95,52 @@ namespace IFRS_Test1
         static void Main(string[] args)
         {
 
-            var cc = new Random().Next(10, 100) *0.01;// / 100;
-            Console.WriteLine(cc);
-            //DeployServices();
+            //Console.Write("Paste Path:");
+            //var path=Console.ReadLine();
+            new AutomationCore().ProcessRunTask(1);
 
-            Core c = new Core();
-            c.ProcessRunTask(0);
-            
+            //@"\ETI_Ghana EAD V.2_june_20.xlsb"
+            //new EAD_Processor().ProcessEAD(new IFRS9_ECL.Core.ECLProcessor.Entities.EADParameters());
+            //var input = new LGDParameters();
+            //input.BasePath = @"C:\PwC\Projects\ECL_Review_20_03_2021\GHANA_EXCEL\GHANA_EXCEL\JUNE\JUNE";
+            //input.LoanBookFileName = "EGH_JUNE_20_excel - Copy.xlsx";
+            //input.ModelFileName = "ETI_Ghana LGDs V.2_sep_20 - Copy.xlsb";
+            //input.ReportDate = new DateTime(2020,06,30);
+            //input.NonExpired = 19;
+            //input.Expired = 26;
+
+            //new LGD_Processor().ProcessLGD(input);
+
+            //var input = new PDParameters();
+            //input.BasePath = @"C:\PwC\Projects\ECL_Review_20_03_2021\GHANA_EXCEL\GHANA_EXCEL\JUNE\JUNE";
+            //input.LoanBookFileName = "EGH_JUNE_20_excel - Copy (2).xlsx";
+            //input.ModelFileName = "ETI_Ghana PDs V.2.0.Updated - Copy - Copy - Copy.xlsb";
+            //input.ReportDate = new DateTime(2020, 06, 30);
+            //input.NonExpired = 19;
+            //input.Expired = 26;
+            //input.RedefaultAdjustmentFactor = 1;
+            //input.SandPMapping = "Best Fit";
+
+            //new PD_Processor().ProcessPD(input);
+
+            //var input = new FrameworkParameters();
+            //input.BasePath = @"C:\PwC\Projects\ECL_Review_20_03_2021\GHANA_EXCEL\GHANA_EXCEL\JUNE\JUNE";
+            //input.ModelFileName = "ETI_Ghana IFRS9 Impairment Model 202006_june_20.xlsb";
+            //input.ReportDate = new DateTime(2020, 06, 30);
+            //input.EadFileName = "ETI_Ghana EAD V.2_june_20.xlsb";
+            //input.LgdFile = "ETI_Ghana LGDs V.2_sep_20.xlsb";
+            //input.PdFileName = "ETI_Ghana PDs V.2.0.Updated.xlsb";
+            //input.ReportFolderName = "Report";
+
+            //new Framework_Processor().ProcessFramework(input);
+
+            //var cc = new Random().Next(10, 100) *0.01;// / 100;
+            //Console.WriteLine(cc);
+            ////DeployServices();
+
+            //Core c = new Core();
+            //c.ProcessRunTask(0);
+
             // Generate Macro Data
             //var affId = 6; //new Guid("4FE329C8-C57F-4EB2-8F7F-08D75BC1F14A");
 
@@ -108,7 +148,7 @@ namespace IFRS_Test1
             //// 55C3EDDB - 94F5 - 47BF - 7B86 - 08D78395353F
             //var caliId = new Guid("55C3EDDB-94F5-47BF-7B86-08D78395353F");
             //Macro_Processor m = new Macro_Processor();
-            
+
             ////m.ProcessMacro(1,affId);
 
 

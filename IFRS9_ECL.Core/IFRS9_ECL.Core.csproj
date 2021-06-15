@@ -46,6 +46,9 @@
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.2.0.246, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.1.2.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
+    <Reference Include="LinqToExcel, Version=1.11.0.0, Culture=neutral, PublicKeyToken=9c8ea65a58f03f1f, processorArchitecture=MSIL">
+      <HintPath>..\packages\LinqToExcel.1.11.0\lib\LinqToExcel.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
     </Reference>
@@ -55,6 +58,9 @@
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NPOI, Version=2.5.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
       <HintPath>..\packages\NPOI.2.5.1\lib\net45\NPOI.dll</HintPath>
@@ -72,6 +78,15 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="Remotion, Version=1.13.52.2, Culture=neutral, PublicKeyToken=0669cf0452175907, processorArchitecture=MSIL">
+      <HintPath>..\packages\LinqToExcel.1.11.0\lib\Remotion.dll</HintPath>
+    </Reference>
+    <Reference Include="Remotion.Data.Linq, Version=1.13.52.2, Culture=neutral, PublicKeyToken=0669cf0452175907, processorArchitecture=MSIL">
+      <HintPath>..\packages\LinqToExcel.1.11.0\lib\Remotion.Data.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="Remotion.Interfaces, Version=1.13.52.2, Culture=neutral, PublicKeyToken=0669cf0452175907, processorArchitecture=MSIL">
+      <HintPath>..\packages\LinqToExcel.1.11.0\lib\Remotion.Interfaces.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
@@ -90,6 +105,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutomationCore.cs" />
+    <Compile Include="ConnexionExcel.cs" />
+    <Compile Include="ECLProcessor\Entities\FrameworkParameters.cs" />
+    <Compile Include="ECLProcessor\Entities\PDParameters.cs" />
+    <Compile Include="ECLProcessor\Framework_Processor.cs" />
+    <Compile Include="ECLProcessor\PD_Processor.cs" />
+    <Compile Include="ECLProcessor\Entities\LGDParameters.cs" />
+    <Compile Include="ECLProcessor\LGD_Processor.cs" />
+    <Compile Include="ECLProcessor\EAD_Processor.cs" />
     <Compile Include="Calibration\CalibrationInput_PD_CR_RD_Processor.cs" />
     <Compile Include="Calibration\CalibrationInput_LGD_Haricut_Processor.cs" />
     <Compile Include="Calibration\CalibrationInput_LGD_RecoveryRate_Processor.cs" />
@@ -127,6 +151,7 @@
     <Compile Include="Calibration\HoldingCo_Processor.cs" />
     <Compile Include="Calibration\RV_Impairment_Processor.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="ECLProcessor\Entities\EADParameters.cs" />
     <Compile Include="ECLTasks.cs" />
     <Compile Include="ExcelFormulaUtil.cs" />
     <Compile Include="FrameworkComputation\IrFactorWorkings.cs" />

@@ -49,6 +49,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.Service15
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecobank.IFRS9.ECL.ServiceWatcher", "Ecobank.IFRS9.ECL.ServiceWatcher\Ecobank.IFRS9.ECL.ServiceWatcher.csproj", "{CF43863F-19A6-4C36-B17E-5B46A48358F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS9_EADModelProcessor", "IFRS9_EADModelProcessor\IFRS9_EADModelProcessor.csproj", "{6CADBFD4-32B3-4E00-A39F-D1DA68AFEFBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS9_LGDModelProcessor", "IFRS9_LGDModelProcessor\IFRS9_LGDModelProcessor.csproj", "{37E0E98A-6722-401A-8281-4FA54A75ACBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS9_PDModelProcessor", "IFRS9_PDModelProcessor\IFRS9_PDModelProcessor.csproj", "{80970FF3-E1E0-413C-9E01-B22842C302DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFRS9_FrameworkModelProcessor", "IFRS9_FrameworkModelProcessor\IFRS9_FrameworkModelProcessor.csproj", "{C889FAD5-62B1-4F7A-9E10-8B576C7408DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +151,22 @@ Global
 		{CF43863F-19A6-4C36-B17E-5B46A48358F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF43863F-19A6-4C36-B17E-5B46A48358F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF43863F-19A6-4C36-B17E-5B46A48358F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CADBFD4-32B3-4E00-A39F-D1DA68AFEFBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CADBFD4-32B3-4E00-A39F-D1DA68AFEFBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CADBFD4-32B3-4E00-A39F-D1DA68AFEFBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CADBFD4-32B3-4E00-A39F-D1DA68AFEFBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37E0E98A-6722-401A-8281-4FA54A75ACBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37E0E98A-6722-401A-8281-4FA54A75ACBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37E0E98A-6722-401A-8281-4FA54A75ACBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37E0E98A-6722-401A-8281-4FA54A75ACBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80970FF3-E1E0-413C-9E01-B22842C302DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80970FF3-E1E0-413C-9E01-B22842C302DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80970FF3-E1E0-413C-9E01-B22842C302DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80970FF3-E1E0-413C-9E01-B22842C302DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C889FAD5-62B1-4F7A-9E10-8B576C7408DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C889FAD5-62B1-4F7A-9E10-8B576C7408DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C889FAD5-62B1-4F7A-9E10-8B576C7408DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C889FAD5-62B1-4F7A-9E10-8B576C7408DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
