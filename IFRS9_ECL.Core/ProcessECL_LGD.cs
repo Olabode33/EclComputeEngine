@@ -175,6 +175,10 @@ namespace IFRS9_ECL.Core
             {
                 qry = Queries.EclOverridesTTr(_eclId, _eclType);
             }
+            if (dataRequest == 4)
+            {
+                qry = Queries.EclOverridesAllData(_eclId, _eclType);
+            }
 
             var dt = DataAccess.i.GetData(qry);
             var eclOverrides = new List<EclOverrides>();

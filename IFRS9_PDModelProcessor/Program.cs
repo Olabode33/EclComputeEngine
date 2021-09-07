@@ -14,27 +14,41 @@ namespace IFRS9_PDModelProcessor
     {
         static void Main(string[] args)
         {
+            var tasks = new List<Task>();
             while (0 < 1)
             {
                 Thread.Sleep(AppSettings.ServerCallWaitTime);
 
-                var basePath = AppSettings.ECLServer3;
+                var basePath = AppSettings.ECLServer4;
 
                 var di = new DirectoryInfo(basePath);
-                var files = di.GetFiles("*", SearchOption.AllDirectories).Where(o=>o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("PD.xlsb")).ToList();
+                tasks = tasks.Where(o => o.Status == TaskStatus.Running).ToList();
 
-                foreach (var file in files)
+                if (tasks.Count > 4)
                 {
-                    //var task1 = Task.Run(() =>
-                    //{
-                        ProcessFile(file);
-                    //});
+                    continue;
                 }
+
+                var files = di.GetFiles("*", SearchOption.AllDirectories).Where(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("PD.xlsb")).ToList();
+
+                foreach (var file in files.OrderBy(o => o.Name).ToList())
+                {
+                    var task1 = Task.Run(() =>
+                    {
+                        ProcessFile(file);
+                    });
+                    tasks.Add(task1);
+                }
+
             }
         }
 
         public static bool ProcessFile(FileInfo file)
         {
+
+            if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                return false;
+
             //Process EAD
             var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
             File.Move(file.FullName, processingFileName);
@@ -47,7 +61,21 @@ namespace IFRS9_PDModelProcessor
             }
             if (eadProcessor)
             {
-                File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.complete_));
+                var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                if (!File.Exists(completedProcessingFileName))
+                    File.Move(processingFileName, completedProcessingFileName);
+
+                //transfer file back to master server
+
+                File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1), true);
+                File.Delete(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1).Replace(AppSettings.complete_, string.Empty));
+                File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.PDComputeComplete), string.Empty);
+
+                // Move FrameworkFile
+                if (File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.EADComputeComplete)) && File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.LGDComputeComplete)))
+                {
+                    new Framework_Processor().TransferFrameworkInputFiles(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1), AppSettings.PD);
+                }
             }
             else
             {

@@ -251,9 +251,13 @@ namespace IFRS9_ECL.Data
         {
             return $"update {TableName} set ServiceId={serviceId} where Id ='{recordId.ToString()}' and (ServiceId =0 or (ServiceId>0 and Status=12))";
         }
-        public static string UpdateEclStatus(string eclType, string eclId, int status, string exception)
+        public static string UpdateEclStatus(string eclType, string eclId, int status, string exception, int overrideStatus=-1)
         {
             return $"update {eclType.ToString()}Ecls set status={status}, ExceptionComment='{exception}' where Id ='{eclId}'";
+        }
+        public static string DeleteDataOnWholesaleEclFramworkReportDetail(string eclId)
+        {
+            return $"delete from WholesaleEclFramworkReportDetail where WholesaleEclId='{eclId}'";
         }
         public static string CalibrationBehavioural()
         {
@@ -350,10 +354,18 @@ namespace IFRS9_ECL.Data
         {
             return $"select ContractId, TtrYears from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
         }
-
+        public static string EclOverridesAllData(Guid eclId, EclType eclType)
+        {
+            return $"select * from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
+        }
         public static string EclOverrideExist(Guid eclId, EclType eclType)
         {
             return $"select count(*) from {eclType.ToString()}EclOverrides where {eclType.ToString()}EclDataLoanBookId ='{eclId}'";
+        }
+
+        public static string EclOverrideIsRunning(Guid eclId)
+        {
+            return $"select ExceptionComment from WholesaleEcls where Id ='{eclId}'";
         }
 
 

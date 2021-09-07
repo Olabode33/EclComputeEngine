@@ -94,10 +94,12 @@ namespace IFRS_Test1
         }
         static void Main(string[] args)
         {
-
+            //var xx=StringHelper.RemoveSpecialCharacters("dsfsfd325534.5 45sdv  fdvg  ");
             //Console.Write("Paste Path:");
             //var path=Console.ReadLine();
             new AutomationCore().ProcessRunTask(1);
+
+            //new Framework_Processor().TestSavingToCsv(@"C:\ECLAutomation\6\20afae92-a2bc-4757-9b10-08d8ff38e6e7\Batch3\FrameworkTemplate.xlsb");
 
             //@"\ETI_Ghana EAD V.2_june_20.xlsb"
             //new EAD_Processor().ProcessEAD(new IFRS9_ECL.Core.ECLProcessor.Entities.EADParameters());

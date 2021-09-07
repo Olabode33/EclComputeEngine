@@ -27,10 +27,12 @@ namespace IFRS9_ECL.Core
             var autoCore = new AutomationCore();
             autoCore.ProcessRunTask(serviceId);
 
-            ProcessCalibrationRunTask();
-            ProcessMacroRunTask();
-
-            ProcessIVModelsRunTask();
+            if(AppSettings.ServiceType == AppSettings.Main)
+            {
+                ProcessCalibrationRunTask();
+                ProcessMacroRunTask();
+                ProcessIVModelsRunTask();
+            }
 
             return true;
         }
@@ -291,13 +293,6 @@ namespace IFRS9_ECL.Core
 
 
                // return true; ;
-
-
-
-
-
-
-
 
 
                 var overrideExist = false;

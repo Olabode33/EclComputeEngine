@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IFRS9_ECL.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,5 +16,7 @@ namespace IFRS9_ECL.Core.ECLProcessor.Entities
         public string PdFileName { get; set; }
         public string ReportFolderName { get; set; }
         public DateTime ReportDate { get; set; }
+        public Guid EclId { get; set; }
+        public EclType EclType { get; set; }
     }
 }

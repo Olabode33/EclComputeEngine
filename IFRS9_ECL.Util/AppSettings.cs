@@ -11,7 +11,7 @@ namespace IFRS9_ECL.Util
         public static string CalibrationModelPath { get { return ConfigurationManager.AppSettings["CalibrationModelPath"]; } }
         public static string MacroModelPath { get { return ConfigurationManager.AppSettings["MacroModelPath"]; } }
         public static string RScriptPath { get { return ConfigurationManager.AppSettings["RScriptPath"]; } }
-
+        
         public static double ServiceInterval
         {
             get
@@ -66,21 +66,47 @@ namespace IFRS9_ECL.Util
 
         public static string SheetPassword = "ARQ_IFRS9";
         public static string DumbContract= "DumbContract";
-        public static int BatchSize=1000;
+        public static int BatchSize=3000;
 
+        public static string ECLServer1 { get { return ConfigurationManager.AppSettings["ECLServer1"]; } }
         public static string ECLServer2 { get { return ConfigurationManager.AppSettings["ECLServer2"]; } }
         public static string ECLServer3 { get { return ConfigurationManager.AppSettings["ECLServer3"]; } }
         public static string ECLServer4 { get { return ConfigurationManager.AppSettings["ECLServer4"]; } }
         public static string ECLServer5 { get { return ConfigurationManager.AppSettings["ECLServer5"]; } }
         public static string Drive { get { return ConfigurationManager.AppSettings["Drive"]; } }
+        public static string ServiceType { get { return ConfigurationManager.AppSettings["ServiceType"]; } }
+        public static double MaxExcelTaskCount { get { return int.Parse(ConfigurationManager.AppSettings["MaxExcelTaskCount"]); } }
 
         public static readonly string new_ = "new_";
+        public static readonly string override_ = "override_";
         public static readonly string csv = "csv";
+        public static readonly string xcsv = "xcsv";
         public static readonly string xlsb = "xlsb";
+        public static readonly string LoadingDB_ = "LoadingDB_";
+        public static readonly string LoadingDBComplete_ = "LoadingDBComplete_";
         public static readonly string processing_ = "processing_";
         public static readonly string complete_ = "complete_";
         public static readonly string error_ = "error_";
-        public static readonly int ServerCallWaitTime = 20000;
+        public static readonly string TransferComplete = "TransferComplete.File";
+
+        public static readonly string EADComputeComplete = "EADComputeComplete.File";
+        public static readonly string LGDComputeComplete = "LGDComputeComplete.File";
+        public static readonly string PDComputeComplete = "PDComputeComplete.File";
+        public static readonly string FrameworkComputeComplete = "FrameworkComputeComplete.File";
+
+        public static readonly string Main = "Main";
+        public static readonly string ResultUpload = "ResultUpload";
+        public static readonly string EAD = "EAD";
+        public static readonly string LGD = "LGD";
+        public static readonly string PD = "PD";
+        public static readonly string Framework = "Framework";
+
+        public static readonly string Report = "Report";
+        
+        public static readonly string ECLAutomation = "ECLAutomation";
+        
+
+        public static readonly int ServerCallWaitTime = 2000;
 
         public static readonly string ModelInputFileEto = "InputFile.txt";
 

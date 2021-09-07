@@ -7,10 +7,12 @@ using IFRS9_ECL.Models.ECL_Result;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using Microsoft.Office.Interop.Excel;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -25,19 +27,345 @@ namespace IFRS9_ECL.Core
         int serviceId = 0;
         public bool ProcessRunTask(int serviceId)
         {
-            
+
             this.serviceId = serviceId;
-            ProcessECLRunTask();
+
+            if (AppSettings.ServiceType==AppSettings.EAD)
+            {
+                SetProcessPriority();
+                Process_EAD_ExcelModel();
+            }
+            if (AppSettings.ServiceType == AppSettings.LGD)
+            {
+                SetProcessPriority();
+                Process_LGD_ExcelModel();
+            }
+            if (AppSettings.ServiceType == AppSettings.PD)
+            {
+                SetProcessPriority();
+                Process_PD_ExcelModel();
+            }
+            if (AppSettings.ServiceType == AppSettings.Framework)
+            {
+                SetProcessPriority();
+                Process_Framework_ExcelModel();
+            }
+            if(AppSettings.ServiceType == AppSettings.Main)
+            {
+                ProcessECLRunTask();
+            }
+            if (AppSettings.ServiceType == AppSettings.ResultUpload)
+            {
+                ProcessFrameworkResultTask();
+                ProcessFrameworkOverrideResultTask();
+
+            }
+
 
             return true;
         }
 
-        public bool ProcessRunTask(string path)
+        private void SetProcessPriority()
         {
-            ExtractAndSaveResult(path);
+            var proocesses = Process.GetProcesses().Where(o => o.ProcessName == "EXCEL").ToList();
+            foreach (var process in proocesses)
+            {
+                try
+                {
+                    Console.WriteLine(process.PriorityClass.ToString());
+                    if (process.PriorityClass != ProcessPriorityClass.RealTime)
+                    {
+                        process.PriorityBoostEnabled = true;
+                        process.PriorityClass = ProcessPriorityClass.RealTime;
+                        Console.WriteLine($"Optimized - {process.Id}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Error(ex);
+                }
+            }
+        }
 
-            Console.WriteLine("Complete");
-            return true;
+
+        private void Process_Framework_ExcelModel()
+        {
+            try
+            {
+                var basePath = AppSettings.ECLServer5;
+
+                var di = new DirectoryInfo(basePath);
+
+                var files = di.GetFiles("*", SearchOption.AllDirectories).OrderBy(n => n.Name).Where(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("Framework.xlsb")).ToList();
+
+                Log4Net.Log.Info($"Found {files.Count} EAD file");
+                foreach (var file in files)
+                {
+                    Log4Net.Log.Info($"Processing {file.FullName}");
+                    try
+                    {
+
+                        if (file == null)
+                        {
+                            continue;
+                        }
+
+                        if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                            continue;
+
+                        //Process Framework
+                        var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
+                        try
+                        {
+                            File.Move(file.FullName, processingFileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log4Net.Log.Info(file.FullName);
+                            Log4Net.Log.Info("File has probably been moved by another service");
+                            Log4Net.Log.Error(ex);
+                            continue;
+                        }
+
+                        var tryCounter = 0;
+                        var eadProcessor = false;
+                        while (!eadProcessor && tryCounter <= 3)
+                        {
+                            eadProcessor = new Framework_Processor().ExecuteFrameworkMacro(processingFileName);
+                            tryCounter = tryCounter + 1;
+                        }
+                        if (eadProcessor)
+                        {
+                            var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                            File.Move(processingFileName, completedProcessingFileName);
+
+                            completedProcessingFileName = completedProcessingFileName.Replace(AppSettings.xlsb, AppSettings.csv);
+                            //transfer file back to master server
+
+                            File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1), true);
+                            File.Copy(completedProcessingFileName.Replace(AppSettings.xlsb, AppSettings.csv), completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1).Replace(AppSettings.xlsb, AppSettings.csv), true);
+                            try { File.Delete(processingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1).Replace(AppSettings.processing_, string.Empty)); } catch { }
+                            File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1)).Directory.FullName, AppSettings.FrameworkComputeComplete), string.Empty);
+                        }
+                        else
+                        {
+                            File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.error_));
+                        }
+                    }catch(Exception ex)
+                    {
+                        Log4Net.Log.Error(ex);
+                        continue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+        }
+
+        private void Process_PD_ExcelModel()
+        {
+            try
+            {
+                var basePath = AppSettings.ECLServer4;
+
+                var di = new DirectoryInfo(basePath);
+
+                var file = di.GetFiles("*", SearchOption.AllDirectories).OrderBy(n => n.Name).FirstOrDefault(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("PD.xlsb"));
+                if (file == null)
+                {
+                    return;
+                }
+                if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                    return;
+
+                //Process PD
+                var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
+                try
+                {
+                    File.Move(file.FullName, processingFileName);
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Info(file.FullName);
+                    Log4Net.Log.Info("File has probably been moved by another service");
+                    Log4Net.Log.Error(ex);
+                    return;
+                }
+
+
+                var tryCounter = 0;
+                var eadProcessor = false;
+                while (!eadProcessor && tryCounter <= 3)
+                {
+                    eadProcessor = new PD_Processor().ExecutePDMacro(processingFileName);
+                    tryCounter = tryCounter + 1;
+                }
+                if (eadProcessor)
+                {
+                    var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                    if (!File.Exists(completedProcessingFileName))
+                        File.Move(processingFileName, completedProcessingFileName);
+
+                    //transfer file back to master server
+
+                    File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1), true);
+                    try { File.Delete(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1).Replace(AppSettings.complete_, string.Empty)); } catch { }
+                    File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.PDComputeComplete), string.Empty);
+
+                    // Move FrameworkFile
+                    if (File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.EADComputeComplete)) && File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1)).Directory.FullName, AppSettings.LGDComputeComplete)))
+                    {
+                        new Framework_Processor().TransferFrameworkInputFiles(completedProcessingFileName.Replace(AppSettings.ECLServer4, AppSettings.ECLServer1), AppSettings.PD);
+                    }
+                }
+                else
+                {
+                    File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.error_));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+
+        }
+
+        private void Process_LGD_ExcelModel()
+        {
+            try
+            {
+                var basePath = AppSettings.ECLServer3;
+
+                var di = new DirectoryInfo(basePath);
+
+                var file = di.GetFiles("*", SearchOption.AllDirectories).OrderBy(n => n.Name).FirstOrDefault(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("LGD.xlsb"));
+
+                if (file == null)
+                {
+                    return;
+                }
+                if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                    return;
+
+                //Process LGD
+                var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
+                try
+                {
+                    File.Move(file.FullName, processingFileName);
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Info(file.FullName);
+                    Log4Net.Log.Info("File has probably been moved by another service");
+                    Log4Net.Log.Error(ex);
+                    return;
+                }
+
+
+                var tryCounter = 0;
+                var eadProcessor = false;
+                while (!eadProcessor && tryCounter <= 3)
+                {
+                    eadProcessor = new LGD_Processor().ExecuteLGDMacro(processingFileName);
+                    tryCounter = tryCounter + 1;
+                }
+                if (eadProcessor)
+                {
+                    var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                    if (!File.Exists(completedProcessingFileName))
+                        File.Move(processingFileName, completedProcessingFileName);
+
+                    //transfer file back to master server
+
+                    File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1), true);
+                    try { File.Delete(completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1).Replace(AppSettings.complete_, string.Empty)); } catch { }
+                    File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1)).Directory.FullName, AppSettings.LGDComputeComplete), string.Empty);
+
+                    // Move FrameworkFile
+                    if (File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1)).Directory.FullName, AppSettings.EADComputeComplete)) && File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1)).Directory.FullName, AppSettings.PDComputeComplete)))
+                    {
+                        new Framework_Processor().TransferFrameworkInputFiles(completedProcessingFileName.Replace(AppSettings.ECLServer3, AppSettings.ECLServer1), AppSettings.LGD);
+                    }
+                }
+                else
+                {
+                    File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.error_));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
+        }
+
+        private void Process_EAD_ExcelModel()
+        {
+            try
+            {
+                var basePath = AppSettings.ECLServer2;
+
+                var di = new DirectoryInfo(basePath);
+
+                var file = di.GetFiles("*", SearchOption.AllDirectories).OrderBy(n => n.Name).FirstOrDefault(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("EAD.xlsb"));
+
+                if (file == null)
+                {
+                    return;
+                }
+                if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                    return;
+
+                //Process EAD
+                var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
+                try
+                {
+                    File.Move(file.FullName, processingFileName);
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Info(file.FullName);
+                    Log4Net.Log.Info("File has probably been moved by another service");
+                    Log4Net.Log.Error(ex);
+                    return;
+                }
+
+                var tryCounter = 0;
+                var eadProcessor = false;
+                while (!eadProcessor && tryCounter <= 3)
+                {
+                    eadProcessor = new EAD_Processor().ExecuteEADMacro(processingFileName);
+                    tryCounter = tryCounter + 1;
+
+                }
+                if (eadProcessor)
+                {
+                    var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                    if (!File.Exists(completedProcessingFileName))
+                        File.Move(processingFileName, completedProcessingFileName);
+
+                    //transfer file back to master server
+
+                    File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer2, AppSettings.ECLServer1), true);
+                    try { File.Delete(completedProcessingFileName.Replace(AppSettings.ECLServer2, AppSettings.ECLServer1).Replace(AppSettings.complete_, string.Empty)); } catch { }
+                    File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer2, AppSettings.ECLServer1)).Directory.FullName, AppSettings.EADComputeComplete), string.Empty);
+
+                    // Move FrameworkFile
+                    if (File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer2, AppSettings.ECLServer1)).Directory.FullName, AppSettings.LGDComputeComplete)) && File.Exists(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer2, AppSettings.ECLServer1)).Directory.FullName, AppSettings.PDComputeComplete)))
+                    {
+                        new Framework_Processor().TransferFrameworkInputFiles(completedProcessingFileName.Replace(AppSettings.Drive, AppSettings.ECLServer1), AppSettings.EAD);
+                    }
+                }
+                else
+                {
+                    File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.error_));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log4Net.Log.Error(ex);
+            }
         }
 
         private bool ProcessECLRunTask()
@@ -105,6 +433,32 @@ namespace IFRS9_ECL.Core
                 var eclType = eclRegister.eclType;
                 Log4Net.Log.Info($"Found ECL with ID {eclRegister.Id} of Type [{eclType.ToString()}]. Running will commence if it has not been picked by another Job");
 
+
+                // Check if there is override. if there is. do not execute EAD, LGD, PD. just get override data and apply it to framework
+                var overrideExist = false;
+                if (eclRegister.Status == 12)
+                {
+                    overrideExist = CheckOverrideDataExist(eclRegister.Id, eclType);
+                    if (!overrideExist)
+                    {
+                        qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "No Override data found");
+                        DataAccess.i.ExecuteQuery(qry);
+                        Log4Net.Log.Info("No Override Data Found. Task concluded and exited");
+                        return true;
+                    }
+                    else
+                    {
+                        qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "Running Overrides");
+                        DataAccess.i.ExecuteQuery(qry);
+                        qry = Queries.DeleteDataOnWholesaleEclFramworkReportDetail(eclRegister.Id.ToString());
+                        DataAccess.i.ExecuteQuery(qry);
+
+                        Log4Net.Log.Info("Running Overrides");
+                    }
+                }
+
+
+
                 LifetimeEadWorkings lifetimeEadWorkings = new LifetimeEadWorkings(eclRegister.Id, eclType);
                 var loanbook_data = lifetimeEadWorkings.GetLoanBookDataRaw();
                 var payment_Schedules = lifetimeEadWorkings.GetPaymentScheduleRaw();
@@ -112,7 +466,7 @@ namespace IFRS9_ECL.Core
 
                 var groupedLoanBook = new List<List<Loanbook_Data>>();
                 var batchCount = Math.Ceiling(loanbook_data.Count / AppSettings.BatchSizeDouble);
-                
+
 
                 for (int i = 0; i < batchCount; i++)
                 {
@@ -148,58 +502,58 @@ namespace IFRS9_ECL.Core
                 }
 
 
-                for (int i = 0; i < batchCount; i++)
-                {
-                    GenerateLoanBookFile(i, groupedLoanBook[i], payment_Schedules, eclRegister.OrganizationUnitId, eclRegister.Id);
-                }
-
-
                 var eadParam = BuildEADParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
                 var lgdParam = BuildLGDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
                 var pdParam = BuildPDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
                 var frameworkParam = BuildFrameworkParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
-                
 
-                var counter = 0;
-                var taskList = new List<Task>();
-                var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
-
-                //while (counter < batchCount)
-                //{
-
-                //    var batchContracts = loanbook_data.Skip(counter * AppSettings.BatchSize).Take(AppSettings.BatchSize).ToList();
-                //    var task1 = Task.Run(() =>
-                //    {
-                //        RunECL(batchContracts, counter, eclRegister.OrganizationUnitId, eclRegister.Id, eclType, eadParam, lgdParam, pdParam, frameworkParam);
-                //    });
-                //    taskList.Add(task1);
-                //    Thread.Sleep(2000);
-
-                //    while (taskList.Where(o => !tskStatusLst.Contains(o.Status)).Count() >= 2)
-                //    {
-                //        //do nothing
-                //    }
-                //    counter = counter + 1;
-                //}
-
-                var hasUpdatedPercent = false;
-
-                for (int i = 0; i < batchCount; i++)
+                if (!overrideExist)
                 {
-                    if (i > (batchCount / 2.0) && !hasUpdatedPercent)
+
+                    for (int i = 0; i < batchCount; i++)
                     {
-                        qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
-                        DataAccess.i.ExecuteQuery(qry);
-                        hasUpdatedPercent = true;
+                        GenerateLoanBookFile(i, groupedLoanBook[i], payment_Schedules, eclRegister.OrganizationUnitId, eclRegister.Id);
                     }
 
+                    var counter = 0;
+                    var taskList = new List<Task>();
+                    var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
 
-                    var batchContracts = groupedLoanBook[i];
-                    RunECL(batchContracts, i, eclRegister.OrganizationUnitId, eclRegister.Id, eclType, eadParam, lgdParam, pdParam, frameworkParam);
+                    var hasUpdatedPercent = false;
+
+                    for (int i = 0; i < batchCount; i++)
+                    {
+                        if (i > (batchCount / 2.0) && !hasUpdatedPercent)
+                        {
+                            qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                            hasUpdatedPercent = true;
+                        }
+
+
+                        var batchContracts = groupedLoanBook[i];
+                        RunECL(batchContracts, i, eclRegister.OrganizationUnitId, eclRegister.Id, eclType, eadParam, lgdParam, pdParam, frameworkParam);
+                    }
                 }
+                else
+                {
 
-                qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 5, "");
-                DataAccess.i.ExecuteQuery(qry);
+                    var hasUpdatedPercent = false;
+
+                    for (int i = 0; i < batchCount; i++)
+                    {
+                        if (i > (batchCount / 2.0) && !hasUpdatedPercent)
+                        {
+                            qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                            hasUpdatedPercent = true;
+                        }
+
+
+                        var batchContracts = groupedLoanBook[i];
+                        RunECLOverride(batchContracts, i, eclRegister.OrganizationUnitId, eclRegister.Id, eclType, frameworkParam);
+                    }
+                }
 
 
                 Log4Net.Log.Info($"Start Time {DateTime.Now}");
@@ -217,10 +571,19 @@ namespace IFRS9_ECL.Core
         private FrameworkParameters BuildFrameworkParameter(Guid id, DateTime reportingDate, EclType eclType)
         {
             return new FrameworkParameters
-            {  
-                BasePath= AppSettings.ECLBasePath,
-                 ReportDate= reportingDate
+            {
+                EclId = id,
+                EclType = eclType,
+                BasePath = AppSettings.ECLBasePath,
+                ReportDate = reportingDate
             };
+        }
+
+        public bool CheckOverrideDataExist(Guid eclId, EclType eclType)
+        {
+            var qry = Queries.CheckOverrideDataExist(eclId, eclType);
+            var cnt = DataAccess.i.getCount(qry);
+            return cnt > 0;
         }
 
         private PDParameters BuildPDParameter(Guid eclId, DateTime reportingDate, EclType eclType)
@@ -231,14 +594,14 @@ namespace IFRS9_ECL.Core
             var pdCali = new CalibrationInput_PD_CR_RD_Processor().GetPDRedefaultFactorCureRate(eclId, eclType);
             double readjustmentFactor = pdCali[0];
 
-            var obj= new PDParameters
+            var obj = new PDParameters
             {
-                 BasePath= AppSettings.ECLBasePath,
+                BasePath = AppSettings.ECLBasePath,
                 Expired = bt_ead_data.Expired,
                 NonExpired = bt_ead_data.NonExpired,
                 ReportDate = reportingDate,
-                 SandPMapping= "Best Fit",
-                 RedefaultAdjustmentFactor= readjustmentFactor
+                SandPMapping = "Best Fit",
+                RedefaultAdjustmentFactor = readjustmentFactor
             };
 
 
@@ -252,12 +615,12 @@ namespace IFRS9_ECL.Core
         {
             var bt_ead = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             var bt_ead_data = bt_ead.GetBehaviouralData(eclId, eclType);
-            var obj= new LGDParameters
+            var obj = new LGDParameters
             {
-                 BasePath= AppSettings.ECLBasePath,
-                 Expired= bt_ead_data.Expired,
-                 NonExpired= bt_ead_data.NonExpired,
-                 ReportDate=reportingDate
+                BasePath = AppSettings.ECLBasePath,
+                Expired = bt_ead_data.Expired,
+                NonExpired = bt_ead_data.NonExpired,
+                ReportDate = reportingDate
             };
 
 
@@ -276,16 +639,16 @@ namespace IFRS9_ECL.Core
 
             var exchangeRate = eclTsk._eclEadInputAssumption.Where(o => o.Key.StartsWith("ExchangeRate")).ToList();
 
-            var er=new List<ExchangeRate>();
+            var er = new List<ExchangeRate>();
             foreach (var _er in exchangeRate)
             {
-                er.Add(new ExchangeRate { Currency=_er.InputName.ToUpper(), Value= Convert.ToDouble(_er.Value) });
+                er.Add(new ExchangeRate { Currency = _er.InputName.ToUpper(), Value = Convert.ToDouble(_er.Value) });
             }
 
             var vir = new List<VariableInterestRate>();
             foreach (var _vir in eclTsk.ViR)
             {
-                vir.Add(new VariableInterestRate {  VIR_Name = _vir.InputName.ToUpper(), Value = Convert.ToDouble(_vir.Value) });
+                vir.Add(new VariableInterestRate { VIR_Name = _vir.InputName.ToUpper(), Value = Convert.ToDouble(_vir.Value) });
             }
 
             var CCF_OBE = 1.0;
@@ -299,7 +662,7 @@ namespace IFRS9_ECL.Core
 
             var ccfOverall = ccfData.Overall_CCF ?? 0.0;
 
-            var obj= new EADParameters
+            var obj = new EADParameters
             {
                 ExchangeRates = er,
                 VariableInterestRates = vir,
@@ -337,193 +700,6 @@ namespace IFRS9_ECL.Core
 
             return obj;
 
-
-        }
-
-        public bool ExtractAndSaveResult(string filePath)
-        {
-
-
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-            using (var package = new ExcelPackage(new FileInfo(filePath)))
-            {
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[5];//.FirstOrDefault();
-
-                int rows = worksheet.Dimension.Rows; // 10
-
-                var frameworkResult = new List<ResultDetailDataMore>();
-                for (int i = 10; i <= AppSettings.BatchSize + 20; i++)
-                {
-                    int bc = 1;
-
-                    if (worksheet.Cells[i, bc + 2].Value == null)
-                        continue;
-                    try
-                    {
-                        var c = new ResultDetailDataMore();
-                        c.ContractNo = Convert.ToString(worksheet.Cells[i, bc + 2].Value);
-                        c.AccountNo = worksheet.Cells[i, bc + 3].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 3].Value) : "";
-                        c.CustomerNo = worksheet.Cells[i, bc + 4].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 4].Value) : "";
-                        c.Segment = worksheet.Cells[i, bc + 5].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 5].Value) : "";
-                        c.ProductType = worksheet.Cells[i, bc + 6].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 6].Value) : "";
-                        c.Sector = worksheet.Cells[i, bc + 7].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 7].Value) : "";
-                        c.Stage = worksheet.Cells[i, bc + 8].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 8].Value) : 0;
-                        c.Outstanding_Balance = worksheet.Cells[i, bc + 9].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 9].Value) : 0.0;
-                        c.ECL_Best_Estimate = worksheet.Cells[i, bc + 10].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 10].Value) : 0.0;
-                        c.ECL_Optimistic = worksheet.Cells[i, bc + 11].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 11].Value) : 0.0;
-                        c.ECL_Downturn = worksheet.Cells[i, bc + 12].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 12].Value) : 0.0;
-                        c.Impairment_ModelOutput = worksheet.Cells[i, bc + 13].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 13].Value) : 0.0;
-                        c.Overrides_Stage = worksheet.Cells[i, bc + 14].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 14].Value) : 0;
-                        try { c.Overrides_TTR_Years = worksheet.Cells[i, bc + 15].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 15].Value) : 0.0; } catch { c.Overrides_TTR_Years = 0.0; }
-                        try { c.Overrides_FSV = worksheet.Cells[i, bc + 16].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 16].Value) : 0.0; } catch { c.Overrides_FSV = 0.0; }
-                        try { c.Overrides_Overlay = worksheet.Cells[i, bc + 17].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 17].Value) : 0.0; } catch { c.Overrides_Overlay = 0.0; }
-                        c.Overrides_ECL_Best_Estimate = worksheet.Cells[i, bc + 18].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 18].Value) : 0.0;
-                        c.Overrides_ECL_Optimistic = worksheet.Cells[i, bc + 19].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 19].Value) : 0.0;
-                        c.Overrides_ECL_Downturn = worksheet.Cells[i, bc + 20].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 20].Value) : 0.0;
-                        c.Overrides_Impairment_Manual = worksheet.Cells[i, bc + 21].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 21].Value) : 0.0;
-
-                        try { c.OriginalOutstandingBalance = 0; } catch { }
-
-
-                        frameworkResult.Add(c);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                        Log4Net.Log.Error(ex);
-                    }
-                }
-            }
-            return true;
-            //try
-            //{
-            //    var frameworkResult = new List<ResultDetailDataMore>();
-            //    var c = new ResultDetailDataMore();
-
-            //    string txtLocation = Path.GetFullPath(filePath);
-
-            //    object _missingValue = System.Reflection.Missing.Value;
-            //    Application excel = new Application();
-            //    excel.DisplayAlerts = false;
-
-            //    excel.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable;
-            //    var theWorkbook = excel.Workbooks.Open(txtLocation,
-            //                                                            _missingValue,
-            //                                                            false,
-            //                                                            _missingValue,
-            //                                                            _missingValue,
-            //                                                            _missingValue,
-            //                                                            true,
-            //                                                            _missingValue,
-            //                                                            _missingValue,
-            //                                                            true,
-            //                                                            _missingValue,
-            //                                                            _missingValue,
-            //                                                            _missingValue);
-
-
-
-            //    try
-            //    {
-            //        Worksheet worksheet = theWorkbook.Sheets[7];
-            //        worksheet.Unprotect(AppSettings.SheetPassword);
-
-            //        var rows = worksheet.Rows;
-
-
-            //        for (int i = 10; i <= AppSettings.BatchSize + 20; i++)
-            //        {
-            //            int bc = 1;
-
-            //            if (worksheet.Cells[i, bc + 2].Value == null)
-            //                continue;
-
-            //            //try
-            //            //{
-            //            //    c = new ResultDetailDataMore();
-            //            //    c.ContractNo = Convert.ToString(worksheet.Cells[i, bc + 2].Value);
-            //            //    c.AccountNo = worksheet.Cells[i, bc + 3].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 3].Value) : "";
-            //            //    c.CustomerNo = worksheet.Cells[i, bc + 4].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 4].Value) : "";
-            //            //    c.Segment = worksheet.Cells[i, bc + 5].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 5].Value) : "";
-            //            //    c.ProductType = worksheet.Cells[i, bc + 6].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 6].Value) : "";
-            //            //    c.Sector = worksheet.Cells[i, bc + 7].Value != null ? Convert.ToString(worksheet.Cells[i, bc + 7].Value) : "";
-            //            //    c.Stage = worksheet.Cells[i, bc + 8].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 8].Value) : 0;
-            //            //    c.Outstanding_Balance = worksheet.Cells[i, bc + 9].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 9].Value) : 0.0;
-            //            //    c.ECL_Best_Estimate = worksheet.Cells[i, bc + 10].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 10].Value) : 0.0;
-            //            //    c.ECL_Optimistic = worksheet.Cells[i, bc + 11].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 11].Value) : 0.0;
-            //            //    c.ECL_Downturn = worksheet.Cells[i, bc + 12].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 12].Value) : 0.0;
-            //            //    c.Impairment_ModelOutput = worksheet.Cells[i, bc + 13].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 13].Value) : 0.0;
-            //            //    c.Overrides_Stage = worksheet.Cells[i, bc + 14].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 14].Value) : 0;
-            //            //    try { c.Overrides_TTR_Years = worksheet.Cells[i, bc + 15].Value != null ? Convert.ToInt32(worksheet.Cells[i, bc + 15].Value) : 0.0; } catch { c.Overrides_TTR_Years = 0.0; }
-            //            //    try { c.Overrides_FSV = worksheet.Cells[i, bc + 16].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 16].Value) : 0.0; } catch { c.Overrides_FSV = 0.0; }
-            //            //    try { c.Overrides_Overlay = worksheet.Cells[i, bc + 17].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 17].Value) : 0.0; } catch { c.Overrides_Overlay = 0.0; }
-            //            //    c.Overrides_ECL_Best_Estimate = worksheet.Cells[i, bc + 18].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 18].Value) : 0.0;
-            //            //    c.Overrides_ECL_Optimistic = worksheet.Cells[i, bc + 19].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 19].Value) : 0.0;
-            //            //    c.Overrides_ECL_Downturn = worksheet.Cells[i, bc + 20].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 20].Value) : 0.0;
-            //            //    c.Overrides_Impairment_Manual = worksheet.Cells[i, bc + 21].Value != null ? Convert.ToDouble(worksheet.Cells[i, bc + 21].Value) : 0.0;
-
-            //            //    try { c.OriginalOutstandingBalance = 0; } catch { }
-
-
-            //            //    frameworkResult.Add(c);
-            //            //}
-            //            //catch (Exception ex)
-            //            //{
-            //            //    Console.WriteLine(ex);
-            //            //    Log4Net.Log.Error(ex);
-            //            //}
-
-            //        }
-
-            //        //theWorkbook.Save();
-
-            //        // save in XlFileFormat.xlExcel12 format which is XLSB
-
-            //        theWorkbook.SaveAs(filePath.Replace("xlsb", "xlsx"), XlFileFormat.xlOpenXMLWorkbook, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-            //            XlSaveAsAccessMode.xlNoChange, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
-
-            //        // close workbook
-            //        theWorkbook.Close(false, Type.Missing, Type.Missing);
-
-            //        //excelApplication.Quit();
-
-
-
-
-            //        //theWorkbook.Close(true);
-
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Console.WriteLine(ex);
-            //        Log4Net.Log.Error(ex);
-            //        theWorkbook.Close(true);
-            //        excel.Quit();
-            //        return false;
-
-            //    }
-            //    finally
-            //    {
-            //        excel.Quit();
-            //        System.Runtime.InteropServices.Marshal.ReleaseComObject(theWorkbook);
-            //        System.Runtime.InteropServices.Marshal.ReleaseComObject(theWorkbook);
-            //        System.Runtime.InteropServices.Marshal.ReleaseComObject(theWorkbook);
-            //    }
-
-            //    //return true;
-
-
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex);
-            //    Log4Net.Log.Error(ex);
-            //    return false;
-            //}
-
-            //return true;
 
         }
 
@@ -659,7 +835,7 @@ namespace IFRS9_ECL.Core
                 //Save to Report Detail
                 var r = DataAccess.i.ExecuteBulkCopy(dt, ECLStringConstants.i.EclFramworkReportDetail(eclType));
 
-            }catch(Exception ex)
+            } catch (Exception ex)
             {
                 Log4Net.Log.Error(ex);
                 return false;
@@ -678,12 +854,12 @@ namespace IFRS9_ECL.Core
             var eadTemplate = Path.Combine(affiliatePath, "EADTemplate.xlsb");
             var lgdTemplate = Path.Combine(affiliatePath, "LGDTemplate.xlsb");
             var pdTemplate = Path.Combine(affiliatePath, "PDTemplate.xlsb");
-            var fraemworkTemplate = Path.Combine(affiliatePath, "FrameworkTemplate.xlsb");
+            var frameworkTemplate = Path.Combine(affiliatePath, "FrameworkTemplate.xlsb");
 
             var eadFile = Path.Combine(batchPath, $"{batchId}_{eclId}_EAD.xlsb");
             var lgdFile = Path.Combine(batchPath, $"{batchId}_{eclId}_LGD.xlsb");
             var pdFile = Path.Combine(batchPath, $"{batchId}_{eclId}_PD.xlsb");
-            var fraemworkFile = Path.Combine(batchPath, $"{batchId}_{eclId}_Framework.xlsb");
+            var frameworkFile = Path.Combine(batchPath, $"{batchId}_{eclId}_Framework.xlsb");
 
             var eadFileName = Path.Combine($"{batchId}_{eclId}_EAD.xlsb");
             var lgdFileName = Path.Combine($"{batchId}_{eclId}_LGD.xlsb");
@@ -693,7 +869,7 @@ namespace IFRS9_ECL.Core
             File.Copy(eadTemplate, eadFile);
             File.Copy(lgdTemplate, lgdFile);
             File.Copy(pdTemplate, pdFile);
-            File.Copy(fraemworkTemplate, fraemworkFile);
+            File.Copy(frameworkTemplate, frameworkFile);
 
             eadParam.ModelFileName = eadFileName;
             eadParam.BasePath = batchPath;
@@ -714,19 +890,20 @@ namespace IFRS9_ECL.Core
             frameworkParam.LgdFile = $"{batchId}_{eclId}_LGD.xlsb";
             frameworkParam.PdFileName = $"{batchId}_{eclId}_PD.xlsb";
             var reportPath = Path.Combine(batchPath, "Report");
-            
-            if(!Directory.Exists(reportPath))
+
+            if (!Directory.Exists(reportPath))
             {
                 Directory.CreateDirectory(reportPath);
             }
-            frameworkParam.ReportFolderName= reportPath;
-            
+            frameworkParam.ReportFolderName = reportPath;
+
 
             var taskList = new List<Task>();
             var tskStatusLst = new List<TaskStatus> { TaskStatus.RanToCompletion, TaskStatus.Faulted };
 
             //new EAD_Processor().ProcessEAD(eadParam);
-            //return;
+            //new PD_Processor().ProcessPD(pdParam);
+            // return;
 
             var tryCounter = 0;
             var task1 = Task.Run(() =>
@@ -742,7 +919,7 @@ namespace IFRS9_ECL.Core
                 }
                 tryCounter = 0;
 
-                Log4Net.Log.Info("Completed EAD");
+                Log4Net.Log.Info("Completed EAD Files transfer");
             });
             taskList.Add(task1);
 
@@ -757,21 +934,21 @@ namespace IFRS9_ECL.Core
                     lgdProcessor = new LGD_Processor().ProcessLGD(lgdParam);
                 }
                 tryCounter = 0;
-                Log4Net.Log.Info("Completed LGD");
+                Log4Net.Log.Info("Completed LGD Files transfer");
             });
             taskList.Add(task2);
 
             var task3 = Task.Run(() =>
             {
 
-            var pdProcessor = false;
-            while (!pdProcessor && tryCounter <= 3)
-            {
-                Log4Net.Log.Info($"{batchId} - Started PD");
-                tryCounter = tryCounter + 1;
-                pdProcessor = new PD_Processor().ProcessPD(pdParam);
-            }
-            Log4Net.Log.Info("Completed PD");
+                var pdProcessor = false;
+                while (!pdProcessor && tryCounter <= 3)
+                {
+                    Log4Net.Log.Info($"{batchId} - Started PD");
+                    tryCounter = tryCounter + 1;
+                    pdProcessor = new PD_Processor().ProcessPD(pdParam);
+                }
+                Log4Net.Log.Info("Completed PD Files transfer");
             });
             taskList.Add(task3);
 
@@ -822,6 +999,42 @@ namespace IFRS9_ECL.Core
 
         }
 
+        private void RunECLOverride(List<Loanbook_Data> batchContracts, int batchId, long affiliateId, Guid eclId, EclType eclType, FrameworkParameters frameworkParam)
+        {
+            var affiliatePath = Path.Combine(AppSettings.ECLBasePath, affiliateId.ToString());
+            var eclPath = Path.Combine(affiliatePath, eclId.ToString());
+            var batchPath = Path.Combine(eclPath, batchId.ToString());
+
+            var frameworkFileName = Path.Combine($"{batchId}_{eclId}_Framework.xlsb");
+            frameworkParam.ModelFileName = frameworkFileName;
+            frameworkParam.BasePath = batchPath;
+
+            var tryCounter = 0;
+            
+            var fwProcessor = false;
+            while (!fwProcessor && tryCounter <= 3)
+            {
+                Log4Net.Log.Info($"{batchId} - Started Framework");
+                tryCounter = tryCounter + 1;
+                fwProcessor = new Framework_Processor().ProcessFrameworkOverride(frameworkParam, batchContracts, eclId, eclType);
+            }
+            Log4Net.Log.Info("Completed Framework");
+
+            //var fraemworkResultFile = Path.Combine(batchPath, fraemworkFile);
+
+            //tryCounter = 0;
+
+            //var exProcessor = false;
+            //while (!exProcessor && tryCounter <= 3)
+            //{
+            //    Log4Net.Log.Info($"{batchId} - Started Extraction");
+            //    tryCounter = tryCounter + 1;
+            //    exProcessor=ExtractAndSaveResult(batchContracts, fraemworkResultFile, eclId, eclType);
+            //}
+            Log4Net.Log.Info("Completed Extraction");
+
+        }
+
         private void GenerateLoanBookFile(int batchId, List<Loanbook_Data> loanbook, List<TempPaymentSchedule> payment_Schedules, long affiliateId, Guid eclId)
         {
             var contractNos = loanbook.Select(o => o.ContractNo).ToList();
@@ -838,14 +1051,14 @@ namespace IFRS9_ECL.Core
             var eclPath = Path.Combine(affiliatePath, eclId.ToString());
             var batchPath = Path.Combine(eclPath, batchId.ToString());
 
-            if(Directory.Exists(batchPath))
+            if (Directory.Exists(batchPath))
             {
                 Directory.Delete(batchPath, true);
             }
-                
-            
-                Directory.CreateDirectory(batchPath);
-            
+
+
+            Directory.CreateDirectory(batchPath);
+
 
             var loanBookTemplatePath = Path.Combine(AppSettings.ECLBasePath, "LoanBookTemplate.xlsx");
             var paymentScheduleTemplatePath = Path.Combine(AppSettings.ECLBasePath, "PaymentScheduleTemplate.xlsx");
@@ -858,11 +1071,11 @@ namespace IFRS9_ECL.Core
 
             var lgdloanbookPath = Path.Combine(batchPath, $"{batchId}_{eclId}_LGD_LoanBook.xlsx");
             File.Copy(eadloanbookPath, lgdloanbookPath);
-            
+
 
             var pdloanbookPath = Path.Combine(batchPath, $"{batchId}_{eclId}_PD_LoanBook.xlsx");
             File.Copy(eadloanbookPath, pdloanbookPath);
-            
+
 
             var paymentSchedulePath = Path.Combine(batchPath, $"{batchId}_{eclId}_PaymentSchedule.xlsx");
             File.Copy(paymentScheduleTemplatePath, paymentSchedulePath);
@@ -886,12 +1099,12 @@ namespace IFRS9_ECL.Core
                 for (int i = 0; i < payment_Schedules.Count; i++)
                 {
                     var p = payment_Schedules[i];
-                    worksheet.Cells[i+3, 1+ 1].Value = p.ContractRefNo;
-                    worksheet.Cells[i+3, 1+ 2].Value = p.StartDate;
-                    worksheet.Cells[i+3, 1+ 3].Value = p.Component;
-                    worksheet.Cells[i+3, 1+ 4].Value = p.NoOfSchedules;
-                    worksheet.Cells[i+3, 1+ 5].Value = p.Frequency;
-                    worksheet.Cells[i+3, 1+ 6].Value = p.Amount;
+                    worksheet.Cells[i + 3, 1 + 1].Value = p.ContractRefNo;
+                    worksheet.Cells[i + 3, 1 + 2].Value = p.StartDate;
+                    worksheet.Cells[i + 3, 1 + 3].Value = p.Component;
+                    worksheet.Cells[i + 3, 1 + 4].Value = p.NoOfSchedules;
+                    worksheet.Cells[i + 3, 1 + 5].Value = p.Frequency;
+                    worksheet.Cells[i + 3, 1 + 6].Value = p.Amount;
                 }
 
                 package.Save();
@@ -915,106 +1128,348 @@ namespace IFRS9_ECL.Core
 
                 for (int i = 0; i < loanbook.Count; i++)
                 {
-                    
+
                     var p = loanbook[i];
 
-                    if(p.SpecialisedLending== "#N/A")
+                    if (p.SpecialisedLending == "#N/A")
                     {
                         p.SpecialisedLending = "";
                     }
-                    p.OriginalRating = p.OriginalRating.Replace("+", "");
-                    p.RatingModel = p.RatingModel.Replace("+", "");
-                    p.CurrentRating = p.CurrentRating.Replace("+", "");
+                    p.OriginalRating = p.OriginalRating.Replace("+", "").Replace(",", "");
+                    p.RatingModel = p.RatingModel.Replace("+", "").Replace(",", "");
+                    p.CurrentRating = p.CurrentRating.Replace("+", "").Replace(",", "");
 
-                    worksheet.Cells[i+4, 1+ 1].Value = p.CustomerNo ?? "";
-                    worksheet.Cells[i+4, 1+ 2].Value = p.AccountNo ?? "";
-                    worksheet.Cells[i+4, 1+ 3].Value = p.ContractNo ?? "";
-                    worksheet.Cells[i+4, 1+ 4].Value = p.CustomerName ?? "";
-                    worksheet.Cells[i+4, 1+ 5].Value = p.SnapshotDate;
-                    worksheet.Cells[i+4, 1+ 6].Value = p.Segment ?? "";
-                    worksheet.Cells[i+4, 1+ 7].Value = p.Sector ?? "";
-                    worksheet.Cells[i+4, 1+ 8].Value = p.Currency ?? "";
-                    worksheet.Cells[i+4, 1+ 9].Value = p.ProductType ?? "";
-                    worksheet.Cells[i+4, 1+ 10].Value = p.ProductMapping ?? "";
+                    p.CustomerNo= p.CustomerNo ?? "";
+                    p.AccountNo = p.AccountNo ?? "";
+                    p.ContractNo = p.ContractNo ?? "";
+                    p.CustomerName = p.CustomerName ?? "";
+                    p.Segment = p.Segment ?? "";
+                    p.Sector = p.Sector ?? "";
+                    p.ProductType = p.ProductType ?? "";
+
+
+
+                    worksheet.Cells[i + 4, 1 + 1].Value = p.CustomerNo.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 2].Value = p.AccountNo.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 3].Value = p.ContractNo.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 4].Value = p.CustomerName.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 5].Value = p.SnapshotDate;
+                    worksheet.Cells[i + 4, 1 + 6].Value = p.Segment.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 7].Value = p.Sector.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 8].Value = p.Currency ?? "";
+                    worksheet.Cells[i + 4, 1 + 9].Value = p.ProductType.Replace(",", "");
+                    worksheet.Cells[i + 4, 1 + 10].Value = p.ProductMapping ?? "";
                     worksheet.Cells[i + 4, 1 + 11].Value = "";// p.SpecialisedLending??"";
-                    worksheet.Cells[i+4, 1+ 12].Value = p.RatingModel ?? "";
-                    worksheet.Cells[i+4, 1+ 13].Value = p.OriginalRating ?? "";
-                    worksheet.Cells[i+4, 1+ 14].Value = p.CurrentRating ?? "";
-                    worksheet.Cells[i+4, 1+ 15].Value = p.LifetimePD;
-                    worksheet.Cells[i+4, 1+ 16].Value = p.Month12PD;
-                    worksheet.Cells[i+4, 1+ 17].Value = p.DaysPastDue;
-                    worksheet.Cells[i+4, 1+ 18].Value = p.WatchlistIndicator ? "1" : "";
-                    worksheet.Cells[i+4, 1+ 19].Value = p.Classification??"";
-                    worksheet.Cells[i+4, 1+ 20].Value = p.ImpairedDate;
-                    worksheet.Cells[i+4, 1+ 21].Value = p.DefaultDate;
-                    worksheet.Cells[i+4, 1+ 22].Value = p.CreditLimit;
-                    worksheet.Cells[i+4, 1+ 23].Value = p.OriginalBalanceLCY;
-                    worksheet.Cells[i+4, 1+ 24].Value = p.OutstandingBalanceLCY;
-                    worksheet.Cells[i+4, 1+ 25].Value = p.OutstandingBalanceACY;
-                    worksheet.Cells[i+4, 1+ 26].Value = p.ContractStartDate;
-                    worksheet.Cells[i+4, 1+ 27].Value = p.ContractEndDate;
-                    worksheet.Cells[i+4, 1+ 28].Value = p.RestructureIndicator ? "1" : "";
-                    worksheet.Cells[i+4, 1+ 29].Value = p.RestructureRisk;
-                    worksheet.Cells[i+4, 1+ 30].Value = p.RestructureType;
-                    worksheet.Cells[i+4, 1+ 31].Value = p.RestructureStartDate;
-                    worksheet.Cells[i+4, 1+ 32].Value = p.RestructureEndDate;
-                    worksheet.Cells[i+4, 1+ 33].Value = p.PrincipalPaymentTermsOrigination;
-                    worksheet.Cells[i+4, 1+ 34].Value = p.PPTOPeriod;
-                    worksheet.Cells[i+4, 1+ 35].Value = p.InterestPaymentTermsOrigination;
-                    worksheet.Cells[i+4, 1+ 36].Value = p.IPTOPeriod;
-                    worksheet.Cells[i+4, 1+ 37].Value = p.PrincipalPaymentStructure;
-                    worksheet.Cells[i+4, 1+ 38].Value = p.InterestPaymentStructure;
-                    worksheet.Cells[i+4, 1+ 39].Value = p.InterestRateType;
-                    worksheet.Cells[i+4, 1+ 40].Value = p.BaseRate ?? "";
-                    worksheet.Cells[i+4, 1+ 41].Value = p.OriginationContractualInterestRate ?? "";
-                    worksheet.Cells[i+4, 1+ 42].Value = p.IntroductoryPeriod;
-                    worksheet.Cells[i+4, 1+ 43].Value = p.PostIPContractualInterestRate;
-                    worksheet.Cells[i+4, 1+ 44].Value = p.CurrentContractualInterestRate;
-                    worksheet.Cells[i+4, 1+ 45].Value = p.EIR;
+                    worksheet.Cells[i + 4, 1 + 12].Value = p.RatingModel ?? "";
+                    worksheet.Cells[i + 4, 1 + 13].Value = p.OriginalRating ?? "";
+                    worksheet.Cells[i + 4, 1 + 14].Value = p.CurrentRating ?? "";
+                    worksheet.Cells[i + 4, 1 + 15].Value = p.LifetimePD;
+                    worksheet.Cells[i + 4, 1 + 16].Value = p.Month12PD;
+                    worksheet.Cells[i + 4, 1 + 17].Value = p.DaysPastDue;
+                    worksheet.Cells[i + 4, 1 + 18].Value = p.WatchlistIndicator ? "1" : "";
+                    worksheet.Cells[i + 4, 1 + 19].Value = p.Classification ?? "";
+                    worksheet.Cells[i + 4, 1 + 20].Value = p.ImpairedDate;
+                    worksheet.Cells[i + 4, 1 + 21].Value = p.DefaultDate;
+                    worksheet.Cells[i + 4, 1 + 22].Value = p.CreditLimit;
+                    worksheet.Cells[i + 4, 1 + 23].Value = p.OriginalBalanceLCY;
+                    worksheet.Cells[i + 4, 1 + 24].Value = p.OutstandingBalanceLCY;
+                    worksheet.Cells[i + 4, 1 + 25].Value = p.OutstandingBalanceACY;
+                    worksheet.Cells[i + 4, 1 + 26].Value = p.ContractStartDate;
+                    worksheet.Cells[i + 4, 1 + 27].Value = p.ContractEndDate;
+                    worksheet.Cells[i + 4, 1 + 28].Value = p.RestructureIndicator ? "1" : "";
+                    worksheet.Cells[i + 4, 1 + 29].Value = p.RestructureRisk;
+                    worksheet.Cells[i + 4, 1 + 30].Value = p.RestructureType;
+                    worksheet.Cells[i + 4, 1 + 31].Value = p.RestructureStartDate;
+                    worksheet.Cells[i + 4, 1 + 32].Value = p.RestructureEndDate;
+                    worksheet.Cells[i + 4, 1 + 33].Value = p.PrincipalPaymentTermsOrigination;
+                    worksheet.Cells[i + 4, 1 + 34].Value = p.PPTOPeriod;
+                    worksheet.Cells[i + 4, 1 + 35].Value = p.InterestPaymentTermsOrigination;
+                    worksheet.Cells[i + 4, 1 + 36].Value = p.IPTOPeriod;
+                    worksheet.Cells[i + 4, 1 + 37].Value = p.PrincipalPaymentStructure;
+                    worksheet.Cells[i + 4, 1 + 38].Value = p.InterestPaymentStructure;
+                    worksheet.Cells[i + 4, 1 + 39].Value = p.InterestRateType;
+                    worksheet.Cells[i + 4, 1 + 40].Value = p.BaseRate ?? "";
+                    worksheet.Cells[i + 4, 1 + 41].Value = p.OriginationContractualInterestRate ?? "";
+                    worksheet.Cells[i + 4, 1 + 42].Value = p.IntroductoryPeriod;
+                    worksheet.Cells[i + 4, 1 + 43].Value = p.PostIPContractualInterestRate;
+                    worksheet.Cells[i + 4, 1 + 44].Value = p.CurrentContractualInterestRate;
+                    worksheet.Cells[i + 4, 1 + 45].Value = p.EIR;
 
-                    worksheet.Cells[i+4, 1+ 46].Value = p.DebentureOMV;
-                    worksheet.Cells[i+4, 1+ 47].Value = p.DebentureFSV;
+                    worksheet.Cells[i + 4, 1 + 46].Value = p.DebentureOMV;
+                    worksheet.Cells[i + 4, 1 + 47].Value = p.DebentureFSV;
 
-                    worksheet.Cells[i+4, 1+ 48].Value = p.CashOMV;
-                    worksheet.Cells[i+4, 1+ 49].Value = p.CashFSV;
+                    worksheet.Cells[i + 4, 1 + 48].Value = p.CashOMV;
+                    worksheet.Cells[i + 4, 1 + 49].Value = p.CashFSV;
 
-                    worksheet.Cells[i+4, 1+ 50].Value = p.InventoryOMV;
-                    worksheet.Cells[i+4, 1+ 51].Value = p.InventoryFSV;
+                    worksheet.Cells[i + 4, 1 + 50].Value = p.InventoryOMV;
+                    worksheet.Cells[i + 4, 1 + 51].Value = p.InventoryFSV;
 
-                    worksheet.Cells[i+4, 1+ 52].Value = p.PlantEquipmentOMV;
-                    worksheet.Cells[i+4, 1+ 53].Value = p.PlantEquipmentFSV;
+                    worksheet.Cells[i + 4, 1 + 52].Value = p.PlantEquipmentOMV;
+                    worksheet.Cells[i + 4, 1 + 53].Value = p.PlantEquipmentFSV;
 
-                    worksheet.Cells[i+4, 1+ 54].Value = p.ResidentialPropertyOMV;
-                    worksheet.Cells[i+4, 1+ 55].Value = p.ResidentialPropertyFSV;
+                    worksheet.Cells[i + 4, 1 + 54].Value = p.ResidentialPropertyOMV;
+                    worksheet.Cells[i + 4, 1 + 55].Value = p.ResidentialPropertyFSV;
 
-                    worksheet.Cells[i+4, 1+ 56].Value = p.CommercialPropertyOMV;
-                    worksheet.Cells[i+4, 1+ 57].Value = p.CommercialProperty;
+                    worksheet.Cells[i + 4, 1 + 56].Value = p.CommercialPropertyOMV;
+                    worksheet.Cells[i + 4, 1 + 57].Value = p.CommercialProperty;
 
-                    worksheet.Cells[i+4, 1+ 58].Value = p.ReceivablesOMV;
-                    worksheet.Cells[i+4, 1+ 59].Value = p.ReceivablesFSV;
+                    worksheet.Cells[i + 4, 1 + 58].Value = p.ReceivablesOMV;
+                    worksheet.Cells[i + 4, 1 + 59].Value = p.ReceivablesFSV;
 
-                    worksheet.Cells[i+4, 1+ 60].Value = p.SharesOMV;
-                    worksheet.Cells[i+4, 1+ 61].Value = p.SharesFSV;
+                    worksheet.Cells[i + 4, 1 + 60].Value = p.SharesOMV;
+                    worksheet.Cells[i + 4, 1 + 61].Value = p.SharesFSV;
 
-                    worksheet.Cells[i+4, 1+ 62].Value = p.VehicleOMV;
-                    worksheet.Cells[i+4, 1+ 63].Value = p.VehicleFSV;
+                    worksheet.Cells[i + 4, 1 + 62].Value = p.VehicleOMV;
+                    worksheet.Cells[i + 4, 1 + 63].Value = p.VehicleFSV;
 
-                    worksheet.Cells[i+4, 1+ 64].Value = p.CureRate;
-                    worksheet.Cells[i+4, 1+ 65].Value = p.GuaranteeIndicator?"1":"";
-                    worksheet.Cells[i+4, 1+ 66].Value = p.GuarantorPD;
-                    worksheet.Cells[i+4, 1+ 67].Value = p.GuarantorLGD;
-                    worksheet.Cells[i+4, 1+ 68].Value = p.GuaranteeValue;
+                    worksheet.Cells[i + 4, 1 + 64].Value = p.CureRate;
+                    worksheet.Cells[i + 4, 1 + 65].Value = p.GuaranteeIndicator ? "1" : "";
+                    worksheet.Cells[i + 4, 1 + 66].Value = p.GuarantorPD;
+                    worksheet.Cells[i + 4, 1 + 67].Value = p.GuarantorLGD;
+                    worksheet.Cells[i + 4, 1 + 68].Value = p.GuaranteeValue;
 
-                    if(p.GuaranteeLevel != null && p.GuaranteeLevel > 1)
+                    if (p.GuaranteeLevel != null && p.GuaranteeLevel > 1)
                     {
                         p.GuaranteeLevel = 1;
                     }
-                    worksheet.Cells[i+4, 1+ 69].Value = p.GuaranteeLevel;
+                    worksheet.Cells[i + 4, 1 + 69].Value = p.GuaranteeLevel;
 
                 }
 
                 package.Save();
             }
+        }
+
+
+        private void ProcessFrameworkOverrideResultTask()
+        {
+            var eclServer1Path = Path.Combine(AppSettings.ECLServer1, AppSettings.ECLAutomation);
+
+            var di = new DirectoryInfo(eclServer1Path);
+
+
+            var files = new List<FileInfo>();
+
+            files = di.GetFiles("*", SearchOption.AllDirectories).Where(o => o.Name.StartsWith(AppSettings.complete_) && o.Name.Contains(AppSettings.override_) && o.Name.EndsWith($"{AppSettings.Framework}.{AppSettings.csv}")).ToList();
+
+            if (files.Count == 0)
+            {
+                Log4Net.Log.Info("Found no Framework to process");
+                return;
+            }
+
+
+            foreach (var file in files)
+            {
+                Log4Net.Log.Info(file.FullName);
+                if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.FrameworkComputeComplete)))
+                {
+                    continue;
+                }
+                var uploadingSourceCsvResult = Path.Combine(file.Directory.FullName, $"{file.Name.Replace(AppSettings.complete_, AppSettings.LoadingDB_)}");
+                if (!File.Exists(file.FullName))
+                {
+                    Log4Net.Log.Info("File has probably been moved.");
+                    continue;
+                }
+                try
+                {
+                    if (File.Exists(uploadingSourceCsvResult))
+                    {
+                        Log4Net.Log.Info("File has probably been moved.");
+                        continue;
+                    }
+                    File.Move(file.FullName, uploadingSourceCsvResult);
+                }
+                catch (Exception ex)
+                {
+                    Log4Net.Log.Info("File has probably been moved.");
+                    Log4Net.Log.Error(ex);
+                    continue;
+                }
+
+                var basePath = new FileInfo(uploadingSourceCsvResult).DirectoryName;
+                var inputFileText = File.ReadAllText(Path.Combine(basePath, AppSettings.ModelInputFileEto));
+                var input = JsonConvert.DeserializeObject<FrameworkParameters>(inputFileText);
+
+
+                var uploadStatus = new Framework_Processor().
+                    ProcessFrameworkResult(uploadingSourceCsvResult, input);
+
+                if (uploadStatus)
+                {
+                    Log4Net.Log.Info("Concluding on DB upload completed file:");
+                    Log4Net.Log.Info(uploadingSourceCsvResult);
+                    File.Move(uploadingSourceCsvResult, uploadingSourceCsvResult.Replace(AppSettings.LoadingDB_, AppSettings.LoadingDBComplete_));
+
+                    var eclDirectories = new FileInfo(uploadingSourceCsvResult).Directory.Parent.GetDirectories();
+
+                    var eclDataUploadIsCompleted = true;
+                    foreach (var dir in eclDirectories)
+                    {
+                        try
+                        {
+                            if (int.Parse(dir.Name) >= 0)
+                            {
+                                var loadingDBComplete = dir.GetFiles().Any(o => o.Name.StartsWith(AppSettings.LoadingDBComplete_) && o.Name.Contains(AppSettings.override_));
+                                if (!loadingDBComplete)
+                                {
+                                    eclDataUploadIsCompleted = false;
+                                    break;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log4Net.Log.Error(ex);
+                            continue;
+                        }
+                    }
+
+                    if (eclDataUploadIsCompleted)
+                    {
+                        var qry = Queries.EclOverrideIsRunning(input.EclId);
+                        var dt = DataAccess.i.GetData(qry);
+                        if (dt.Rows[0][0].ToString() != "Running Overrides")
+                        {
+                            qry = Queries.UpdateEclStatus(input.EclType.ToString(), input.EclId.ToString(), 4, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                        }
+                        else
+                        {
+                            qry = Queries.UpdateEclStatus(input.EclType.ToString(), input.EclId.ToString(), 5, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                        }
+
+                    }
+                }
+                else
+                {
+                    // reset files
+                    Log4Net.Log.Info("Reverting file from loading to completed");
+                    Log4Net.Log.Info(uploadingSourceCsvResult);
+                    Log4Net.Log.Info(file.FullName);
+
+                    File.Move(uploadingSourceCsvResult, file.FullName);
+                }
+            }
+
+        }
+        private void ProcessFrameworkResultTask()
+        {
+            var eclServer1Path = Path.Combine(AppSettings.ECLServer1,AppSettings.ECLAutomation);
+
+            var di = new DirectoryInfo(eclServer1Path);
+
+
+            var files = new List<FileInfo>();
+            
+            files=di.GetFiles("*", SearchOption.AllDirectories).Where(o => o.Name.StartsWith(AppSettings.complete_) && !o.Name.Contains(AppSettings.override_) && o.Name.EndsWith($"{AppSettings.Framework}.{AppSettings.csv}")).ToList();
+
+            if (files.Count == 0)
+            {
+                Log4Net.Log.Info("Found no Framework to process");
+                return;
+            }
+                
+
+            foreach (var file in files)
+            {
+                Log4Net.Log.Info(file.FullName);
+                if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.FrameworkComputeComplete)))
+                {
+                    continue;
+                }
+                var uploadingSourceCsvResult = Path.Combine(file.Directory.FullName, $"{file.Name.Replace(AppSettings.complete_, AppSettings.LoadingDB_)}");
+                if (!File.Exists(file.FullName))
+                {
+                    Log4Net.Log.Info("File has probably been moved.");
+                    continue;
+                }
+                try
+                {
+                    if (File.Exists(uploadingSourceCsvResult))
+                    {
+                        Log4Net.Log.Info("File has probably been moved.");
+                        continue;
+                    }
+                    File.Move(file.FullName, uploadingSourceCsvResult);
+                }
+                catch(Exception ex)
+                {
+                    Log4Net.Log.Info("File has probably been moved.");
+                    Log4Net.Log.Error(ex);
+                    continue;
+                }
+
+                var basePath = new FileInfo(uploadingSourceCsvResult).DirectoryName;
+                var inputFileText = File.ReadAllText(Path.Combine(basePath, AppSettings.ModelInputFileEto));
+                var input = JsonConvert.DeserializeObject<FrameworkParameters>(inputFileText);
+
+
+                var uploadStatus =new Framework_Processor().
+                    ProcessFrameworkResult(uploadingSourceCsvResult, input);
+
+                if(uploadStatus)
+                {
+                    Log4Net.Log.Info("Concluding on DB upload completed file:");
+                    Log4Net.Log.Info(uploadingSourceCsvResult);
+                    File.Move(uploadingSourceCsvResult, uploadingSourceCsvResult.Replace(AppSettings.LoadingDB_, AppSettings.LoadingDBComplete_));
+
+                    var eclDirectories = new FileInfo(uploadingSourceCsvResult).Directory.Parent.GetDirectories();
+
+                    var eclDataUploadIsCompleted = true;
+                    foreach (var dir in eclDirectories)
+                    {
+                        try
+                        {
+                            if (int.Parse(dir.Name) >= 0)
+                            {
+                                var loadingDBComplete=dir.GetFiles().Any(o=>o.Name.StartsWith(AppSettings.LoadingDBComplete_) && !o.Name.Contains(AppSettings.override_));
+                                if(!loadingDBComplete)
+                                {
+                                    eclDataUploadIsCompleted = false;
+                                    break;
+                                }
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            Log4Net.Log.Error(ex);
+                            continue;
+                        }
+                    }
+
+                    if(eclDataUploadIsCompleted)
+                    {
+                        var qry = Queries.EclOverrideIsRunning(input.EclId);
+                        var dt=DataAccess.i.GetData(qry);
+
+                        //dt.Rows.Count > 0 && 
+                        if (dt.Rows[0][0].ToString() == "Running Overrides")
+                        {
+                            qry = Queries.UpdateEclStatus(input.EclType.ToString(), input.EclId.ToString(), 4, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                        }
+                        else
+                        {
+                            qry = Queries.UpdateEclStatus(input.EclType.ToString(), input.EclId.ToString(), 5, "");
+                            DataAccess.i.ExecuteQuery(qry);
+                        }
+
+                    }
+                }
+                else
+                {
+                    // reset files
+                    Log4Net.Log.Info("Reverting file from loading to completed");
+                    Log4Net.Log.Info(uploadingSourceCsvResult);
+                    Log4Net.Log.Info(file.FullName);
+
+                    File.Move(uploadingSourceCsvResult,file.FullName);
+                }
+            }
+
         }
     }
 }

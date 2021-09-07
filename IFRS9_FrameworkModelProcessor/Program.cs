@@ -14,6 +14,7 @@ namespace IFRS9_FrameworkModelProcessor
     {
         static void Main(string[] args)
         {
+            var tasks = new List<Task>();
             while (0 < 1)
             {
                 Thread.Sleep(AppSettings.ServerCallWaitTime);
@@ -21,21 +22,35 @@ namespace IFRS9_FrameworkModelProcessor
                 var basePath = AppSettings.ECLServer5;
 
                 var di = new DirectoryInfo(basePath);
+                tasks = tasks.Where(o => o.Status == TaskStatus.Running).ToList();
+
+                if (tasks.Count > AppSettings.MaxExcelTaskCount)
+                {
+                    continue;
+                }
+
                 var files = di.GetFiles("*", SearchOption.AllDirectories).Where(o => o.Name.StartsWith(AppSettings.new_) && o.Name.EndsWith("Framework.xlsb")).ToList();
 
-                foreach (var file in files)
+                foreach (var file in files.OrderBy(o => o.Name).ToList())
                 {
                     var task1 = Task.Run(() =>
                     {
                         ProcessFile(file);
                     });
+                    tasks.Add(task1);
                 }
+
+
             }
         }
 
         public static bool ProcessFile(FileInfo file)
         {
-            //Process EAD
+
+            if (!File.Exists(Path.Combine(file.Directory.FullName, AppSettings.TransferComplete)))
+                return false;
+
+            //Process Frmaework
             var processingFileName = file.FullName.Replace(AppSettings.new_, AppSettings.processing_);
             File.Move(file.FullName, processingFileName);
 
@@ -48,7 +63,16 @@ namespace IFRS9_FrameworkModelProcessor
             }
             if (eadProcessor)
             {
-                File.Move(processingFileName, processingFileName.Replace(AppSettings.processing_, AppSettings.complete_));
+                var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
+                File.Move(processingFileName, completedProcessingFileName);
+
+                completedProcessingFileName = completedProcessingFileName.Replace(AppSettings.xlsb, AppSettings.csv);
+                //transfer file back to master server
+
+                File.Copy(completedProcessingFileName, completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1), true);
+                File.Copy(completedProcessingFileName.Replace(AppSettings.xlsb, AppSettings.csv), completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1).Replace(AppSettings.xlsb, AppSettings.csv), true);
+                File.Delete(processingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1).Replace(AppSettings.processing_, string.Empty));
+                File.WriteAllText(Path.Combine(new FileInfo(completedProcessingFileName.Replace(AppSettings.ECLServer5, AppSettings.ECLServer1)).Directory.FullName, AppSettings.FrameworkComputeComplete), string.Empty);
             }
             else
             {
