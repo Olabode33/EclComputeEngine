@@ -348,8 +348,6 @@ namespace IFRS9_ECL.Core
                     qry = Queries.UpdateEclStatus(eclRegister.eclType.ToString(), eclRegister.Id.ToString(), 7, ""); // should change to framekwork
                     DataAccess.i.ExecuteQuery(qry);
 
-                
-
                 }
 
                 //Process Framework

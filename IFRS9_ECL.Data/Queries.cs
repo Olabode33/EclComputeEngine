@@ -29,24 +29,33 @@ namespace IFRS9_ECL.Data
 
         public static string GetEADBehaviouralData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select top 1 Id from CalibrationRunEadBehaviouralTerms where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}')  and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_Behavioural_Terms where CalibrationID=(select BehaviouralCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
         public static string GetEADCCFData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_EAD_CCF_Summary where CalibrationID=(select top 1 Id from CalibrationRunEadCcfSummary where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_EAD_CCF_Summary where CalibrationID=(select CCFCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
+        //public static string GetLGDHaircutSummaryData(Guid eclId, string eclType)
+        //{
+        //    return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select top 1 Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+        //}
+
         public static string GetLGDHaircutSummaryData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select top 1 Id from CalibrationRunLgdHairCut where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_HairCut_Summary where CalibrationID=(select HaircutCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
 
+        //public static string GetLGDRecoveryRateData(Guid eclId, string eclType)
+        //{
+        //    return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select top 1 Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+        //}
         public static string GetLGDRecoveryRateData(Guid eclId, string eclType)
         {
-            return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select top 1 Id from CalibrationRunLgdRecoveryRate where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 * from CalibrationResult_LGD_RecoveryRate where CalibrationID=(select RecoveryRateCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
         public static string GetPD12MonthsPD(Guid eclId, string eclType)
         {
-            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Months where CalibrationID=(select top 1 Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select Rating, Months_PDs_12 from CalibrationResult_PD_12Months where CalibrationID=(select PDCrDrCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
         
         public static string GetPDIndexData(Guid eclId, string eclType)
@@ -72,7 +81,7 @@ namespace IFRS9_ECL.Data
         }
         public static string GetPDRedefaultFactor(Guid eclId, string eclType)
         {
-            return $"select top 1 Redefault_Factor, Cure_Rate,Commercial_CureRate, Consumer_CureRate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select Id from CalibrationRunPdCrDrs where OrganizationUnitId=(select OrganizationUnitId from {eclType}Ecls where Id='{eclId.ToString()}') and Status=7)";
+            return $"select top 1 Redefault_Factor, Cure_Rate,Commercial_CureRate, Consumer_CureRate from CalibrationResult_PD_12Months_Summary where CalibrationID=(select PDCrDrCalibrationId from WholesaleEcls where Id='{eclId}')";
         }
 
         public static string Affiliate_MacroeconomicVariable(long affiliateId)
@@ -198,6 +207,17 @@ namespace IFRS9_ECL.Data
 
             //return $" insert into CalibrationResult_PD_CommsCons_MarginalDefaultRate(Month, Comm1, Cons1, Comm2, Cons2, Comment, Status, CalibrationId, DateCreated) " +
             //       $" values({Month}, {Comm1}, {Cons1}, {Comm2}, {Cons2}, '', 1, '{calibrationId.ToString()}', GetDate()); ";
+        }
+
+
+        public static string Get_EclPdSnPCummulativeDefaultRates(Guid eclId)
+        {
+            return $"select top 1 * from WholesaleEclPdSnPCummulativeDefaultRates where WholesaleEclId='{eclId}'";
+        }
+
+        public static string Get_PD_Comm_Cons_Result(Guid eclId)
+        {
+            return $"select top 1 * from CalibrationResult_Comm_Cons_PD where CalibrationId=(select CommConsCalibrationId from WholesaleEcls where Id='{eclId}') order by Month";
         }
 
         public static string CalibrationResult_PD_Update_Summary(Guid calibrationId, string lstQry, string commsCons, double? Normal_12_Months_PD, double? DefaultedLoansA, double? DefaultedLoansB, double? CuredLoansA, double? CuredLoansB, double? Cure_Rate, double? CuredPopulationA, double? CuredPopulationB, double? RedefaultedLoansA, double? RedefaultedLoansB, double? Redefault_Rate, double? Redefault_Factor, 
@@ -398,6 +418,10 @@ namespace IFRS9_ECL.Data
         public static string eclLGDAssumptions(Guid eclId, EclType eclType)
         {
             return $"select [Key], Value, LgdGroup AssumptionGroup from {eclType.ToString()}EclLgdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
+        }
+        public static string eclPDAssumptions(Guid eclId, EclType eclType)
+        {
+            return $"select [Key], Value, PdGroup AssumptionGroup from {eclType.ToString()}EclPdAssumptions where {eclType.ToString()}EclId='{eclId.ToString()}'";
         }
 
         public static string Get_AffiliateMEVBackDateValues(Guid eclId, EclType eclType)

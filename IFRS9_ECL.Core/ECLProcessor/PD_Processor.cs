@@ -98,6 +98,58 @@ namespace IFRS9_ECL.Core.Calibration
                     var fileName = new FileInfo(input.LoanBookFileName).Name;
                     startSheet.Cells[21, 5] = fileName;
 
+
+                    Worksheet internalModelSheet = theWorkbook.Sheets[3];
+                    var rowFour = 4;
+                    var colThree = 3;
+                    var colFour = 4;
+
+                    internalModelSheet.Cells[rowFour, colThree] = input.CreditPd.CrPD_CreditPd1;
+                    internalModelSheet.Cells[rowFour + 1, colThree] = input.CreditPd.CrPD_CreditPd2;
+                    internalModelSheet.Cells[rowFour + 2, colThree] = input.CreditPd.CrPD_CreditPd3;
+                    internalModelSheet.Cells[rowFour + 3, colThree] = input.CreditPd.CrPD_CreditPd4;
+                    internalModelSheet.Cells[rowFour + 4, colThree] = input.CreditPd.CrPD_CreditPd5;
+                    internalModelSheet.Cells[rowFour + 5, colThree] = input.CreditPd.CrPD_CreditPd6;
+                    internalModelSheet.Cells[rowFour + 6, colThree] = input.CreditPd.CrPD_CreditPd7;
+                    internalModelSheet.Cells[rowFour + 7, colThree] = input.CreditPd.CrPD_CreditPd8;
+                    internalModelSheet.Cells[rowFour + 8, colThree] = input.CreditPd.CrPD_CreditPd9;
+                    internalModelSheet.Cells[rowFour + 9, colThree] = input.CreditPd.CrPD_CreditPd10;
+
+                    internalModelSheet.Cells[rowFour, colFour] = input.CreditPolicy.CrPD_CreditPolicy1;
+                    internalModelSheet.Cells[rowFour + 1, colFour] = input.CreditPolicy.CrPD_CreditPolicy2;
+                    internalModelSheet.Cells[rowFour + 2, colFour] = input.CreditPolicy.CrPD_CreditPolicy3;
+                    internalModelSheet.Cells[rowFour + 3, colFour] = input.CreditPolicy.CrPD_CreditPolicy4;
+                    internalModelSheet.Cells[rowFour + 4, colFour] = input.CreditPolicy.CrPD_CreditPolicy5;
+                    internalModelSheet.Cells[rowFour + 5, colFour] = input.CreditPolicy.CrPD_CreditPolicy6;
+                    internalModelSheet.Cells[rowFour + 6, colFour] = input.CreditPolicy.CrPD_CreditPolicy7;
+                    internalModelSheet.Cells[rowFour + 7, colFour] = input.CreditPolicy.CrPD_CreditPolicy8;
+                    internalModelSheet.Cells[rowFour + 8, colFour] = input.CreditPolicy.CrPD_CreditPolicy9;
+                    internalModelSheet.Cells[rowFour + 9, colFour] = input.CreditPolicy.CrPD_CreditPolicy10;
+
+                    var grouped=input.CummulativeDefaultRates.GroupBy(o => o.Rating);
+
+                    var aaa = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("AAA", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var aa = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("AA", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var a = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("A", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var bbb = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("BBB", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var bb = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("BB", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var b = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("B", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+                    var ccc = input.CummulativeDefaultRates.Where(o => o.Rating.Equals("CCC", StringComparison.InvariantCultureIgnoreCase)).OrderBy(n => n.Years).ToList();
+
+                    var rowFive = 5;
+                    var valueSeven = 7;
+                    for (int i = 8; i <= 22; i++)
+                    {
+                        try { internalModelSheet.Cells[rowFive, i] = aaa.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+1, i] = aa.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+2, i] = a.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+3, i] = bbb.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+4, i] = bb.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+5, i] = b.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                        try{internalModelSheet.Cells[rowFive+6, i] = ccc.FirstOrDefault(o => o.Years == (i - valueSeven)).Value; } catch { };
+                    }
+
+
                     excel.ScreenUpdating = false;
 
 

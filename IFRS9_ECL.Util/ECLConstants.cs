@@ -296,6 +296,30 @@ namespace IFRS9_ECL.Util
         public static string Vehicle = "vehicle";
         public static string Collateral = "collateral";
     }
+    public static class CreditPd
+    {
+        public static string CreditPd1 = "CreditPd1";
+        public static string CreditPd2 = "CreditPd2";
+        public static string CreditPd3 = "CreditPd3";
+        public static string CreditPd4 = "CreditPd4";
+        public static string CreditPd5 = "CreditPd5";
+        public static string CreditPd6 = "CreditPd6";
+        public static string CreditPd7 = "CreditPd7";
+        public static string CreditPd8 = "CreditPd8";
+        public static string CreditPd9 = "CreditPd9";
+        public static string CreditPd10 = "CreditPd10";
+
+        public static string CreditPdEtiPolicy1 = "CreditPdEtiPolicy1";
+        public static string CreditPdEtiPolicy2 = "CreditPdEtiPolicy2";
+        public static string CreditPdEtiPolicy3 = "CreditPdEtiPolicy3";
+        public static string CreditPdEtiPolicy4 = "CreditPdEtiPolicy4";
+        public static string CreditPdEtiPolicy5 = "CreditPdEtiPolicy5";
+        public static string CreditPdEtiPolicy6 = "CreditPdEtiPolicy6";
+        public static string CreditPdEtiPolicy7 = "CreditPdEtiPolicy7";
+        public static string CreditPdEtiPolicy8 = "CreditPdEtiPolicy8";
+        public static string CreditPdEtiPolicy9 = "CreditPdEtiPolicy9";
+        public static string CreditPdEtiPolicy10 = "CreditPdEtiPolicy10";
+    }
 
     public enum EclType
     {

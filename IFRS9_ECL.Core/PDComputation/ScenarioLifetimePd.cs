@@ -1,4 +1,5 @@
 ﻿using IFRS9_ECL.Data;
+using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.PD;
 using IFRS9_ECL.Util;
 using System;
@@ -25,7 +26,11 @@ namespace IFRS9_ECL.Core.PDComputation
             this._eclType = eclType;
             _scenarioMarginalPd = new ScenarioMarginalPd(_scenario, eclId, this._eclType);
         }
-
+        public ScenarioLifetimePd(Guid eclId, EclType eclType)
+        {
+            this._eclId = eclId;
+            this._eclType = eclType;
+        }
         public string Run()
         {
             var output = ComputeLifetimePd();
@@ -87,5 +92,20 @@ namespace IFRS9_ECL.Core.PDComputation
         {
             return _scenarioMarginalPd.ComputeMaginalPd();
         }
+
+        public List<EclAssumptions> GetECLPdAssumptions()
+        {
+            var qry = Queries.eclPDAssumptions(this._eclId, this._eclType);
+            var dt = DataAccess.i.GetData(qry);
+            var eclAssumptions = new List<EclAssumptions>();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                eclAssumptions.Add(DataAccess.i.ParseDataToObject(new EclAssumptions(), dr));
+            }
+
+            return eclAssumptions;
+        }
+
     }
 }

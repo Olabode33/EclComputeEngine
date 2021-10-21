@@ -1,9 +1,11 @@
 ﻿using IFRS9_ECL.Core.Calibration;
 using IFRS9_ECL.Core.ECLProcessor.Entities;
 using IFRS9_ECL.Core.FrameworkComputation;
+using IFRS9_ECL.Core.PDComputation;
 using IFRS9_ECL.Data;
 using IFRS9_ECL.Models;
 using IFRS9_ECL.Models.ECL_Result;
+using IFRS9_ECL.Models.Framework;
 using IFRS9_ECL.Models.Raw;
 using IFRS9_ECL.Util;
 using Microsoft.Office.Interop.Excel;
@@ -196,13 +198,13 @@ namespace IFRS9_ECL.Core
 
 
                 var tryCounter = 0;
-                var eadProcessor = false;
-                while (!eadProcessor && tryCounter <= 3)
+                var pdProcessor = false;
+                while (!pdProcessor && tryCounter <= 3)
                 {
-                    eadProcessor = new PD_Processor().ExecutePDMacro(processingFileName);
+                    pdProcessor = new PD_Processor().ExecutePDMacro(processingFileName);
                     tryCounter = tryCounter + 1;
                 }
-                if (eadProcessor)
+                if (pdProcessor)
                 {
                     var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
                     if (!File.Exists(completedProcessingFileName))
@@ -265,13 +267,13 @@ namespace IFRS9_ECL.Core
 
 
                 var tryCounter = 0;
-                var eadProcessor = false;
-                while (!eadProcessor && tryCounter <= 3)
+                var lgdProcessor = false;
+                while (!lgdProcessor && tryCounter <= 3)
                 {
-                    eadProcessor = new LGD_Processor().ExecuteLGDMacro(processingFileName);
+                    lgdProcessor = new LGD_Processor().ExecuteLGDMacro(processingFileName);
                     tryCounter = tryCounter + 1;
                 }
-                if (eadProcessor)
+                if (lgdProcessor)
                 {
                     var completedProcessingFileName = processingFileName.Replace(AppSettings.processing_, AppSettings.complete_);
                     if (!File.Exists(completedProcessingFileName))
@@ -501,10 +503,15 @@ namespace IFRS9_ECL.Core
 
                 }
 
+                var scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclRegister.Id, eclType);
+                var lgd_assumptions = scenarioLifetimeLGD.GetECLLgdAssumptions();
+
+                var scenarioLifetimePD = new ScenarioLifetimePd(eclRegister.Id, eclType);
+                var pd_assumptions = scenarioLifetimePD.GetECLPdAssumptions();
 
                 var eadParam = BuildEADParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
-                var lgdParam = BuildLGDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
-                var pdParam = BuildPDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
+                var lgdParam = BuildLGDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType, lgd_assumptions);
+                var pdParam = BuildPDParameter(eclRegister.Id, eclRegister.ReportingDate, eclType, pd_assumptions);
                 var frameworkParam = BuildFrameworkParameter(eclRegister.Id, eclRegister.ReportingDate, eclType);
 
                 if (!overrideExist)
@@ -586,7 +593,7 @@ namespace IFRS9_ECL.Core
             return cnt > 0;
         }
 
-        private PDParameters BuildPDParameter(Guid eclId, DateTime reportingDate, EclType eclType)
+        private PDParameters BuildPDParameter(Guid eclId, DateTime reportingDate, EclType eclType, List<EclAssumptions> assumptions)
         {
             var bt_ead = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             var bt_ead_data = bt_ead.GetBehaviouralData(eclId, eclType);
@@ -601,31 +608,158 @@ namespace IFRS9_ECL.Core
                 NonExpired = bt_ead_data.NonExpired,
                 ReportDate = reportingDate,
                 SandPMapping = "Best Fit",
-                RedefaultAdjustmentFactor = readjustmentFactor
+                RedefaultAdjustmentFactor = readjustmentFactor,
+                CommCons = new List<Calibration.Input.CalibrationResult_PD_CommsCons_MarginalDefaultRate>(),
+                CreditPd = new CreditPdParam(),
+                CreditPolicy = new CreditPolicyParam()
             };
 
 
-            //obj.NonExpired = 12;
-            //obj.Expired = 4;
-            //obj.RedefaultAdjustmentFactor = 1;
+            var CommConsResultQuery = Queries.Get_PD_Comm_Cons_Result(eclId);
+            var dt = DataAccess.i.GetData(CommConsResultQuery);
+            foreach(DataRow dr in dt.Rows)
+            {
+                obj.CommCons.Add(new Calibration.Input.CalibrationResult_PD_CommsCons_MarginalDefaultRate
+                {
+                     Comm1= dr["Comm1"]!=DBNull.Value?Convert.ToDouble(dr["Comm1"]):0,
+                    Comm2 = dr["Comm2"] != DBNull.Value ? Convert.ToDouble(dr["Comm2"]) : 0,
+                    Cons1 = dr["Cons1"] != DBNull.Value ? Convert.ToDouble(dr["Cons1"]) : 0,
+                    Cons2 = dr["Cons2"] != DBNull.Value ? Convert.ToDouble(dr["Cons2"]) : 0,
+                    Month = dr["Month"] != DBNull.Value ? Convert.ToInt32(dr["Month"]) : 0,
+                });
+            }
+
+            var pd_Assumptions_CrPD = assumptions.Where(o => o.AssumptionGroup == 1).ToList();
+            try { obj.CreditPd.CrPD_CreditPd1 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd1.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd2 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd2.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd3 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd3.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd4 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd4.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd5 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd5.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd6 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd6.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd7 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd7.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd8 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd8.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd9 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd9.ToLower())).Value); } catch { }
+            try { obj.CreditPd.CrPD_CreditPd10 = double.Parse(pd_Assumptions_CrPD.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPd10.ToLower())).Value); } catch { }
+
+            var pd_Assumptions_CreditPolicy = assumptions.Where(o => o.AssumptionGroup == 2).ToList();
+            try { obj.CreditPolicy.CrPD_CreditPolicy1 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy1.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy2 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy2.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy3 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy3.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy4 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy4.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy5 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy5.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy6 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy6.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy7 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy7.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy8 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy8.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy9 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy9.ToLower())).Value; } catch { }
+            try { obj.CreditPolicy.CrPD_CreditPolicy10 = pd_Assumptions_CreditPolicy.FirstOrDefault(o => o.Key.ToLower().Contains(CreditPd.CreditPdEtiPolicy10.ToLower())).Value; } catch { }
+
+
+            var EclPdSnPCummulativeDefaultRateQuery = Queries.Get_EclPdSnPCummulativeDefaultRates(eclId);
+            var SnPdt = DataAccess.i.GetData(EclPdSnPCummulativeDefaultRateQuery);
+
+            foreach (DataRow dr in SnPdt.Rows)
+            {
+                obj.CummulativeDefaultRates.Add(new Calibration.Input.CalibrationResult_PD_CummulativeDefaultRate
+                {
+                    Key = dr["Key"] != DBNull.Value ? Convert.ToString(dr["Key"]) : "",
+                    Rating = dr["Rating"] != DBNull.Value ? Convert.ToString(dr["Rating"]) : "",
+                    Years = dr["Years"] != DBNull.Value ? Convert.ToInt32(dr["Years"]) : 0,
+                    Value = dr["Value"] != DBNull.Value ? Convert.(dr["Value"]) : 0
+                });
+            }
+
             return obj;
         }
 
-        private LGDParameters BuildLGDParameter(Guid eclId, DateTime reportingDate, EclType eclType)
+        private LGDParameters BuildLGDParameter(Guid eclId, DateTime reportingDate, EclType eclType, List<EclAssumptions> assumptions)
         {
             var bt_ead = new CalibrationInput_EAD_Behavioural_Terms_Processor();
             var bt_ead_data = bt_ead.GetBehaviouralData(eclId, eclType);
+
+            var cureRateRedefaultFactor = new CalibrationInput_PD_CR_RD_Processor().GetPDRedefaultFactorCureRate(eclId, eclType);
+            var unsecuredRecoveryRate = new CalibrationInput_LGD_RecoveryRate_Processor().GetLGDRecoveryRateData(eclId, eclType);
+
+            
+            var lgd_Assumptions_2_first = assumptions.Where(o => o.AssumptionGroup == 4).ToList();
+            var lgd_Assumptions_2_last = assumptions.Where(o => o.AssumptionGroup == 3).ToList();
+
+            var lgd_first = new LGD_Assumptions_CollateralType_TTR_Years();
+
+            try { lgd_first.collateral_value = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value); } catch { lgd_first.collateral_value = 0; }
+            try { lgd_first.debenture = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value); } catch { lgd_first.debenture = 0; }
+            try { lgd_first.cash = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value); } catch { lgd_first.cash = 0; }
+            try { lgd_first.commercial_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value); } catch { lgd_first.commercial_property = 0; }
+            try { lgd_first.Receivables = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value); } catch { lgd_first.Receivables = 0; }
+            try { lgd_first.inventory = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value); } catch { lgd_first.inventory = 0; }
+            try { lgd_first.plant_and_equipment = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value); } catch { lgd_first.plant_and_equipment = 0; }
+            try { lgd_first.residential_property = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value); } catch { lgd_first.residential_property = 0; }
+            try { lgd_first.shares = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value); } catch { lgd_first.shares = 0; }
+            try { lgd_first.vehicle = double.Parse(lgd_Assumptions_2_first.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value); } catch { lgd_first.vehicle = 0; }
+
+            var lgd_last = new LGD_Assumptions_CollateralType_TTR_Years();
+
+            try { lgd_last.collateral_value = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Collateral)).Value); } catch { lgd_first.collateral_value = 0; }
+            try { lgd_last.debenture = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture)).Value); } catch { lgd_first.debenture = 0; }
+            try { lgd_last.cash = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash)).Value); } catch { lgd_first.cash = 0; }
+            try { lgd_last.commercial_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty)).Value); } catch { lgd_first.commercial_property = 0; }
+            try { lgd_last.Receivables = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables)).Value); } catch { lgd_first.Receivables = 0; }
+            try { lgd_last.inventory = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory)).Value); } catch { lgd_first.inventory = 0; }
+            try { lgd_last.plant_and_equipment = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment)).Value); } catch { lgd_first.plant_and_equipment = 0; }
+            try { lgd_last.residential_property = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty)).Value); } catch { lgd_first.residential_property = 0; }
+            try { lgd_last.shares = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares)).Value); } catch { lgd_first.shares = 0; }
+            try { lgd_last.vehicle = double.Parse(lgd_Assumptions_2_last.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle)).Value); } catch { lgd_first.vehicle = 0; }
+
+
+            var _scenarioLifetimeLGD = new ScenarioLifetimeLGD(eclId, eclType);
+            
+
+
             var obj = new LGDParameters
             {
                 BasePath = AppSettings.ECLBasePath,
                 Expired = bt_ead_data.Expired,
                 NonExpired = bt_ead_data.NonExpired,
-                ReportDate = reportingDate
+                ReportDate = reportingDate,
+                Commercial_CureRate = cureRateRedefaultFactor[2],
+                Consumer_CureRate = cureRateRedefaultFactor[3],
+                Corporate_CureRate = cureRateRedefaultFactor[1],
+                Commercial_RecoveryRate = unsecuredRecoveryRate.Commercial_RecoveryRate,
+                Consumer_RecoveryRate = unsecuredRecoveryRate.Consumer_RecoveryRate,
+                Corporate_RecoveryRate = unsecuredRecoveryRate.Corporate_RecoveryRate,
+                RedefaultFactor = cureRateRedefaultFactor[0],
+                lgd_first= lgd_first, 
+                lgd_last= lgd_last,
+
             };
 
+            
 
-            //obj.NonExpired = 12;
-            //obj.Expired = 4;
+            var lgd_Assumptions_collateral = assumptions.Where(o => o.AssumptionGroup == 5).ToList();
+            try { obj.LGDCollateralGrowthAssumption_Debenture = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_Cash = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_Inventory = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_PlantEquipment = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_ResidentialProperty = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_CommercialProperty = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_Receivables = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_Shares = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares.ToLower())).Value); } catch { }
+            try { obj.LGDCollateralGrowthAssumption_Vehicle = double.Parse(lgd_Assumptions_collateral.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle.ToLower())).Value); } catch { }
+
+            var lgd_Assumptions_ttr = assumptions.Where(o => o.AssumptionGroup == 8).ToList();
+            try { obj.TTR_Debenture = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Debenture.ToLower())).Value); } catch { }
+            try { obj.TTR_Cash = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Cash.ToLower())).Value); } catch { }
+            try { obj.TTR_Inventory = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Inventory.ToLower())).Value); } catch { }
+            try { obj.TTR_PlantEquipment = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.PlantEquipment.ToLower())).Value); } catch { }
+            try { obj.TTR_ResidentialProperty = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.ResidentialProperty.ToLower())).Value); } catch { }
+            try { obj.TTR_CommercialProperty = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.CommercialProperty.ToLower())).Value); } catch { }
+            try { obj.TTR_Receivables = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Receivables.ToLower())).Value); } catch { }
+            try { obj.TTR_Shares = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Shares.ToLower())).Value); } catch { }
+            try { obj.TTR_Vehicle = double.Parse(lgd_Assumptions_ttr.FirstOrDefault(o => o.Key.ToLower().Contains(LGDCollateralGrowthAssumption.Vehicle.ToLower())).Value); } catch { }
+
+
+            obj.Haircut = new CalibrationInput_LGD_Haricut_Processor().GetLGDHaircutSummaryData(eclId, eclType);
+
+
 
             return obj;
         }
@@ -678,25 +812,6 @@ namespace IFRS9_ECL.Core
                 BasePath = AppSettings.ECLBasePath
             };
 
-            //obj.NonExpired = 12;
-            //obj.Expired = 4;
-            //obj.ConversionFactorObe = 0.35;
-            //obj.PrePaymentFactor = 0;
-            //obj.ExchangeRates = new List<ExchangeRate>();
-            //obj.ExchangeRates.Add(new ExchangeRate { Currency= "EUR", Value= 655.957 });
-            //obj.ExchangeRates.Add(new ExchangeRate { Currency = "GBP", Value = 728.412157285154 });
-            //obj.ExchangeRates.Add(new ExchangeRate { Currency = "USD", Value = 553.643652937205 });
-            //obj.ExchangeRates.Add(new ExchangeRate { Currency = "XOF", Value = 1 });
-
-            //obj.VariableInterestRates = new List<VariableInterestRate>();
-            //obj.VariableInterestRates.Add(new VariableInterestRate {  VIR_Name = "EGH GHS BASE RATE", Value = 0.2595 });
-            //obj.VariableInterestRates.Add(new VariableInterestRate { VIR_Name = "EGH USD BASE RATE", Value = 0.11 });
-            //obj.VariableInterestRates.Add(new VariableInterestRate { VIR_Name = "GHANA REFERENCE RATE", Value = 0.1475 });
-
-            //obj.CCF_Commercial = 0.996413814962257;
-            //obj.CCF_Consumer = 0.996413814962257;
-            //obj.CCF_Corporate = 0.996413814962257;
-            //obj.CCF_OBE = 0.35;
 
             return obj;
 
@@ -931,7 +1046,7 @@ namespace IFRS9_ECL.Core
                 {
                     Log4Net.Log.Info($"{batchId} - Started LGD");
                     tryCounter = tryCounter + 1;
-                    lgdProcessor = new LGD_Processor().ProcessLGD(lgdParam);
+                    lgdProcessor = new LGD_Processor().ProcessLGD(lgdParam, pdParam);
                 }
                 tryCounter = 0;
                 Log4Net.Log.Info("Completed LGD Files transfer");
